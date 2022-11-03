@@ -4,6 +4,8 @@
 
 library(rhdf5)
 library(terra)
+library(stars)
+library(parallel)
 
 # tempdir <- function() { "/Volumes/jt/projects/margulis/temp" }
 # tempdir()
@@ -15,7 +17,7 @@ setwd("/Users/jacktarricone/ch1_margulis/")
 swe_list <-list.files("./swe/hdf", pattern = ".h5", full.names = TRUE)
 print(swe_list) # static and wy2015 SCA
 
-### list attributes for swe file
+## list attributes for swe file
 h5ls(swe_list[1]) # contains 3 groups: lat, long, and SCA
 h5readAttributes(swe_list[1], name = "SWE") # SWE units = mm
 
@@ -24,11 +26,50 @@ hmmt <-rast(swe_list[1], subds = "//SWE")
 hmmt
 plot(t(hmmt[[1]])) # looks okay
 
+# test running matx with app and 8 cores
+# system.time(max_test <-app(hmmt, fun=function(i) max(i), cores=10)) # calc max
+
 # No data value to NaN
-system.time(hmmt[hmmt == -32768 ] <- NA) #remove NA
+# system.time(max_test[max_test == -32768 ] <- NA) #remove NA
+# plot(t(max_test))
 
-max_test <-app(hmmt, fun = max, cores=8)) # calc max
+?read_stars
 
+#tif <- system.file("tif/L7_ETMs.tif", package = "stars")
+x <-read_stars(swe_list[1])
+x$`//SWE`
+
+##
+no_cores <- detectCores() - 3
+cluster <- makeCluster(no_cores)
+result <- parLapply(cluster, docs$text, preProcessChunk)
+
+
+st_apply(x$`//SWE`, 
+         MARGIN = 1:2, 
+         FUN = max,
+         CLUSTER = cluster,
+         PROGRESS = TRUE)# mean band value for each pixel
+
+stopCluster(cluster)
+
+# st_apply(
+#   X,
+#   MARGIN,
+#   FUN,
+#   ...,
+#   CLUSTER = NULL,
+#   PROGRESS = FALSE,
+#   FUTURE = FALSE,
+#   rename = TRUE,
+#   .fname,
+#   single_arg = has_single_arg(FUN, list(...)) || can_single_arg(FUN),
+#   keep = FALSE
+# )
+
+
+st_apply(x, c("x", "y"), mean) # equivalent to the above
+st_apply(x, 3, mean) # mean of all pixels for each band
 
 
 ### list attributes for swe file
