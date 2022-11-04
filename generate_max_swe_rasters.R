@@ -31,20 +31,32 @@ max_raster <- function(swe_list) {
   dims <-test$dim[1]
   nday <-as.integer(sub("6601 x 5701 x ","",dims))
   
-  c1 <-h5read(swe_list, "/SWE", index = list(1:3300,1:5701,1:nday)) #load in 
-  max_c1 <-as.matrix(apply(c1, c(1,2), max)) #create matrix with max value on z axis
-  rm(c1) 
+  # load in borth half of the data cube for RAM purposes
+  c1 <-h5read(swe_list, "/SWE", index = list(1:3300,1:5701,1:nday))
+  print("c1 read into memory")
   
+  ## calculate pixel-wise max
+  # returns max value in mm per pixel in the given year
+  max_c1 <-as.matrix(apply(c1, c(1,2), max)) 
+  print("c1 max calculated")
+  rm(c1) # clean up
+  
+  ## same for south half of data
   c2 <-h5read(swe_list, "/SWE", index = list(3301:6601,1:5701,1:nday))
+  print("c2 read into memory")
   max_c2 <-as.matrix(apply(c2, c(1,2), max))
+  print("c2 max calculated")
   rm(c2)
   h5closeAll()
   
   #bind chunks together
   full_max <-rbind(max_c1,max_c2)
   r <-rast(full_max) # convert from matrix to raster
-  rm(full_max) # clean up
+  rm(full_max) # trash array
   values(r)[values(r) == -32768] <- NA # change no data to NA
+  print("-32768 converted to NA")
+  
+  # georeference
   ext(r) <-c(-123.3,-117.6,35.4,42) # set extent
   crs(r) <-crs(dem) # set crs from DEM raster
 
@@ -55,19 +67,21 @@ max_raster <- function(swe_list) {
   # save
   setwd("./snow_metric_rasters/max_swe/terra_rasters")
   writeRaster(r, paste0(good_name, ".tif"))
-  return(r)
+  
+  # thank you!
+  print(paste0(good_name," has been generated!"))
 }
 
-#### mcapply function 
+# mcapply function 
 # set number of cores to use
-ncores <-detectCores()-8
+ncores <-4
 
 # check list, looks good
-swe_list 
+swe_list[15:31] 
 
 # run function
-system.time(raster_list <-mclapply(swe_list, 
+system.time(raster_list <-mclapply(swe_list[15:31], 
                                    function(x) max_raster(x),
-                                   mc.cores = ncores, mc.cleanup = TRUE))
-
+                                   mc.cores = ncores, 
+                                   mc.cleanup = FALSE))
 
