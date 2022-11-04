@@ -86,3 +86,25 @@ sdd <-function(x){
     }
   }
 }
+
+#######################################
+############   max_dowy     ###########
+#######################################
+
+# day of water year that max swe occurs on
+# abbr: max_swe_dowy
+
+
+max_swe_dowy <-function(x){
+  
+  # set threshold
+  if (max(x) < 5.1){
+    return(NA)
+    
+  } 
+  else{
+    max_swe<-as.numeric(max(x))
+    dowy <-as.numeric(max(which(x == max_swe)))
+    return(dowy)
+  }
+}

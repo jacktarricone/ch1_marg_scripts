@@ -26,6 +26,9 @@ dem
 ### function for creating max raster
 max_raster <- function(swe_list) {
   
+  # reset wd
+  setwd("/Users/jacktarricone/ch1_margulis/")
+  
   # pull out number of days in given year
   test <-h5ls(swe_list) # contains 3 groups: lat, long, and SCA
   dims <-test$dim[1]
@@ -77,10 +80,10 @@ max_raster <- function(swe_list) {
 ncores <-4
 
 # check list, looks good
-swe_list[15:31] 
+swe_list[23:31] 
 
 # run function
-system.time(raster_list <-mclapply(swe_list[15:31], 
+system.time(raster_list <-mclapply(swe_list[19:31], 
                                    function(x) max_raster(x),
                                    mc.cores = ncores, 
                                    mc.cleanup = FALSE))
