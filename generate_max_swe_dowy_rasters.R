@@ -40,7 +40,7 @@ snow_metric_name <-"max_swe_dowy"
 
 # mcapply function 
 # set number of cores to use
-ncores <-4
+ncores <-1
 
 # check list, looks good
 swe_list
@@ -54,3 +54,8 @@ system.time(raster_list <-pbmclapply(swe_list[1],
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
+
+generate_snow_metric_rasters(swe_list[2], 
+                             snow_metric_function = max_swe_dowy, 
+                             snow_metric_name = snow_metric_name)
+
