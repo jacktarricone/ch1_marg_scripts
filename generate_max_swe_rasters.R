@@ -1,13 +1,19 @@
-### creating pixel-wise annual max swe raster ###
+### creating pixel-wise annual rasters for:
+#### max swe ###
+
 # november 3th 2022
 # jack tarricone
 
 library(rhdf5)
 library(terra)
 library(parallel)
+library(pbmcapply)
 
 #set working directory
 setwd("/Users/jacktarricone/ch1_margulis/")
+
+# metric creating wit hthis script
+snow_metric_name <-"max_swe"
 
 # list hdf swe files
 swe_list <-list.files("./swe/hdf", pattern = ".h5", full.names = TRUE)
@@ -24,10 +30,10 @@ dem <-rast(static_list[3])
 dem
 
 ### function for creating max raster
-max_raster <- function(swe_list) {
+max_swe_raster <- function(swe_list) {
   
   # reset wd
-  setwd("/Users/jacktarricone/ch1_margulis/")
+  setwd("/Users/jacktarricone/ch1_margulis/") 
   
   # pull out number of days in given year
   test <-h5ls(swe_list) # contains 3 groups: lat, long, and SCA
@@ -65,10 +71,16 @@ max_raster <- function(swe_list) {
 
   # name formatting
   name <- gsub(".h5", "", basename(swe_list))
-  good_name <- gsub("SN_SWE_", "max_swe_", name)
+  good_name <- gsub("SN_SWE", snow_metric_name, name)
+  
+  # set saving director to correct folder
+  # doesn't need to change for each metric bc include at top of script
+  saving_location <-list.files("./snow_metric_rasters/terra_rasters",
+                               pattern = paste0("*",snow_metric_name,"$"), 
+                               full.names = TRUE)
   
   # save
-  setwd("./snow_metric_rasters/max_swe/terra_rasters")
+  setwd(saving_location)
   writeRaster(r, paste0(good_name, ".tif"))
   
   # thank you!
@@ -82,9 +94,9 @@ ncores <-4
 # check list, looks good
 swe_list[23:31] 
 
-# run function
-system.time(raster_list <-mclapply(swe_list[19:31], 
-                                   function(x) max_raster(x),
-                                   mc.cores = ncores, 
-                                   mc.cleanup = FALSE))
+# run function using progress bar (pb) multi-core lapply
+system.time(raster_list <-pbmclapply(swe_list[1], 
+                                     function(x) max_swe_raster(x),
+                                     mc.cores = ncores, 
+                                     mc.cleanup = TRUE))
 

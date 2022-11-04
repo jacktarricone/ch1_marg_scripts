@@ -25,7 +25,6 @@
 # number of days there is snow on the ground vs total days in a given year
 # set threshold to 5.1 mm or .2 inches because thats the accuracy a SNTOEL site has
 # this will also reduce the long tails seen on the data and unrealistically large scf number
-
 # abbr: scf
 
 scf <-function(x){
@@ -103,8 +102,72 @@ max_swe_dowy <-function(x){
     
   } 
   else{
+    # pull out max value
     max_swe<-as.numeric(max(x))
+    
+    # use which() funciton for position tracking
+    # nested with max() to have last day of max swe
     dowy <-as.numeric(max(which(x == max_swe)))
     return(dowy)
   }
+}
+
+#########################################
+### function for creating max raster ####
+#########################################
+
+generate_snow_metric_rasters <- function(swe_list, snow_metric_function, snow_metric_name) {
+  
+  # reset wd
+  setwd("/Users/jacktarricone/ch1_margulis/") 
+  
+  # pull out number of days in given year
+  test <-h5ls(swe_list) # contains 3 groups: lat, long, and SCA
+  dims <-test$dim[1]
+  nday <-as.integer(sub("6601 x 5701 x ","",dims))
+  
+  # load in borth half of the data cube for RAM purposes
+  c1 <-h5read(swe_list, "/SWE", index = list(1:3300,1:5701,1:nday))
+  print("c1 read into memory")
+  
+  ## calculate pixel-wise max
+  # returns max value in mm per pixel in the given year
+  max_c1 <-as.matrix(apply(c1, c(1,2), snow_metric_function)) 
+  print("c1 max calculated")
+  rm(c1) # clean up
+  
+  ## same for south half of data
+  c2 <-h5read(swe_list, "/SWE", index = list(3301:6601,1:5701,1:nday))
+  print("c2 read into memory")
+  max_c2 <-as.matrix(apply(c2, c(1,2), snow_metric_function))
+  print("c2 max calculated")
+  rm(c2)
+  h5closeAll()
+  
+  #bind chunks together
+  full_max <-rbind(max_c1,max_c2)
+  r <-rast(full_max) # convert from matrix to raster
+  rm(full_max) # trash array
+  values(r)[values(r) == -32768] <- NA # change no data to NA
+  print("-32768 converted to NA")
+  
+  # georeference
+  ext(r) <-c(-123.3,-117.6,35.4,42) # set extent
+  crs(r) <-crs(dem) # set crs from DEM raster
+  
+  # name formatting
+  name <- gsub(".h5", "", basename(swe_list))
+  good_name <- gsub("SN_SWE", snow_metric_name, name)
+  
+  # set saving director to correct folder
+  # doesn't need to change for each metric bc include at top of script
+  saving_location <-list.files("./snow_metric_rasters/terra_rasters",
+                               pattern = paste0("*",snow_metric_name,"$"), 
+                               full.names = TRUE)
+  # save
+  setwd(saving_location)
+  writeRaster(r, paste0(good_name, ".tif"))
+  
+  # thank you!
+  print(paste0(good_name," has been generated!"))
 }
