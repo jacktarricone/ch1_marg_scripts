@@ -33,20 +33,20 @@ dim(sagehen_wy93) #dimensions
 sagehen_wy15 <- h5read(path_2015, "/SWE", index = list(2523:2621, 2947:3172, 1:365)) #sagehen extent
 
 # pull out one pixel time series
-z <-c(sagehen_wy15[89,30,1:365])
+z <-c(sagehen_wy15[50,60,1:365])
 plot(z)
 x <-z
 
 ##### mid winter ablation function function
-mwa <-function(x){
+mid_winter_abal <-function(x){
   
-        max_swe_dowy <-function(x){
-          if (max(x) < 5.1){
+        max_swe_dowy <-function(j){
+          if (max(j) < 5.1){
           return(NA)
            } 
           else{
-          max_swe<-as.numeric(max(x))
-          dowy <-as.numeric(max(which(x == max_swe)))
+          max_swe<-as.numeric(max(j))
+          dowy <-as.numeric(max(which(j == max_swe)))
           return(dowy)} 
           
         # calc ms_dowy  
@@ -60,12 +60,12 @@ mwa <-function(x){
         plot(val_diff)
         
         # sum all negative values
-        final_value <- as.integer(sum(val_diff[val_diff<0]))
+        final_value <-sum(val_diff[val_diff<0])
         return(final_value)
  }
 }
 
-mwa(z)
+mid_winter_abal(z)
 
 # test for wy2015
 mat_wy15 <-as.matrix(apply(sagehen_wy15, c(1,2), max_swe_dowy))
