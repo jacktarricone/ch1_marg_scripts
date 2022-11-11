@@ -7,6 +7,9 @@
 # applied on a pixel-wise basis to the margulis et al. 2016 dataset
 # swe values are in mm
 
+# list names
+
+function_names <-c("scf","sdd","max_swe_dowy","wa")
 
 #######################################
 ############   max_swe   ##############

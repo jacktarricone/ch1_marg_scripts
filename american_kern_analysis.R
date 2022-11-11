@@ -152,6 +152,14 @@ plot(scf_1500_2000_n)
 plot(american_shp, add = TRUE)
 freq(scf_1500_2000_n)
 
+(global(scf_1500_2000_n, mean, na.rm = TRUE))*100
+(global(scf_2000_2500_n, mean, na.rm = TRUE))*100
+(global(scf_2500_3000_n, mean, na.rm = TRUE))*100
+(global(scf_1500_2000_s, mean, na.rm = TRUE))*100
+(global(scf_2000_2500_s, mean, na.rm = TRUE))*100
+(global(scf_2500_3000_s, mean, na.rm = TRUE))*100
+
+
 # count pixels for north facing 
 n_df <-freq(dem_1500_2000_n)
 pixels_1500_2000_n <-sum(n_df$count)
