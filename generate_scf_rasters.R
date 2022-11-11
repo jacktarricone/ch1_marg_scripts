@@ -1,5 +1,5 @@
 ### creating pixel-wise annual rasters for:
-#### max_swe_dowy
+#### scf
 
 # november 4th 2022
 # jack tarricone
@@ -36,26 +36,22 @@ devtools::source_url(url)
 ###########################
 
 # metric creating with this script
-snow_metric_name <-"max_swe_dowy"
+snow_metric_name <-function_names[1]
 
 # mcapply function 
 # set number of cores to use
-ncores <-1
+ncores <-3
 
 # check list, looks good
 swe_list
 
 # run function using progress bar (pb) multi-core lapply
-# make sure to give it proper metric name and function
-system.time(raster_list <-pbmclapply(swe_list[1], 
+system.time(raster_list <-pbmclapply(swe_list, 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = max_swe_dowy, 
+                                                                  snow_metric_function = scf, 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
 
-generate_snow_metric_rasters(swe_list[2], 
-                             snow_metric_function = max_swe_dowy, 
-                             snow_metric_name = snow_metric_name)
 
