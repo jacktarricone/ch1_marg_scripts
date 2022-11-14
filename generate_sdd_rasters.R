@@ -1,7 +1,7 @@
 ### creating pixel-wise annual rasters for:
-#### scf
+#### sdd
 
-# november 4th 2022
+# november 13th 2022
 # jack tarricone
 
 library(rhdf5)
@@ -36,21 +36,21 @@ devtools::source_url(url)
 ###########################
 
 # metric creating with this script
-snow_metric_name <-function_names[1]
+function_names
+snow_metric_name <-function_names[2]
 
 # mcapply function 
 # set number of cores to use
 ncores <-3
 
 # check list, looks good
-swe_list_v2 <-swe_list[20:32]
-swe_list_v
+swe_list
 
 # run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list_v2, 
+system.time(raster_list <-pbmclapply(swe_list, 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = scf, 
+                                                                  snow_metric_function = sdd, 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
