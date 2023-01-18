@@ -29,3 +29,9 @@ ext(r) <-c(-123.3,-117.6,35.4,42) # set extent
 crs(r) <-crs(dem) # set crs from DEM raster
 plot(r)
 
+for (i in 1:11){
+  num <-as.character(i)
+  name <-paste0(num,"_wy1993_end.tif")
+  writeRaster(r[[i]], name)
+}
+
