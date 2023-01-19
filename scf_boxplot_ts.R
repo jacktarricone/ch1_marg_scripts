@@ -5,6 +5,7 @@
 library(terra)
 library(lubridate)
 library(tidyverse)
+library(cowplot)
 
 theme_classic <- function(base_size = 11, base_family = "",
                           base_line_size = base_size / 22,
@@ -99,7 +100,7 @@ head(scf_mk_df) # looks good!
 ##################################
 
 # starting plot
-ggplot(scf_mk_df, mapping = aes(x = as.factor(year), y = scf_percent_100, fill = as.factor(SNSR_aspect))) +
+scf <-ggplot(scf_mk_df, mapping = aes(x = as.factor(year), y = scf_percent_100, fill = as.factor(SNSR_aspect))) +
   geom_boxplot(linewidth = .5, width = .4, outlier.size = .01, outlier.shape = 1) +
   scale_fill_manual(name = "Aspect",
                     values = c('1' = 'goldenrod', '2' = 'cornflowerblue'),
@@ -111,15 +112,25 @@ ggplot(scf_mk_df, mapping = aes(x = as.factor(year), y = scf_percent_100, fill =
         axis.text.x = element_text(angle = 75, hjust = 1),
         legend.position = "none")
 
-ggsave("./plots/scf_boxplot_test_v2.pdf",
+print(scf)
+
+# stack plots
+plot_grid(scf, max,
+          labels = c("(a)","(b)","(c)","(d)"),
+          align = "v", 
+          nrow = 2, 
+          rel_heights = c(1/2, 1/2),
+          label_y = .92)
+
+ggsave("./plots/scf_max_boxplot_test.pdf",
        width = 9, 
-       height = 3,
+       height = 6,
        units = "in",
        dpi = 500)
 
-ggsave("./plots/scf_boxplot_test_v2.pnd",
+ggsave("./plots/scf_boxplot_test_v2.png",
        width = 9, 
-       height = 3,
+       height = 6,
        units = "in",
        dpi = 500)
 

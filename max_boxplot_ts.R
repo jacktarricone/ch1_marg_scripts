@@ -5,6 +5,7 @@
 library(terra)
 library(lubridate)
 library(tidyverse)
+library(cowplot)
 
 theme_classic <- function(base_size = 11, base_family = "",
                           base_line_size = base_size / 22,
@@ -104,11 +105,13 @@ max <-ggplot(max_mk_df, mapping = aes(x = as.factor(year), y = max_swe_m, fill =
                      values = c('1' = 'goldenrod', '2' = 'cornflowerblue'),
                      labels = c('North Facing', 'South Facing'))+
   xlab("Year") + ylab("Max SWE (m)") +
-  scale_y_continuous(limits = c(0,3)) +
+  scale_y_continuous(limits = c(0,2)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill=NA, size = 1),
         axis.text.x = element_text(angle = 75, hjust = 1),
         legend.position = "none")
+
+print(max)
 
 # pdf
 ggsave("./plots/max_boxplot_test_v2.pdf",
