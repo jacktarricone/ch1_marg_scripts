@@ -1,11 +1,40 @@
-# scf regional mann-kendall test script start
+# scf box plot time series
 # jack tarricone
 # january 18 2023
 
 library(terra)
 library(lubridate)
-library(tidyverse);theme_set(theme_classic(12))
-library(rkt)
+library(tidyverse)
+
+theme_classic <- function(base_size = 11, base_family = "",
+                          base_line_size = base_size / 22,
+                          base_rect_size = base_size / 22) {
+  theme_bw(
+    base_size = base_size,
+    base_family = base_family,
+    base_line_size = base_line_size,
+    base_rect_size = base_rect_size
+  ) %+replace%
+    theme(
+      # no background and no grid
+      panel.border     = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      
+      # show axes
+      # axis.line      = element_line(colour = "black", linewidth = rel(1)),
+      
+      # match legend key to panel.background
+      legend.key       = element_blank(),
+      
+      # simple, black and white strips
+      strip.background = element_rect(fill = "white", colour = "black", linewidth = rel(2)),
+      # NB: size is 1 but clipped, it looks like the 0.5 of the axes
+      
+      complete = TRUE
+    )
+}
+theme_set(theme_classic(12))
 
 # set working dir
 setwd("/Users/jacktarricone/ch1_margulis/")
@@ -94,50 +123,9 @@ mk_test_df$scf_percent_100 <-mk_test_df$scf_percent*100
 mk_df <-mk_test_df[order(mk_test_df$year),] # sort by year
 head(mk_df) # looks good!
 
-# using rkt package run regional kendall by aspect category
-# rkt_results <-system.time(rkt(mk_test_df$year, # time vector of years
-#                   mk_test_df$scf_percent,      # scf_percent data 
-#                   mk_test_df$SNSR_aspect))      # block aka aspect (numbers 1:4)
-# 
-# print(rkt_results)
-
 #########################
 #### make time series box plot
 ##################################
-
-theme_classic <- function(base_size = 11, base_family = "",
-                          base_line_size = base_size / 22,
-                          base_rect_size = base_size / 22) {
-  theme_bw(
-    base_size = base_size,
-    base_family = base_family,
-    base_line_size = base_line_size,
-    base_rect_size = base_rect_size
-  ) %+replace%
-    theme(
-      # no background and no grid
-      panel.border     = element_blank(),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      
-      # show axes
-      # axis.line      = element_line(colour = "black", linewidth = rel(1)),
-      
-      # match legend key to panel.background
-      legend.key       = element_blank(),
-      
-      # simple, black and white strips
-      strip.background = element_rect(fill = "white", colour = "black", linewidth = rel(2)),
-      # NB: size is 1 but clipped, it looks like the 0.5 of the axes
-      
-      complete = TRUE
-    )
-}
-theme_set(theme_classic(12))
-
-# crop to 800 cells
-# cell_numbers <-mk_df$cell[1:800]
-# mk_crop <-filter(mk_df, cell %in% cell_numbers) # filter for certain cells
 
 # starting plot
 ggplot(mk_df, mapping = aes(x = as.factor(year), y = scf_percent_100, fill = as.factor(SNSR_aspect))) +
