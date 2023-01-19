@@ -123,8 +123,8 @@ print(south_rkt_results)
 ###### brain storm code
 #################################
 
-cell_numbers <-mk_df$cell[1:800]
-mk_crop <-filter(mk_df, cell %in% cell_numbers) # filter for certain cells
+# cell_numbers <-mk_df$cell[1:800]
+# mk_crop <-filter(mk_df, cell %in% cell_numbers) # filter for certain cells
 
 
 ### test plot

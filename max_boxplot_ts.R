@@ -87,33 +87,39 @@ head(joined)
 # pivot longer for test
 # creates "year" col and "max_percent" col while preserving meta data info
 mk_test_df <-as.data.frame(joined %>%
- pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "max_percent"))
+ pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "max_swe_mm"))
 
 # convert to int for test
 mk_test_df$year <-as.integer(mk_test_df$year)
-mk_test_df$max_percent_100 <-mk_test_df$max_percent*100
+mk_test_df$max_swe_m <-mk_test_df$max_swe_mm * (1/1000) # add meters col
 mk_df <-mk_test_df[order(mk_test_df$year),] # sort by year
 head(mk_df) # looks good!
 
-#########################
-#### make time series box plot
-##################################
+###################################
+#### make time series box plot ####
+###################################
 
 # starting plot
-ggplot(mk_df, mapping = aes(x = as.factor(year), y = max_percent_100, fill = as.factor(SNSR_aspect))) +
+ggplot(mk_df, mapping = aes(x = as.factor(year), y = max_swe_m, fill = as.factor(SNSR_aspect))) +
   geom_boxplot(linewidth = .5, width = .4, outlier.size = .01) +
   scale_fill_manual(name = "Aspect",
-                     values = c('1' = 'firebrick', '2' = 'goldenrod'),
+                     values = c('1' = 'goldenrod', '2' = 'deeppink4'),
                      labels = c('North Facing', 'South Facing'))+
-  xlab("Year") + ylab("max (%)") +
+  xlab("Year") + ylab("Max SWE (m)") +
+  scale_y_continuous(limits = c(0,3), expand = c(0,0)) +
   theme(panel.border = element_rect(colour = "black", fill=NA, size = 1),
         axis.text.x = element_text(angle = 75, hjust = 1))
 
+# pdf
 ggsave("./plots/max_boxplot_test.pdf",
        width = 9, 
        height = 3,
        units = "in",
        dpi = 500)
 
-??ggplot2::geom_boxplot
-
+# png
+ggsave("./plots/max_boxplot_test.png",
+       width = 9, 
+       height = 3,
+       units = "in",
+       dpi = 500)
