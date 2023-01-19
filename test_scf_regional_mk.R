@@ -3,7 +3,7 @@
 # january 18 2023
 
 library(terra)
-library(tidyverse)
+library(tidyverse);theme_set(theme_classic(12))
 library(rkt)
 
 # set working dir
@@ -24,30 +24,24 @@ plot(american, add = TRUE)
 # bring in aspect raster
 aspect_v1 <-rast("/Users/jacktarricone/ch1_margulis/static/rasters/SNSR_aspect.tif")
 aspect <-project(aspect_v1, crs(scf_stack))
-plot(aspect)
-hist(aspect, breaks = 100)
 
 # bin into 4 categories north, south, east, west
 aspect_classes <-matrix(c(315,360,1, 00,45,1, # 1 = north
                           135,225,2,          # 2 = south
                           45,135,3,           # 3 = east 
                           225,315,4),         # 4 = west
-                          ncol=3, byrow=TRUE)
+                        ncol=3, byrow=TRUE)
 
 aspect_classes # inspect
 
 # classify using matrix
 aspect_cat <-classify(aspect, rcl = aspect_classes)
-plot(aspect_cat)
-hist(aspect_cat)
 # writeRaster(aspect_cat, "./static/aspect_cat.tif")
 
 ##### format for analysis
 # crop and mask
 aspect_cat_american_v1 <-crop(aspect_cat, american)
 aspect_cat_american <-mask(aspect_cat_american_v1, american)
-plot(aspect_cat_american)
-hist(aspect_cat_american)
 # writeRaster(aspect_cat_american)
 
 # convert to df
@@ -77,18 +71,40 @@ head(joined)
 # pivot longer for test
 # creates "year" col and "scf_percent" col while preserving meta data info
 mk_test_df <-as.data.frame(joined %>%
- pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "scf_percent"))
+                             pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "scf_percent"))
 
 # convert to int for test
 mk_test_df$year <-as.integer(mk_test_df$year)
 mk_df <-mk_test_df[order(mk_test_df$year),] # sort by year
 head(mk_df) # looks good!
 
+# crop for test of code
+# cell_numbers <-mk_df$cell[1:800]
+# mk_crop <-filter(mk_df, cell %in% cell_numbers) # filter for certain cells
+
+mk_crop <-filter(mk_df, cell %in% cell_numbers)
+tail(mk_crop)
+
 # using rkt package run regional kendall by aspect category
-rkt_results <-system.time(rkt(mk_test_df$year, # time vector of years
-                  mk_test_df$scf_percent,      # scf_percent data 
-                  mk_test_df$SNSR_aspect))      # block aka aspect (numbers 1:4)
+rkt_results <-rkt(mk_crop$year,         # time vector of years
+                  mk_crop$scf_percent,  # scf_percent data 
+                  mk_crop$SNSR_aspect,
+                  correct = TRUE,
+                  rep = "m") # block aka aspect (numbers 1:4)
 
 print(rkt_results)
+rkt_results
 
+### test plot
+# one cell
+north <-filter(mk_df, SNSR_aspect == 1)
 
+# quick test plot
+library(scattermore)
+ggplot(north, aes(x = year, y = scf_percent)) +
+  geom_scattermore()
+
+data(pie1)
+pie1
+ex<-rkt(pie1$Year,pie1$SO4,pie1$Month, correct = TRUE)
+print(ex)
