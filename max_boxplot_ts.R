@@ -101,24 +101,26 @@ head(mk_df) # looks good!
 
 # starting plot
 ggplot(mk_df, mapping = aes(x = as.factor(year), y = max_swe_m, fill = as.factor(SNSR_aspect))) +
-  geom_boxplot(linewidth = .5, width = .4, outlier.size = .01) +
+  geom_boxplot(linewidth = .5, width = .4, outlier.size = .01, outlier.shape = 1) +
   scale_fill_manual(name = "Aspect",
-                     values = c('1' = 'goldenrod', '2' = 'deeppink4'),
+                     values = c('1' = 'goldenrod', '2' = 'cornflowerblue'),
                      labels = c('North Facing', 'South Facing'))+
   xlab("Year") + ylab("Max SWE (m)") +
-  scale_y_continuous(limits = c(0,3), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,3)) +
+  theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill=NA, size = 1),
-        axis.text.x = element_text(angle = 75, hjust = 1))
+        axis.text.x = element_text(angle = 75, hjust = 1),
+        legend.position = "none")
 
 # pdf
-ggsave("./plots/max_boxplot_test.pdf",
+ggsave("./plots/max_boxplot_test_v2.pdf",
        width = 9, 
        height = 3,
        units = "in",
        dpi = 500)
 
 # png
-ggsave("./plots/max_boxplot_test.png",
+ggsave("./plots/max_boxplot_test_v2.png",
        width = 9, 
        height = 3,
        units = "in",
