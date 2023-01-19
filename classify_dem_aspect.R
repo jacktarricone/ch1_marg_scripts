@@ -71,26 +71,29 @@ plot(test_v3, col = 'purple', add = TRUE)
 # b2_s = 4
 test_v4 <-dem_am_cat == 2 &  # b2
           aspect_ns_am == 2  # s
-test_v4 <-subst(test_v4,TRUE,3)
+test_v4 <-subst(test_v4,TRUE,4)
 test_v4 <-subst(test_v4,0,NA)
 plot(test_v4, col = 'darkorange', add = TRUE)
 
 # b3_n = 5
 test_v5 <-dem_am_cat == 3 &  # b3
           aspect_ns_am == 1  # n
-test_v5 <-subst(test_v5,TRUE,3)
+test_v5 <-subst(test_v5,TRUE,5)
 test_v5 <-subst(test_v5,0,NA)
 plot(test_v5, col = 'grey50', add = TRUE)
 
 # b3_s = 6
 test_v6 <-dem_am_cat == 3 &  # b3
           aspect_ns_am == 2  # s
-test_v6 <-subst(test_v6,TRUE,3)
+test_v6 <-subst(test_v6,TRUE,6)
 test_v6 <-subst(test_v6,0,NA)
 plot(test_v6, col = 'yellow', add = TRUE)
 
+# mosaic back together
+stitch <-mosaic(test,test_v2,test_v3,test_v4,test_v5,test_v6)
+plot(stitch)
 
-
+writeRaster(stitch, "./static/american_dem_aspect_classified.tif")
 
 
 # calculate percentage of land area
