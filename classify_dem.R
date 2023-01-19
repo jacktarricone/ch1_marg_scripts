@@ -39,5 +39,33 @@ hist(dem_am_cat)
 # writeRaster(dem_am_cat, "./static/dem_am_cat.tif")
 
 # calculate percentage of land area
+total_area <-expanse(dem_am_cat, unit = 'km') #km^2
+
+### mask for each individual layer
+# first
+first_bin <-subst(dem_am_cat,c(2:3),NA)
+plot(first_bin, col = 'darkblue')
+
+# second
+second_bin <-subst(dem_am_cat,c(1,3),NA)
+plot(second_bin, col = "darkred", add = TRUE)
+
+# second
+third_bin <-subst(dem_am_cat,c(1,2),NA)
+plot(third_bin, col = "darkgreen", add = TRUE)
+
+# calc areas
+first_area <-expanse(first_bin, unit = 'km') # km^2
+first_percent <-round((first_area/total_area)*100, digits = 1)
+# 56.2 of land area
+
+second_area <-expanse(second_bin, unit = 'km') # km^2
+second_percent <-round((second_area/total_area)*100, digits = 1)
+# 37 of land area
+
+third_area <-expanse(third_bin, unit = 'km') # km^2
+third_percent <-round((third_area/total_area)*100, digits = 2)
+# 6.8 of land area
+
 
 
