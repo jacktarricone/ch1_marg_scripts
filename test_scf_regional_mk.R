@@ -78,22 +78,54 @@ mk_test_df$year <-as.integer(mk_test_df$year)
 mk_df <-mk_test_df[order(mk_test_df$year),] # sort by year
 head(mk_df) # looks good!
 
-# crop for test of code
-# cell_numbers <-mk_df$cell[1:800]
-# mk_crop <-filter(mk_df, cell %in% cell_numbers) # filter for certain cells
-
-mk_crop <-filter(mk_df, cell %in% cell_numbers)
-tail(mk_crop)
+# crop to just north facing slopes
+north_crop <-filter(mk_df, SNSR_aspect == 1)
+tail(north_crop)
 
 # using rkt package run regional kendall by aspect category
-rkt_results <-rkt(mk_crop$year,         # time vector of years
-                  mk_crop$scf_percent,  # scf_percent data 
-                  mk_crop$SNSR_aspect,
-                  correct = TRUE,
-                  rep = "m") # block aka aspect (numbers 1:4)
+north_rkt_results <-rkt(north_crop$year,         # time vector of years
+                        north_crop$scf_percent,  # scf_percent data 
+                        north_crop$SNSR_aspect,
+                        correct = TRUE,
+                        rep = "m") # block aka aspect (numbers 1:4)
 
-print(rkt_results)
-rkt_results
+print(north_results)
+
+# crop to just north facing slopes
+south_crop <-filter(mk_df, SNSR_aspect == 1)
+tail(south_crop)
+
+# using rkt package run regional kendall by aspect category
+south_rkt_results <-rkt(south_crop$year,         # time vector of years
+                         south_crop$scf_percent,  # scf_percent data 
+                         south_crop$SNSR_aspect,
+                         correct = TRUE,
+                         rep = "m") # block aka aspect (numbers 1:4)
+
+print(south_rkt_results)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######################
+###### brain storm code
+#################################
+
+cell_numbers <-mk_df$cell[1:800]
+mk_crop <-filter(mk_df, cell %in% cell_numbers) # filter for certain cells
+
 
 ### test plot
 # one cell
