@@ -62,45 +62,43 @@ plot(aspect_ns_american)
 
 # convert to df
 max_df <-as.data.frame(max_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
-ac_df <-as.data.frame(aspect_ns_american, xy = TRUE, cells = TRUE, na.rm = TRUE)
+max_ac_df <-as.data.frame(aspect_ns_american, xy = TRUE, cells = TRUE, na.rm = TRUE)
 
 # filter down to same cell numbers for each df
 max_filt <-subset(max_df, cell %in% ac_df$cell)
-ac_filt <-subset(ac_df, cell %in% max_df$cell)
+max_ac_filt <-subset(max_ac_df, cell %in% max_df$cell)
 
 # check if the same
-identical(max_filt$cell, ac_filt$cell) # yes
+identical(max_filt$cell, max_ac_filt$cell) # yes
 
 # years seq
 years <-seq(1985,2016,1)
 
 # rename columns, which are the annual rasters, with the correct year name
 colnames(max_filt)[4:ncol(max_filt)] <-years
-tail(max_filt)
-tail(ac_filt)
 
 # join ascpect categorical and max dataframes
-joined <-right_join(ac_filt,max_filt,by = c("cell","x","y"))
-joined$SNSR_aspect <-ac_filt$SNSR_aspect # fix aspect col
-head(joined)
+max_joined <-right_join(max_ac_filt,max_filt,by = c("cell","x","y"))
+max_joined$SNSR_aspect <-max_ac_filt$SNSR_aspect # fix aspect col
+head(max_joined)
 
 # pivot longer for test
 # creates "year" col and "max_percent" col while preserving meta data info
-mk_test_df <-as.data.frame(joined %>%
+max_mk_test_df <-as.data.frame(max_joined %>%
  pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "max_swe_mm"))
 
 # convert to int for test
-mk_test_df$year <-as.integer(mk_test_df$year)
-mk_test_df$max_swe_m <-mk_test_df$max_swe_mm * (1/1000) # add meters col
-mk_df <-mk_test_df[order(mk_test_df$year),] # sort by year
-head(mk_df) # looks good!
+max_mk_test_df$year <-as.integer(max_mk_test_df$year)
+max_mk_test_df$max_swe_m <-max_mk_test_df$max_swe_mm * (1/1000) # add meters col
+max_mk_df <-max_mk_test_df[order(max_mk_test_df$year),] # sort by year
+head(max_mk_df) # looks good!
 
 ###################################
 #### make time series box plot ####
 ###################################
 
 # starting plot
-ggplot(mk_df, mapping = aes(x = as.factor(year), y = max_swe_m, fill = as.factor(SNSR_aspect))) +
+max <-ggplot(max_mk_df, mapping = aes(x = as.factor(year), y = max_swe_m, fill = as.factor(SNSR_aspect))) +
   geom_boxplot(linewidth = .5, width = .4, outlier.size = .01, outlier.shape = 1) +
   scale_fill_manual(name = "Aspect",
                      values = c('1' = 'goldenrod', '2' = 'cornflowerblue'),
