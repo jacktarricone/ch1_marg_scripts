@@ -21,39 +21,25 @@ american <-project(american_v1, crs(scf_stack))
 plot(scf_stack[[6]])
 plot(american, add = TRUE)
 
-# bring in aspect raster
-aspect_v1 <-rast("/Users/jacktarricone/ch1_margulis/static/rasters/SNSR_aspect.tif")
-aspect <-project(aspect_v1, crs(scf_stack))
+# bring in aspect 4
+aspect_4 <-rast("./static/aspect_cat.tif")
+plot(aspect_4)
 
-# bin into 4 categories north, south, east, west
-aspect_classes <-matrix(c(315,360,1, 00,45,1, # 1 = north
-                          135,225,2,          # 2 = south
-                          45,135,3,           # 3 = east 
-                          225,315,4),         # 4 = west
-                        ncol=3, byrow=TRUE)
-
-aspect_classes # inspect
-
-# classify using matrix
-aspect_cat <-classify(aspect, rcl = aspect_classes)
-# writeRaster(aspect_cat, "./static/aspect_cat.tif")
-
-##### format for analysis
 # crop and mask
-aspect_cat_american_v1 <-crop(aspect_cat, american)
-aspect_cat_american <-mask(aspect_cat_american_v1, american)
-# writeRaster(aspect_cat_american)
+aspect_4_c <-crop(aspect_4, american)
+aspect_am <-mask(aspect_4_c, american)
+plot(aspect_am)
 
 # convert to df
 scf_df <-as.data.frame(scf_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
-ac_df <-as.data.frame(aspect_cat_american, xy = TRUE, cells = TRUE, na.rm = TRUE)
+aspect_df <-as.data.frame(aspect_am, xy = TRUE, cells = TRUE, na.rm = TRUE)
 
 # filter down to same cell numbers for each df
-scf_filt <-subset(scf_df, cell %in% ac_df$cell)
-ac_filt <-subset(ac_df, cell %in% scf_df$cell)
+scf_filt <-subset(scf_df, cell %in% aspect_df$cell)
+aspect_filt <-subset(aspect_df, cell %in% scf_df$cell)
 
 # check if the same
-identical(scf_filt$cell, ac_filt$cell) # yes
+identical(scf_filt$cell, aspect_filt$cell) # yes
 
 # years seq
 years <-seq(1985,2016,1)
@@ -64,28 +50,30 @@ tail(scf_filt)
 tail(ac_filt)
 
 # join ascpect categorical and scf dataframes
-joined <-right_join(ac_filt,scf_filt,by = c("cell","x","y"))
-joined$SNSR_aspect <-ac_filt$SNSR_aspect # fix aspect col
-head(joined)
+scf_joined <-right_join(aspect_filt,scf_filt,by = c("cell","x","y"))
+scf_joined$SNSR_aspect <-aspect_filt$SNSR_aspect # fix aspect col
+head(scf_joined)
 
 # pivot longer for test
 # creates "year" col and "scf_percent" col while preserving meta data info
-mk_test_df <-as.data.frame(joined %>%
+scf_mk_test_df <-as.data.frame(scf_joined %>%
                              pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "scf_percent"))
 
 # convert to int for test
-mk_test_df$year <-as.integer(mk_test_df$year)
-mk_df <-mk_test_df[order(mk_test_df$year),] # sort by year
-head(mk_df) # looks good!
+scf_mk_test_df$year <-as.integer(scf_mk_test_df$year)
+scf_mk_df <-scf_mk_test_df[order(scf_mk_test_df$year),] # sort by year
+head(scf_mk_df) # looks good!
 
 # crop to just north facing slopes
-north_crop <-filter(mk_df, SNSR_aspect == 1)
-tail(north_crop)
+north_crop <-filter(scf_mk_df, SNSR_aspect == 1)
+south_crop <-filter(scf_mk_df, SNSR_aspect == 2)
+east_crop <-filter(scf_mk_df, SNSR_aspect == 3)
+west_crop <-filter(scf_mk_df, SNSR_aspect == 4)
 
 # using rkt package run regional kendall by aspect category
 north_rkt_results <-rkt(north_crop$year,         # time vector of years
                         north_crop$scf_percent,  # scf_percent data 
-                        north_crop$SNSR_aspect,
+                        north_crop$SNSR_aspect,  # 'block' variable
                         correct = TRUE,
                         rep = "m") # block aka aspect (numbers 1:4)
 

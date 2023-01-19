@@ -54,12 +54,16 @@ plot(american, add = TRUE)
 
 # read in north/south raster
 aspect_ns <-rast("./static/aspect_cat_ns.tif")
+aspect_ns
 
 ##### format for analysis
 # crop and mask
 aspect_ns_american_v1 <-crop(aspect_ns, american)
 aspect_ns_american <-mask(aspect_ns_american_v1, american)
 plot(aspect_ns_american)
+
+cellSize(aspect_ns_american, unit = 'm')
+ncell <-707*1190*32
 
 # convert to df
 max_df <-as.data.frame(max_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
