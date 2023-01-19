@@ -8,26 +8,26 @@ library(terra)
 setwd("/Users/jacktarricone/ch1_margulis/")
 
 ### format stack
-rast_list <-list.files("./snow_metric_rasters/terra_rasters/max/", pattern = ".tif", full.names = TRUE)
-scf_stack <-rast(rast_list)
-values(scf_stack)[values(scf_stack) == 0] = NA
-# writeRaster(scf_stack, "./snow_metric_rasters/terra_rasters/scf/scf_stack.tif")
+rast_list <-list.files("./snow_metric_rasters/terra_rasters/max_swe/years", full.names = TRUE) # NO 2k16!!!
+max_stack <-rast(rast_list)
+plot(max_stack[[1]])
+# writeRaster(max_stack, "./snow_metric_rasters/terra_rasters/max_swe/max_stack.tif")
 
 # read in stack 
-scf_stack <-rast("./snow_metric_rasters/terra_rasters/scf/scf_stack.tif")
-scf_stack
+max_stack <-rast("./snow_metric_rasters/terra_rasters/max_swe/max_stack.tif")
+max_stack
 
 # test mk code by first running it on .5 degrees lat near tahoe
 american_v1 <-vect("./american_test/american.shp")
-american <-project(american_v1, crs(scf_stack))
+american <-project(american_v1, crs(max_stack))
 
 # test plot
-plot(scf_stack[[6]])
+plot(max_stack[[6]])
 plot(american, add = TRUE)
 
 # crop and mask stack down to just american
-scf_american_v1 <-crop(scf_stack, american)
-scf_american <-mask(scf_american_v1, american)
+max_american_v1 <-crop(max_stack, american)
+max_american <-mask(max_american_v1, american)
 
 # save
-# writeRaster(scf_american, "./snow_metric_rasters/terra_rasters/scf/scf_american.tif")
+writeRaster(max_american, "./snow_metric_rasters/terra_rasters/max_swe/max_american.tif")
