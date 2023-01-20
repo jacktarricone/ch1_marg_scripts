@@ -115,8 +115,46 @@ max_swe_dowy <-function(x){
   }
 }
 
+
+#######################################
+############      mwa       ###########
+#######################################
+
+mwa <-function(x){
+  
+  # define max_swe_dowy
+  max_swe_dowy <-function(x){
+    if (max(x) < 5.1){
+      return(NA)
+    } 
+    else{
+      max_swe <-as.numeric(max(x))
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)} 
+  }
+  
+  # calc ms_dowy
+  # return 0 for values that never reach the 5.1 mm threshold
+  if (is.na(max_swe_dowy(x))){
+    return(NA)
+  } else {
+    ms_dowy <-max_swe_dowy(x)
+    
+    # trim vector to that date
+    before_max_swe <-x[1:ms_dowy]
+    
+    # find difference between values
+    val_diff <-diff(before_max_swe)
+    
+    # sum all negative values
+    mwa_mm <-abs(sum(val_diff[val_diff<0]))
+    return(mwa_mm)
+  }
+}
+
+
 #########################################
-### function for creating max raster ####
+### function for creating rasters ####
 #########################################
 
 generate_snow_metric_rasters <- function(swe_list, snow_metric_function, snow_metric_name) {
