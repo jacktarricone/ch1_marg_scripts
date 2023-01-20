@@ -40,6 +40,7 @@ hist(dem_am_cat)
 aspect_ns <-rast("./static/aspect_cat_ns.tif")
 aspect_ns_am_v1 <-crop(aspect_ns, american)
 aspect_ns_am <-mask(aspect_ns_am_v1, american)
+# writeRaster(aspect_ns_am, "./static/aspect_ns_am.tif")
 
 # test plot
 plot(aspect_ns_am)

@@ -3,7 +3,7 @@
 # january 18 2023
 
 library(terra)
-library(tidyverse);theme_set(theme_classic(12))
+library(tidyverse)
 library(rkt)
 
 # set working dir
@@ -21,74 +21,111 @@ american <-project(american_v1, crs(scf_stack))
 plot(scf_stack[[6]])
 plot(american, add = TRUE)
 
-# bring in aspect 4
-aspect_4 <-rast("./static/aspect_cat.tif")
-plot(aspect_4)
-
-# crop and mask
-aspect_4_c <-crop(aspect_4, american)
-aspect_am <-mask(aspect_4_c, american)
-plot(aspect_am)
+# bring in classes 4
+classes <-rast("./static/american_dem_aspect_classified.tif")
+plot(classes, add = TRUE)
 
 # convert to df
 scf_df <-as.data.frame(scf_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
-aspect_df <-as.data.frame(aspect_am, xy = TRUE, cells = TRUE, na.rm = TRUE)
+classes_df <-as.data.frame(classes, xy = TRUE, cells = TRUE, na.rm = TRUE)
 
 # filter down to same cell numbers for each df
-scf_filt <-subset(scf_df, cell %in% aspect_df$cell)
-aspect_filt <-subset(aspect_df, cell %in% scf_df$cell)
+scf_filt <-subset(scf_df, cell %in% classes_df$cell)
+classes_filt <-subset(classes_df, cell %in% scf_df$cell)
 
 # check if the same
-identical(scf_filt$cell, aspect_filt$cell) # yes
+identical(scf_filt$cell, classes_filt$cell) # yes
 
 # years seq
 years <-seq(1985,2016,1)
 
 # rename columns, which are the annual rasters, with the correct year name
 colnames(scf_filt)[4:ncol(scf_filt)] <-years
-tail(scf_filt)
-tail(ac_filt)
 
-# join ascpect categorical and scf dataframes
-scf_joined <-right_join(aspect_filt,scf_filt,by = c("cell","x","y"))
-scf_joined$SNSR_aspect <-aspect_filt$SNSR_aspect # fix aspect col
+# join classes and scf
+scf_joined <-right_join(classes_filt,scf_filt,by = c("cell","x","y"))
+scf_joined$SNSR_DEM <-classes_filt$SNSR_DEM # fix classes col
 head(scf_joined)
 
 # pivot longer for test
 # creates "year" col and "scf_percent" col while preserving meta data info
 scf_mk_test_df <-as.data.frame(scf_joined %>%
-                             pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "scf_percent"))
+                             pivot_longer(-c(cell,x,y,SNSR_DEM), names_to = "year", values_to = "scf_percent"))
 
 # convert to int for test
 scf_mk_test_df$year <-as.integer(scf_mk_test_df$year)
 scf_mk_df <-scf_mk_test_df[order(scf_mk_test_df$year),] # sort by year
 head(scf_mk_df) # looks good!
 
+# subet to each class
+b1_n <-filter(scf_mk_df, SNSR_DEM == 1)
+b1_s <-filter(scf_mk_df, SNSR_DEM == 2)
+b2_n <-filter(scf_mk_df, SNSR_DEM == 3)
+b2_s <-filter(scf_mk_df, SNSR_DEM == 4)
+b3_n <-filter(scf_mk_df, SNSR_DEM == 5)
+b3_s <-filter(scf_mk_df, SNSR_DEM == 6)
+
+# using rkt package run regional kendall by classes category
+
+# rkt_df_output <-function(df)
+# b3_s
+b3_s_rkt_results <-rkt(b3_s$year,         # time vector of years
+                       b3_s$scf_percent_100,  # scf_percent data 
+                       b3_s$SNSR_DEM,     # 'block' aka class variable
+                       correct = TRUE,
+                       rep = "m") 
+
+# this runs!!
+print(b3_s_rkt_results)
+b3_s_rkt_results
+
+# pull out results
+slope <-b3_s_rkt_results$B     # B = Theil-Sen's slope for Regional Kendall Slope estimator for RKT
+p_val <-b3_s_rkt_results$sl    # sl = two sided p-value
+tau <-b3_s_rkt_results$tau     # tau = Kendall's tau
+score <-b3_s_rkt_results$S     # S = Kendall's score
+varS <-b3_s_rkt_results$varS   # varS = variance of S, after correction for intra-block correlation
+
+as.data.frame(col.names = c(slope,p_val))
+results <-as.data.frame(cbind(slope,p_val,tau,score,varS))
+write.csv(results, "./rkt_results/scf_b3_s_results.csv", row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# b3_n
+b3_n_rkt_results <-rkt(b3_n$year,         # time vector of years
+                       b3_n$scf_percent,  # scf_percent data 
+                       b3_n$SNSR_DEM,     # 'block' aka class variable
+                       correct = TRUE,
+                       rep = "m") 
+
+# this runs!!
+print(b3_n_rkt_results)
+
+??rkt::rkt
+
+
 # crop to just north facing slopes
-north_crop <-filter(scf_mk_df, SNSR_aspect == 1)
-south_crop <-filter(scf_mk_df, SNSR_aspect == 2)
-east_crop <-filter(scf_mk_df, SNSR_aspect == 3)
-west_crop <-filter(scf_mk_df, SNSR_aspect == 4)
-
-# using rkt package run regional kendall by aspect category
-north_rkt_results <-rkt(north_crop$year,         # time vector of years
-                        north_crop$scf_percent,  # scf_percent data 
-                        north_crop$SNSR_aspect,  # 'block' variable
-                        correct = TRUE,
-                        rep = "m") # block aka aspect (numbers 1:4)
-
-print(north_results)
-
-# crop to just north facing slopes
-south_crop <-filter(mk_df, SNSR_aspect == 1)
+south_crop <-filter(mk_df, SNSR_classes == 1)
 tail(south_crop)
 
-# using rkt package run regional kendall by aspect category
+# using rkt package run regional kendall by classes category
 south_rkt_results <-rkt(south_crop$year,         # time vector of years
                          south_crop$scf_percent,  # scf_percent data 
-                         south_crop$SNSR_aspect,
+                         south_crop$SNSR_classes,
                          correct = TRUE,
-                         rep = "m") # block aka aspect (numbers 1:4)
+                         rep = "m") # block aka classes (numbers 1:4)
 
 print(south_rkt_results)
 
@@ -117,7 +154,7 @@ print(south_rkt_results)
 
 ### test plot
 # one cell
-north <-filter(mk_df, SNSR_aspect == 1)
+north <-filter(mk_df, SNSR_classes == 1)
 
 # quick test plot
 library(scattermore)
