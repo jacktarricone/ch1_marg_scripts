@@ -97,9 +97,7 @@ write.csv(results, "./rkt_results/scf_b3_s_results.csv", row.names = FALSE)
 #######################################
 #######################################
 
-df <-b3_s
-head(df)
-
+# define function that outputs df of results
 scf_rkt_df_output <-function(df){
 
     # run rkt
@@ -119,75 +117,10 @@ scf_rkt_df_output <-function(df){
     # convet to df
     results_df <-as.data.frame(cbind(slope,p_val,tau,score,varS))
     return(results_df)
-    write.csv(results_df, "./rkt_results/scf_b3_s_results_v2.csv", row.names = FALSE)
+    #write.csv(results_df, "./rkt_results/scf_b3_s_results_v2.csv", row.names = FALSE)
 
 }
 
-system.time(scf_rkt_df_output(df = b3_s))
-
-
-
-
-
-# b3_n
-b3_n_rkt_results <-rkt(b3_n$year,         # time vector of years
-                       b3_n$scf_percent,  # scf_percent data 
-                       b3_n$SNSR_DEM,     # 'block' aka class variable
-                       correct = TRUE,
-                       rep = "m") 
-
-# this runs!!
-print(b3_n_rkt_results)
-
-??rkt::rkt
-
-
-# crop to just north facing slopes
-south_crop <-filter(mk_df, SNSR_classes == 1)
-tail(south_crop)
-
-# using rkt package run regional kendall by classes category
-south_rkt_results <-rkt(south_crop$year,         # time vector of years
-                         south_crop$scf_percent,  # scf_percent data 
-                         south_crop$SNSR_classes,
-                         correct = TRUE,
-                         rep = "m") # block aka classes (numbers 1:4)
-
-print(south_rkt_results)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#######################
-###### brain storm code
-#################################
-
-# cell_numbers <-mk_df$cell[1:800]
-# mk_crop <-filter(mk_df, cell %in% cell_numbers) # filter for certain cells
-
-
-### test plot
-# one cell
-north <-filter(mk_df, SNSR_classes == 1)
-
-# quick test plot
-library(scattermore)
-ggplot(north, aes(x = year, y = scf_percent)) +
-  geom_scattermore()
-
-data(pie1)
-pie1
-ex<-rkt(pie1$Year,pie1$SO4,pie1$Month, correct = TRUE)
-print(ex)
+# test function
+test_df <-scf_rkt_df_output(df = b3_s)
+test_df_v2 <-scf_rkt_df_output(df = b3_n)
