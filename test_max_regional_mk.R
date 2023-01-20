@@ -123,4 +123,7 @@ max_rkt_df_output <-function(df){
 # test function
 # test_df <-max_rkt_df_output(df = b3_s)
 test_df_v2 <-max_rkt_df_output(df = b3_n)
-# write.csv(test_df_v2, "./rkt_results/max_b3_n_results_v2.csv", row.names = FALSE)
+# write.csv(test_df_v2, "./rkt_results/max_b3_n_results.csv", row.names = FALSE)
+
+
+system.time(test_df_v3 <-max_rkt_df_output(df = b2_s))

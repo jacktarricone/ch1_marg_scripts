@@ -37,19 +37,29 @@ z <-c(sagehen_wy15[50,60,1:365])
 plot(z)
 x <-z
 
+# define max_dowy funciton
+max_swe_dowy <-function(x){
+  if (max(x) < 5.1){
+    return(NA)
+  } 
+  else{
+    max_swe <-as.numeric(max(x))
+    dowy <-as.numeric(max(which(x == max_swe)))
+    return(dowy)} 
+  }
+
+# test, yes
+max_swe_dowy(z)
+max(z)
+
 ##### mid winter ablation function function
 mid_winter_abal <-function(x){
-  
-        max_swe_dowy <-function(j){
-          if (max(j) < 5.1){
-          return(NA)
-           } 
-          else{
-          max_swe<-as.numeric(max(j))
-          dowy <-as.numeric(max(which(j == max_swe)))
-          return(dowy)} 
           
-        # calc ms_dowy  
+        # calc ms_dowy
+        # return 0 for values that never reach the 5.1 mm threshold
+        if (is.na(max_swe_dowy(x))){
+        return(NA)
+        } else {
         ms_dowy <-max_swe_dowy(x)
         
         # trim vector to that date
@@ -57,18 +67,17 @@ mid_winter_abal <-function(x){
         
         # find difference between values
         val_diff <-diff(before_max_swe)
-        plot(val_diff)
         
         # sum all negative values
-        final_value <-sum(val_diff[val_diff<0])
+        final_value <-abs(sum(val_diff[val_diff<0]))
         return(final_value)
+        }
  }
-}
 
 mid_winter_abal(z)
 
 # test for wy2015
-mat_wy15 <-as.matrix(apply(sagehen_wy15, c(1,2), max_swe_dowy))
+mat_wy15 <-apply(sagehen_wy15, c(1,2), mid_winter_abal)
 rast_wy15 <-rast(mat_wy15)
 plot(rast_wy115)
 
