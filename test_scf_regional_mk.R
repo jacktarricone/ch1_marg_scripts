@@ -55,6 +55,7 @@ scf_mk_test_df <-as.data.frame(scf_joined %>%
 # convert to int for test
 scf_mk_test_df$year <-as.integer(scf_mk_test_df$year)
 scf_mk_df <-scf_mk_test_df[order(scf_mk_test_df$year),] # sort by year
+scf_mk_df$scf_percent_100 <-scf_mk_df$scf_percent*100
 head(scf_mk_df) # looks good!
 
 # subet to each class
@@ -92,12 +93,37 @@ write.csv(results, "./rkt_results/scf_b3_s_results.csv", row.names = FALSE)
 
 
 
+#######################################
+#######################################
+#######################################
 
+df <-b3_s
+head(df)
 
+scf_rkt_df_output <-function(df){
 
+    # run rkt
+    results <-rkt(df$year,      # time vector of years
+                  df$scf_percent_100,  # scf_percent_100 data 
+                  df$SNSR,     # 'block' aka class variable
+                  correct = TRUE,
+                  rep = "m") 
 
+    # pull out results from list
+    slope <-results$B     # B = Theil-Sen's slope for Regional Kendall Slope estimator for RKT
+    p_val <-results$sl    # sl = two sided p-value
+    tau <-results$tau     # tau = Kendall's tau
+    score <-results$S     # S = Kendall's score
+    varS <-results$varS   # varS = variance of S, after correction for intra-block correlation
 
+    # convet to df
+    results_df <-as.data.frame(cbind(slope,p_val,tau,score,varS))
+    return(results_df)
+    write.csv(results_df, "./rkt_results/scf_b3_s_results_v2.csv", row.names = FALSE)
 
+}
+
+system.time(scf_rkt_df_output(df = b3_s))
 
 
 
