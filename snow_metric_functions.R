@@ -9,7 +9,7 @@
 
 # list names
 
-function_names <-c("scf","sdd","max_swe_dowy","wa")
+function_names <-c("scf","sdd","max_swe_dowy","mwa")
 
 #######################################
 ############   max_swe   ##############
@@ -134,7 +134,7 @@ mwa <-function(x){
   }
   
   # calc ms_dowy
-  # return 0 for values that never reach the 5.1 mm threshold
+  # return NA for values that never reach the 5.1 mm threshold
   if (is.na(max_swe_dowy(x))){
     return(NA)
   } else {
