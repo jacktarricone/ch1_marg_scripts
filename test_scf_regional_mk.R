@@ -124,3 +124,4 @@ scf_rkt_df_output <-function(df){
 # test function
 test_df <-scf_rkt_df_output(df = b3_s)
 test_df_v2 <-scf_rkt_df_output(df = b3_n)
+# write.csv(test_df_v2, "./rkt_results/scf_b3_n_results_v2.csv", row.names = FALSE)
