@@ -36,18 +36,17 @@ devtools::source_url(url)
 ###########################
 
 # metric creating with this script
-function_names
-snow_metric_name <-"mwa"
+snow_metric_name <-function_names[4]
 
 # mcapply function 
 # set number of cores to use
-ncores <-1
+ncores <-3
 
 # check list, looks good
-swe_list[9]
+swe_list
 
 # run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list[9], 
+system.time(raster_list <-pbmclapply(swe_list, 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
                                                                   snow_metric_function = mwa, 
