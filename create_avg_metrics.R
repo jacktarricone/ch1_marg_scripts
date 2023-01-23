@@ -13,7 +13,7 @@ setwd("/Users/jacktarricone/ch1_margulis/snow_metric_rasters/terra_rasters/")
 ##### mwa ####
 ##############
 
-mwa_list <-list.files('./mwa', pattern = '.tif', full.names = TRUE)
+mwa_list <-list.files('./mwa/years', pattern = '.tif', full.names = TRUE)
 mwa <-rast(mwa_list)
 
 # mean
@@ -54,5 +54,31 @@ global(max_mean, 'mean', na.rm = TRUE)
 global(max_med, 'mean', na.rm = TRUE)
 hist(max_mean, breaks = 100)
 hist(max_med, breaks = 100)
+
+##############
+##### sdd ####
+##############
+
+sdd_list <-list.files('./sdd/years', pattern = '.tif', full.names = TRUE)
+sdd <-rast(sdd_list)
+
+# mean
+sdd_mean <-app(sdd, fun = "mean", cores=5)
+values(sdd_mean)[values(sdd_mean) == 0] <- NA # change no data to NA
+plot(sdd_mean)
+writeRaster(sdd_mean, "./averages/sdd_mean.tif")
+
+# median
+sdd_med <-app(sdd, fun = 'median', cores=5)
+values(sdd_med)[values(sdd_med) == 0] <- NA # change no data to NA
+plot(sdd_med)
+writeRaster(sdd_med, "./averages/sdd_med.tif")
+
+# compare
+global(sdd_mean, 'mean', na.rm = TRUE)
+global(sdd_med, 'mean', na.rm = TRUE)
+hist(sdd_mean, breaks = 100)
+hist(sdd_med, breaks = 100)
+
 
 

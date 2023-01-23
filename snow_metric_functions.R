@@ -72,7 +72,7 @@ sdd <-function(x){
       #represents place on rle vector where condition is met
       meets <-as.numeric(min(which(result$lengths >= 14)))
       
-      #if its the first rle value, this means day 365 so max of days_vecto0r
+      #if its the first rle value, this means day 365 so max of days_vector
       if (meets == 1) {
         sdd1 <- max(days_vector)
         return(sdd1)
@@ -102,7 +102,6 @@ max_swe_dowy <-function(x){
   # set threshold
   if (max(x) < 5.1){
     return(NA)
-    
   } 
   else{
     # pull out max value
