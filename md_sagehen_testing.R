@@ -37,63 +37,68 @@ plot(x)
 
 ##### melt_day function
 
-md <-function(x){
-  
-  max_swe_dowy <-function(x){
-    
-    # set threshold so that pixel is NA if never hiss 5 mm
-    if (max(x) < 5){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe<-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-    # calc ms_dowy
-    # return NA for values that never reach the 5 mm threshold
-    if (is.na(max_swe_dowy(x))){
-      return(NA)
-    } else {
-      
-      # calc mox_swe dowy
-      ms_dowy <-max_swe_dowy(x)
-      
-      # create dowy_vec
-      dowy_vect <-seq(1,length(x),1)
-      
-      # find spot on vector where SWE is less first 5 mm
-      # and date is greater than max_swe doy
-      melt_out_dowy_vect <-which(x < 5 & dowy_vect > ms_dowy)
-      
-      # pull out fist element of vect aka first day snow is gone
-      melt_out_dowy <-melt_out_dowy_vect[1]
-    }
-    if (length(melt_out_dowy_vect) == 0){
-      # if condition is never met, or snow never goes below 5 mm after max_dowy
-      # return last dowy (365 or 366)
-      return(length(dowy_vect))
-    } else {
-    return(melt_out_dowy)
-  }
-}
+# load in functions
+# this file has all the snow metric functions and the raster creation one
+url <-"https://raw.githubusercontent.com/jacktarricone/ch1_marg_scripts/main/snow_metric_functions.R"
+devtools::source_url(url)
+
+# md <-function(x){
+#   
+#   max_swe_dowy <-function(x){
+#     
+#     # set threshold so that pixel is NA if never hiss 5 mm
+#     if (max(x) < 5){
+#       return(NA)
+#     } 
+#     else{
+#       # pull out max value
+#       max_swe<-as.numeric(max(x))
+#       
+#       # use which() funciton for position tracking
+#       # nested with max() to have last day of max swe
+#       dowy <-as.numeric(max(which(x == max_swe)))
+#       return(dowy)
+#     }
+#   }
+#     # calc ms_dowy
+#     # return NA for values that never reach the 5 mm threshold
+#     if (is.na(max_swe_dowy(x))){
+#       return(NA)
+#     } else {
+#       
+#       # calc mox_swe dowy
+#       ms_dowy <-max_swe_dowy(x)
+#       
+#       # create dowy_vec
+#       dowy_vect <-seq(1,length(x),1)
+#       
+#       # find spot on vector where SWE is less first 5 mm
+#       # and date is greater than max_swe doy
+#       melt_out_dowy_vect <-which(x < 5 & dowy_vect > ms_dowy)
+#       
+#       # pull out fist element of vect aka first day snow is gone
+#       melt_out_dowy <-melt_out_dowy_vect[1]
+#     }
+#     if (length(melt_out_dowy_vect) == 0){
+#       # if condition is never met, or snow never goes below 5 mm after max_dowy
+#       # return last dowy (365 or 366)
+#       return(length(dowy_vect))
+#     } else {
+#     return(melt_out_dowy)
+#   }
+# }
 
 vect <-sagehen_wy15[70,100,1:365]
 plot(vect)
-md(vect)
+md(vect, 50)
 
 # test for wy2015
-mat_wy15 <-as.matrix(apply(sagehen_wy15, c(1,2), md))
+mat_wy15 <-as.matrix(apply(sagehen_wy15, c(1,2), function(x) md(x, 50)))
 rast_wy15 <-rast(mat_wy15)
 plot(rast_wy15)
 
 # test for wy1993
-mat_wy93 <-as.matrix(apply(sagehen_wy93, c(1,2), md))
+mat_wy93 <-as.matrix(apply(sagehen_wy93, c(1,2), function(x) md(x, 50)))
 rast_wy93 <-rast(mat_wy93)
 plot(rast_wy93)
 
