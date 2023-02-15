@@ -1,7 +1,7 @@
 ### creating pixel-wise annual rasters for:
 #### md
 
-# november 13th 2022
+# february 15th 2022
 # jack tarricone
 
 library(rhdf5)
@@ -47,10 +47,10 @@ ncores <-1
 swe_list
 
 # run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list[1], 
+system.time(raster_list <-pbmclapply(swe_list[27], 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = mwa, 
+                                                                  snow_metric_function = md, 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))

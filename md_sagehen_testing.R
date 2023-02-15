@@ -31,7 +31,6 @@ dim(sagehen_wy93) #dimensions
 
 # same for 2015
 sagehen_wy15 <- h5read(path_2015, "/SWE", index = list(2523:2621, 2947:3172, 1:365)) #sagehen extent
-
 x <-sagehen_wy93[70,90,1:365]
 x
 plot(x)
@@ -84,7 +83,7 @@ md <-function(x){
   }
 }
 
-vect <-sagehen_wy93[70,100,1:365]
+vect <-sagehen_wy15[70,100,1:365]
 plot(vect)
 md(vect)
 

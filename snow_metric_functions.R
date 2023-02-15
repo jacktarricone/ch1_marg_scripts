@@ -17,12 +17,15 @@ function_names <-c("scf","sdd","max_swe_dowy","mwa","md")
 
 # melt out day defined by DHSVM
 
-md <-function(x){
+md <-function(x, threshold){
+  
+  # x = swe data time series
+  # threshold = number in (mm) that should be considered
   
   max_swe_dowy <-function(x){
     
     # set threshold so that pixel is NA if never hiss 5 mm
-    if (max(x) < 5){
+    if (max(x) < threshold){
       return(NA)
     } 
     else{
@@ -49,7 +52,7 @@ md <-function(x){
     
     # find spot on vector where SWE is less first 5 mm
     # and date is greater than max_swe doy
-    melt_out_dowy_vect <-which(x < 5 & dowy_vect > ms_dowy)
+    melt_out_dowy_vect <-which(x < threshold & dowy_vect > ms_dowy)
     
     # pull out fist element of vect aka first day snow is gone
     melt_out_dowy <-melt_out_dowy_vect[1]
