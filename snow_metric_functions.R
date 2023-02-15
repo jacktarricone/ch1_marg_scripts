@@ -9,7 +9,55 @@
 
 # list names
 
-function_names <-c("scf","sdd","max_swe_dowy","mwa")
+function_names <-c("scf","sdd","max_swe_dowy","mwa","md")
+
+#######################################
+############      md     ##############
+#######################################
+
+# melt out day defined by DHSVM
+
+md <-function(x){
+  
+  max_swe_dowy <-function(x){
+    
+    # set threshold
+    if (max(x) < 5){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe<-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
+  # calc ms_dowy
+  # return NA for values that never reach the 5 mm threshold
+  if (is.na(max_swe_dowy(x))){
+    return(NA)
+  } else {
+    
+    # calc mox_swe dowy
+    ms_dowy <-max_swe_dowy(x)
+    
+    # create dowy_vec
+    dowy_vect <-seq(1,length(x),1)
+    
+    # find spot on vector where SWE is less first 5 mm
+    # and date is greater than max_swe doy
+    # and using min, pull out the first day
+    melt_out_dowy <-as.integer(min(which(x < 5 & dowy_vect > ms_dowy)))
+  }
+  if (is.na(melt_out_dowy)){
+    return(NA)
+  } else {
+    return(melt_out_dowy)
+  }
+}
 
 #######################################
 ############   max_swe   ##############
