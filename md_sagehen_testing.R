@@ -32,17 +32,17 @@ dim(sagehen_wy93) #dimensions
 # same for 2015
 sagehen_wy15 <- h5read(path_2015, "/SWE", index = list(2523:2621, 2947:3172, 1:365)) #sagehen extent
 
-x <-sagehen_wy15[70,76,1:365]
+x <-sagehen_wy93[70,90,1:365]
 x
 plot(x)
 
-##### max_dowy function
+##### melt_day function
 
 md <-function(x){
   
   max_swe_dowy <-function(x){
     
-    # set threshold
+    # set threshold so that pixel is NA if never hiss 5 mm
     if (max(x) < 5){
       return(NA)
     } 
@@ -70,17 +70,22 @@ md <-function(x){
       
       # find spot on vector where SWE is less first 5 mm
       # and date is greater than max_swe doy
-      # and using min, pull out the first day
-      melt_out_dowy <-as.integer(min(which(x < 5 & dowy_vect > ms_dowy)))
+      melt_out_dowy_vect <-which(x < 5 & dowy_vect > ms_dowy)
+      
+      # pull out fist element of vect aka first day snow is gone
+      melt_out_dowy <-melt_out_dowy_vect[1]
     }
-    if (is.na(melt_out_dowy)){
-      return(NA)
+    if (length(melt_out_dowy_vect) == 0){
+      # if condition is never met, or snow never goes below 5 mm after max_dowy
+      # return last dowy (365 or 366)
+      return(length(dowy_vect))
     } else {
     return(melt_out_dowy)
   }
 }
 
-vect <-sagehen_wy93[70,50,1:365]
+vect <-sagehen_wy93[70,100,1:365]
+plot(vect)
 md(vect)
 
 # test for wy2015
@@ -101,7 +106,7 @@ max_swe_dowy_raster <-function(x){
   
 #### top half
 top <- h5read(hdf_file, "/SWE", index = list(1:3300,1:5701,1:365))
-top_max_dowy_mat <-as.matrix(apply(top, c(1,2), max_swe_dowy))
+top_max_dowy_mat <-as.matrix(apply(top, c(1,2), md))
 rm(top)
 
 #### bottomhalf half
@@ -111,7 +116,7 @@ rm(bottom)
 
 #bind chunks together
 full <-rbind(top_max_dowy_mat, bottom_max_dowy_mat)
-rast <-raster(full, xmn=-123.3, xmx=-117.6, ymn=35.4, ymx=42, CRS("+proj=leac +ellps=clrk66"))
+rast <-raster(full, xmn=-123.3, xmx=-117.6, ymn=35.4, ymx=42, crs(dem))
 plot(rast)
 hist(rast)
 

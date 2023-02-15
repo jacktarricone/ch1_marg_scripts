@@ -19,10 +19,9 @@ function_names <-c("scf","sdd","max_swe_dowy","mwa","md")
 
 md <-function(x){
   
-  # define max swe dowy func
   max_swe_dowy <-function(x){
     
-    # set threshold
+    # set threshold so that pixel is NA if never hiss 5 mm
     if (max(x) < 5){
       return(NA)
     } 
@@ -36,7 +35,6 @@ md <-function(x){
       return(dowy)
     }
   }
-  
   # calc ms_dowy
   # return NA for values that never reach the 5 mm threshold
   if (is.na(max_swe_dowy(x))){
@@ -49,16 +47,17 @@ md <-function(x){
     # create dowy_vec
     dowy_vect <-seq(1,length(x),1)
     
-    # find the dowy where SWE is less first 5 mm
-    # and dowy is greater (after) than max_swe doy
-    # and using min, pull out the first day if there are multiple
-    melt_out_dowy <-as.integer(min(which(x < 5 & dowy_vect > ms_dowy)))
+    # find spot on vector where SWE is less first 5 mm
+    # and date is greater than max_swe doy
+    melt_out_dowy_vect <-which(x < 5 & dowy_vect > ms_dowy)
+    
+    # pull out fist element of vect aka first day snow is gone
+    melt_out_dowy <-melt_out_dowy_vect[1]
   }
-  
-  # return NA if condition is never met, aka snow never melts out
-  # this is can be common in the model.... something to thinkk about
-  if (is.na(melt_out_dowy)){
-    return(NA)
+  if (length(melt_out_dowy_vect) == 0){
+    # if condition is never met, or snow never goes below 5 mm after max_dowy
+    # return last dowy (365 or 366)
+    return(length(dowy_vect))
   } else {
     return(melt_out_dowy)
   }
