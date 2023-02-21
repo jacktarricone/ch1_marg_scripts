@@ -14,7 +14,7 @@ hist(dem, breaks = 100)
 
 # bring in american shape file
 american_v1 <-vect("./american_test/american.shp")
-american <-project(american_v1, crs(scf_stack))
+american <-project(american_v1, crs(dem))
 
 # crop and mask
 dem_am_v1 <-crop(dem, american)
@@ -23,20 +23,48 @@ plot(dem_am)
 
 hist(dem_am)
 min(dem_am)
+max(dem)
 
-# bin into 4 categories north, south, east, west
+# bin into 3 categories
 dem_classes_3 <-matrix(c(1500,2000,1, # 1 = north
                          2000,2500,2,          # 2 = south
                          2500,3060,3),           # 3 = east 
                          ncol=3, byrow=TRUE)
 dem_classes_3
 
+
+# bin into 11 categories north, south, east, west for
+dem_classes_11 <-matrix(c(1500,1750,1, # 1 = north
+                          1750,2000,2,          # 2 = south
+                          2000,2250,3,
+                          2250,2500,4,
+                          2500,2750,5,
+                          2750,3000,6,
+                          3000,3250,7,
+                          3250,3500,8,
+                          3500,3750,9,
+                          3750,4000,10,
+                          4000,4360,11),           # 3 = east 
+                          ncol=3, byrow=TRUE)
+dem_classes_11
+
+
+
+
 # classify using matrix
-dem_am_cat <-classify(dem_am, rcl = dem_classes_3)
-plot(dem_am_cat)
-dem_am_cat
-hist(dem_am_cat)
-# writeRaster(dem_am_cat, "./static/dem_am_cat.tif")
+dem_cat11 <-classify(dem, rcl = dem_classes_11)
+plot(dem_cat11)
+dem_cat11
+hist(dem_cat11)
+writeRaster(dem_cat11, "./static/dem_cat11.tif")
+
+
+
+
+
+
+
+
 
 # calculate percentage of land area
 total_area <-expanse(dem_am_cat, unit = 'km') #km^2

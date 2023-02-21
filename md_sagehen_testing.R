@@ -31,9 +31,15 @@ dim(sagehen_wy93) #dimensions
 
 # same for 2015
 sagehen_wy15 <- h5read(path_2015, "/SWE", index = list(2523:2621, 2947:3172, 1:365)) #sagehen extent
-x <-sagehen_wy93[70,90,1:365]
+
+
+x <-sagehen_wy93[70,50,1:365]
 x
 plot(x)
+
+mat_wy15 <-as.matrix(apply(sagehen_wy93,3,mean))
+mat_wy15
+plot(mat_wy15)
 
 ##### melt_day function
 
@@ -93,7 +99,7 @@ plot(vect)
 md(vect, 50)
 
 # test for wy2015
-mat_wy15 <-as.matrix(apply(sagehen_wy15, c(1,2), function(x) md(x, 50)))
+mat_wy15 <-as.matrix(apply(sagehen_wy15, c(1,2), function(x) md(x, 20)))
 rast_wy15 <-rast(mat_wy15)
 plot(rast_wy15)
 
@@ -106,28 +112,4 @@ plot(rast_wy93)
 diff <-rast_wy93-rast_wy15
 plot(diff)
 
-max_swe_dowy_raster <-function(x){
-  
-#### top half
-top <- h5read(hdf_file, "/SWE", index = list(1:3300,1:5701,1:365))
-top_max_dowy_mat <-as.matrix(apply(top, c(1,2), md))
-rm(top)
 
-#### bottomhalf half
-bottom <- h5read(hdf_file, "/SWE", index = list(3301:6601,1:5701,1:365))
-bottom_max_dowy_mat <-as.matrix(apply(bottom, c(1,2), max_dowy))
-rm(bottom)
-
-#bind chunks together
-full <-rbind(top_max_dowy_mat, bottom_max_dowy_mat)
-rast <-raster(full, xmn=-123.3, xmx=-117.6, ymn=35.4, ymx=42, crs(dem))
-plot(rast)
-hist(rast)
-
-name <- gsub(".h5", "", hdf_name)
-good_name <- gsub("SN_SWE_", "max_dowy_", name)
-
-setwd("/Volumes/jt/projects/margulis/snow_metric_rasters/max_dowy/rasters")
-writeRaster(rast, paste0(good_name, ".tif"))
-return(rast)
-}

@@ -12,9 +12,9 @@ dem <-project(dem_v1, 'EPSG:4326')
 plot(dem)
 hist(dem, breaks = 100)
 
-# bin into 11 elevation categories by 250m
-dem_classes_11 <-matrix(c(1500,1750,1, # 1 = north
-                          1750,2000,2,          # 2 = south
+# bin into 11 elevation categories by 250 m
+dem_classes_11 <-matrix(c(1500,1750,1, 
+                          1750,2000,2,         
                           2000,2250,3,
                           2250,2500,4,
                           2500,2750,5,
@@ -23,29 +23,71 @@ dem_classes_11 <-matrix(c(1500,1750,1, # 1 = north
                           3250,3500,8,
                           3500,3750,9,
                           3750,4000,10,
-                          4000,4360,11),           # 3 = east 
-                        ncol=3, byrow=TRUE)
+                          4000,4360,11),          
+                          ncol=3, byrow=TRUE)
 dem_classes_11
 
 # classify using matrix
-dem_am_cat <-classify(dem_am, rcl = dem_classes_3)
-plot(dem_am_cat)
-dem_am_cat
-hist(dem_am_cat)
+dem_cat11 <-classify(dem, rcl = dem_classes_11)
+plot(dem_cat11)
+dem_cat11
+hist(dem_cat11)
 # writeRaster(dem_am_cat, "./static/dem_am_cat.tif")
 
 # bring in aspect ns
 aspect_ns <-rast("./static/aspect_cat_ns.tif")
-aspect_ns_am_v1 <-crop(aspect_ns, american)
-aspect_ns_am <-mask(aspect_ns_am_v1, american)
-# writeRaster(aspect_ns_am, "./static/aspect_ns_am.tif")
-
-# test plot
-plot(aspect_ns_am)
-plot(dem_am_cat)
 
 ##### add north and south classification
+# b1_n = 1
 
+# create function
+create_ele_aspect <-function(dem,aspect,bin_dem,bin_aspect){
+    tf <-dem == bin_dem &  # b1
+         aspect == bin_aspect  # n
+    tf_v1 <-subst(tf,TRUE,bin_dem)
+    rast <-subst(tf_v1,0,NA)
+    # rast
+    # plot(rast, col = 'red')
+    return(rast)
+}
+
+# north facing
+test <-create_ele_aspect(dem = dem_cat11,
+                         aspect = aspect_ns,
+                         bin_dem = 1,
+                         bin_aspect = 1)
+
+# vector of bin numbers
+ele_bin_list <-seq(1,11,1)
+
+# lapp for north to make a list of rasters
+north_list <-lapply(ele_bin_list, function(x) create_ele_aspect(dem = dem_cat11,
+                                             aspect = aspect_ns,
+                                             bin_dem = x, 
+                                             bin_aspect = 1)) # 1 = north facing
+
+# mosaic back together
+north_stitch <-mosaic(north_list[[1]],north_list[[2]],north_list[[3]],north_list[[4]],north_list[[5]],
+                north_list[[6]],north_list[[7]], north_list[[8]],north_list[[9]],north_list[[10]],north_list[[11]])
+
+plot(north_stitch)
+
+
+
+# lapp
+south_list <-lapply(ele_bin_list, function(x) create_ele_aspect(dem = dem_cat11,
+                                                               aspect = aspect_ns,
+                                                               bin_dem = x, 
+                                                               bin_aspect = 2)) # 2 = south facing
+
+# mosaic back together
+south_stitch <-mosaic(test_list[[1]],test_list[[2]],test_list[[3]],test_list[[4]],test_list[[5]],
+                test_list[[6]],test_list[[7]], test_list[[8]],test_list[[9]],test_list[[10]],test_list[[11]])
+
+plot(south_stitch)
+
+
+##### add north and south classification
 # b1_n = 1
 test <-dem_am_cat == 1 &  # b1
        aspect_ns_am == 1  # n
