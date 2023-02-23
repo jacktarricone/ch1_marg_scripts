@@ -1,8 +1,8 @@
 ### creating pixel-wise annual rasters for:
-#### md
-#### for eli, set threshold to 50 mm (5 cm)
+#### max_dowy
+#### for eli, set threshold tp 5mm
 
-# february 20th 2022
+# february 23th 2022
 # jack tarricone
 
 library(rhdf5)

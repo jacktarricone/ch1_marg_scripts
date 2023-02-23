@@ -36,6 +36,7 @@ hist(dem_cat11)
 
 # bring in aspect ns
 aspect_ns <-rast("./static/aspect_cat_ns.tif")
+plot(aspect_ns)
 
 ##### add north and south classification
 # b1_n = 1
@@ -71,20 +72,22 @@ north_stitch <-mosaic(north_list[[1]],north_list[[2]],north_list[[3]],north_list
                 north_list[[6]],north_list[[7]], north_list[[8]],north_list[[9]],north_list[[10]],north_list[[11]])
 
 plot(north_stitch)
+writeRaster(north_stitch, "./static/dem_am_cat_north_test.tif")
 
 
 
 # lapp
 south_list <-lapply(ele_bin_list, function(x) create_ele_aspect(dem = dem_cat11,
-                                                               aspect = aspect_ns,
-                                                               bin_dem = x, 
-                                                               bin_aspect = 2)) # 2 = south facing
+                                                                aspect = aspect_ns,
+                                                                bin_dem = x, 
+                                                                bin_aspect = 2)) # 2 = south facing
 
 # mosaic back together
-south_stitch <-mosaic(test_list[[1]],test_list[[2]],test_list[[3]],test_list[[4]],test_list[[5]],
-                test_list[[6]],test_list[[7]], test_list[[8]],test_list[[9]],test_list[[10]],test_list[[11]])
+south_stitch <-mosaic(south_list[[1]],south_list[[2]],south_list[[3]],south_list[[4]],south_list[[5]],
+                south_list[[6]],south_list[[7]], south_list[[8]],south_list[[9]],south_list[[10]],south_list[[11]])
 
 plot(south_stitch)
+writeRaster(south_stitch, "./static/dem_am_cat_south_test.tif")
 
 
 ##### add north and south classification

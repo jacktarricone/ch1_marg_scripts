@@ -152,10 +152,10 @@ sdd <-function(x){
 # abbr: max_swe_dowy
 
 
-max_swe_dowy <-function(x){
+max_swe_dowy <-function(x, threshold){
   
   # set threshold
-  if (max(x) < 5.1){
+  if (max(x) < threshold){
     return(NA)
   } 
   else{
