@@ -37,7 +37,7 @@ devtools::source_url(url)
 ###########################
 
 # metric creating with this script
-snow_metric_name <-function_names[5]
+snow_metric_name <-function_names[3]
 snow_metric_name
 
 # mcapply function 
@@ -51,61 +51,11 @@ swe_list
 eli_swe_years <-swe_list[27:32]
 eli_swe_years
 
-# change melt date function so one variable and threshold is 50 mm
-eli_md <-function(x){
-  
-  # x = swe data time series
-  # threshold = number in (mm) that should be considered
-  
-  max_swe_dowy <-function(x){
-    
-    # set threshold so that pixel is NA if never hiss 5 mm
-    if (max(x) < 100){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe<-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-  # calc ms_dowy
-  # return NA for values that never reach the 5 mm threshold
-  if (is.na(max_swe_dowy(x))){
-    return(NA)
-  } else {
-    
-    # calc mox_swe dowy
-    ms_dowy <-max_swe_dowy(x)
-    
-    # create dowy_vec
-    dowy_vect <-seq(1,length(x),1)
-    
-    # find spot on vector where SWE is less first 5 mm
-    # and date is greater than max_swe doy
-    melt_out_dowy_vect <-which(x < 100 & dowy_vect > ms_dowy)
-    
-    # pull out fist element of vect aka first day snow is gone
-    melt_out_dowy <-melt_out_dowy_vect[1]
-  }
-  if (length(melt_out_dowy_vect) == 0){
-    # if condition is never met, or snow never goes below 5 mm after max_dowy
-    # return last dowy (365 or 366)
-    return(length(dowy_vect))
-  } else {
-    return(melt_out_dowy)
-  }
-}
-
 # run function using progress bar (pb) multi-core lapply
 system.time(raster_list <-pbmclapply(eli_swe_years, 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = eli_md, 
+                                                                  snow_metric_function =  function(x) max_swe_dowy(x,5), 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
