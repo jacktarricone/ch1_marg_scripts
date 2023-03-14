@@ -82,7 +82,7 @@ sdd_df <-as.data.frame(sdd, xy = TRUE, cells = TRUE)
 
 ######################
 ######################
-######## mmwa #########
+######## mwa #########
 ######################
 ######################
 
@@ -94,7 +94,7 @@ mwa_scale <-brewer.pal(9, 'YlOrRd')
 mwa_plot <-ggplot(mwa_df) +
        geom_tile(mapping = aes(x,y, fill = mean)) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = scale, limits = c(0,20), na.value="transparent") +
+       scale_fill_gradientn(colors = scale, limits = c(0,30), na.value="gray40") +
        labs(fill = "MWA (cm)") +
        theme(panel.border = element_rect(color = NA, fill=NA),
              axis.title.y = element_blank(),
@@ -109,19 +109,13 @@ mwa_plot <-ggplot(mwa_df) +
        
 # save
 ggsave(mwa_plot,
-       file = "./plots/mwa_test_v7.png",
+       file = "./plots/mwa_test_v9.png",
        width = 5.5, 
        height = 9,
        dpi = 600)
 
-system("open ./plots/mwa_test_v7.png")
+system("open ./plots/mwa_test_v9.png")
 
-# ggsave(p1,
-#        file = "mwa_test_v6.pdf",
-#        width = 5.5, 
-#        height = 9)
-# 
-# system("open ./plots/mwa_test_v6.png")
 
 ######################
 ######################
@@ -137,7 +131,7 @@ max_scale <-brewer.pal(9, 'Blues')
 max_plot <-ggplot(max_df) +
   geom_tile(mapping = aes(x,y, fill = mean)) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="transparent") +
+  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="gray40") +
   labs(fill = "Max SWE (m)") +
   theme(panel.border = element_rect(color = NA, fill=NA),
         axis.title.y = element_blank(),
@@ -152,12 +146,12 @@ max_plot <-ggplot(max_df) +
 
 # save
 ggsave(max_plot,
-       file = "./plots/max_test_v2.png",
+       file = "./plots/max_test_v3.png",
        width = 5.5, 
        height = 9,
        dpi = 600)
 
-system("open ./plots/max_test_v2.png")
+system("open ./plots/max_test_v3.png")
 
 ######################
 ######################
@@ -173,8 +167,8 @@ sdd_scale <-brewer.pal(9, 'Spectral')
 sdd_plot <-ggplot(sdd_df) +
   geom_tile(mapping = aes(x,y, fill = mean)) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = sdd_scale, limits = c(100,365), na.value="transparent") +
-  labs(fill = "Max SWE (m)") +
+  scale_fill_gradientn(colors = sdd_scale, limits = c(100,365), na.value="gray40") +
+  labs(fill = "SDD (DOWY)") +
   theme(panel.border = element_rect(color = NA, fill=NA),
         axis.title.y = element_blank(),
         axis.title.x = element_blank(),
@@ -188,11 +182,11 @@ sdd_plot <-ggplot(sdd_df) +
 
 # save
 ggsave(sdd_plot,
-       file = "./plots/sdd_test_v2.png",
+       file = "./plots/sdd_test_v3.png",
        width = 5.5, 
        height = 9,
        dpi = 600)
 
-system("open ./plots/sdd_test_v2.png")
+system("open ./plots/sdd_test_v3.png")
 
   
