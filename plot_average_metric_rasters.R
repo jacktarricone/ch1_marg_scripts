@@ -39,7 +39,7 @@ theme_classic <- function(base_size = 11, base_family = "",
     )
 }
 
-theme_set(theme_classic(14))
+theme_set(theme_classic(17))
 
 ## bring in SNSR shape file
 # with terra
@@ -97,9 +97,15 @@ mwa_plot <-ggplot(mwa_df) +
              axis.ticks = element_blank(),
              legend.position = "bottom",
              plot.margin = unit(c(0,0,0,0), "cm")) +
-       guides(fill = guide_colorbar(direction = "horizontal",
-                                    barwidth = 16,
-                                    barheight = 1))
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 18,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+
 
 # save
 ggsave(mwa_plot,
@@ -135,17 +141,22 @@ max_plot <-ggplot(max_df) +
         legend.position = "bottom",
         plot.margin = unit(c(0,0,0,0), "cm"))+
   guides(fill = guide_colorbar(direction = "horizontal",
-                               barwidth = 16,
-                               barheight = 1))
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 19,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
 
 # save
 ggsave(max_plot,
-       file = "./plots/max_test_v3.png",
-       width = 5, 
-       height = 9,
+       file = "./plots/max_test_v8.png",
+       width = 4.5, 
+       height = 8,
        dpi = 600)
 
-system("open ./plots/max_test_v3.png")
+system("open ./plots/max_test_v8.png")
 
 ######################
 ######################
@@ -172,8 +183,14 @@ sdd_plot <-ggplot(sdd_df) +
         legend.position = "bottom",
         plot.margin = unit(c(0,0,0,0), "cm")) +
   guides(fill = guide_colorbar(direction = "horizontal",
-                               barwidth = 16,
-                               barheight = 1))
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 13,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+
 
 # save
 ggsave(sdd_plot,
@@ -190,10 +207,11 @@ full <-plot_grid(mwa_plot, max_plot, sdd_plot,
                  ncol = 3, 
                  align = "hv",
                  label_size = 26,
-                 vjust =  1.8,
-                 hjust = -.9,
+                 vjust =  2,
+                 hjust = -.5,
                  rel_widths = c(1/3, 1/3, 1/3))
 # test save
+# make tighter together
 ggsave(full,
        file = "./plots/full_test_v7.png",
        width = 16, 
