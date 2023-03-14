@@ -4,6 +4,7 @@
 library(terra)
 library(RColorBrewer)
 library(sf)
+library(cowplot)
 
 #set working directory
 setwd("~/ch1_margulis")
@@ -52,10 +53,19 @@ plot(snsr_sf, axes = TRUE)
 ##### mwa ####
 ##############
 
-# read in
-mwa <-rast('./snow_metric_rasters/terra_rasters/averages/mwa_mean.tif')
-max <-rast('./snow_metric_rasters/terra_rasters/averages/max_mean.tif')
+#### read in metrics
+# mwa
+mwa_mm <-rast('./snow_metric_rasters/terra_rasters/averages/mwa_mean.tif')
+mwa_cm <-mwa_mm/10 
+hist(mwa_cm, breaks = 200)
+
+# max
+max_mm <-rast('./snow_metric_rasters/terra_rasters/averages/max_mean.tif')
+max_m <-max_mm/1000
+hist(max_m, breaks = 200)
+
 sdd <-rast('./snow_metric_rasters/terra_rasters/averages/sdd_mean.tif')
+hist(sdd, breaks = 200)
 
 # quick plot
 plot(mwa)
@@ -65,13 +75,14 @@ plot(snsr, add = TRUE, lwd = .15)
 hist(mwa, breaks = 200)
 
 # convert to df for geom_raster
-mwa_df <-as.data.frame(mwa, xy = TRUE, cells = TRUE)
-head(mwa_df)
+mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
+max_df <-as.data.frame(max_m, xy = TRUE, cells = TRUE)
+sdd_df <-as.data.frame(sdd, xy = TRUE, cells = TRUE)
 
 
 ######################
 ######################
-######## mwa #########
+######## mmwa #########
 ######################
 ######################
 
@@ -79,12 +90,12 @@ head(mwa_df)
 display.brewer.all()
 mwa_scale <-brewer.pal(9, 'YlOrRd')
 
-
+# plot
 mwa_plot <-ggplot(mwa_df) +
        geom_tile(mapping = aes(x,y, fill = mean)) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = scale, limits = c(0,200), na.value="transparent") +
-       labs(fill = "MWA (mm)") +
+       scale_fill_gradientn(colors = scale, limits = c(0,20), na.value="transparent") +
+       labs(fill = "MWA (cm)") +
        theme(panel.border = element_rect(color = NA, fill=NA),
              axis.title.y = element_blank(),
              axis.title.x = element_blank(),
@@ -96,19 +107,92 @@ mwa_plot <-ggplot(mwa_df) +
                                     barwidth = 16,
                                     barheight = 1))
        
-print(mwa_plot)
-
-setwd("./plots/")
-ggsave(p1,
-       file = "./plots/mwa_test_v6.png",
+# save
+ggsave(mwa_plot,
+       file = "./plots/mwa_test_v7.png",
        width = 5.5, 
        height = 9,
        dpi = 600)
 
-ggsave(p1,
-       file = "mwa_test_v6.pdf",
-       width = 5.5, 
-       height = 9)
+system("open ./plots/mwa_test_v7.png")
 
-system("open ./plots/mwa_test_v6.png")
+# ggsave(p1,
+#        file = "mwa_test_v6.pdf",
+#        width = 5.5, 
+#        height = 9)
+# 
+# system("open ./plots/mwa_test_v6.png")
+
+######################
+######################
+######## max #########
+######################
+######################
+
+# set scale 
+display.brewer.all()
+max_scale <-brewer.pal(9, 'Blues')
+
+# plot
+max_plot <-ggplot(max_df) +
+  geom_tile(mapping = aes(x,y, fill = mean)) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="transparent") +
+  labs(fill = "Max SWE (m)") +
+  theme(panel.border = element_rect(color = NA, fill=NA),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "bottom") +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               barwidth = 16,
+                               barheight = 1))
+
+# save
+ggsave(max_plot,
+       file = "./plots/max_test_v2.png",
+       width = 5.5, 
+       height = 9,
+       dpi = 600)
+
+system("open ./plots/max_test_v2.png")
+
+######################
+######################
+######## sdd #########
+######################
+######################
+
+# set scale 
+display.brewer.all()
+sdd_scale <-brewer.pal(9, 'Spectral')
+
+# plot
+sdd_plot <-ggplot(sdd_df) +
+  geom_tile(mapping = aes(x,y, fill = mean)) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = sdd_scale, limits = c(100,365), na.value="transparent") +
+  labs(fill = "Max SWE (m)") +
+  theme(panel.border = element_rect(color = NA, fill=NA),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "bottom") +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               barwidth = 16,
+                               barheight = 1))
+
+# save
+ggsave(sdd_plot,
+       file = "./plots/sdd_test_v2.png",
+       width = 5.5, 
+       height = 9,
+       dpi = 600)
+
+system("open ./plots/sdd_test_v2.png")
+
   
