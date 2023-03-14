@@ -189,15 +189,15 @@ full <-plot_grid(mwa_plot, max_plot, sdd_plot,
                  labels = c("(a)", "(b)", "(c)"),
                  ncol = 3, 
                  align = "hv",
-                 label_size = 18,
-                 vjust = 3.5,
-                 hjust = 2.5,
+                 label_size = 26,
+                 vjust =  1.8,
+                 hjust = -.9,
                  rel_widths = c(1/3, 1/3, 1/3))
 # test save
 ggsave(full,
        file = "./plots/full_test_v7.png",
-       width = 15, 
-       height = 8,
+       width = 16, 
+       height = 9,
        dpi = 600)
 
 system("open ./plots/full_test_v7.png")
