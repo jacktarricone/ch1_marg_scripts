@@ -2,6 +2,7 @@
 # jack tarricone
 
 library(terra)
+library(ggplot2)
 library(RColorBrewer)
 library(sf)
 library(cowplot)
@@ -47,7 +48,6 @@ snsr <-vect("./static/polygon/SNSR_shp_fixed.shp")
 # with sf
 snsr_v1 <-st_read("./static/polygon/SNSR_shp_fixed.shp")
 snsr_sf <-st_geometry(snsr_v1)
-plot(snsr_sf, axes = TRUE)
 
 ##############
 ##### mwa ####
@@ -64,15 +64,9 @@ max_mm <-rast('./snow_metric_rasters/terra_rasters/averages/max_mean.tif')
 max_m <-max_mm/1000
 hist(max_m, breaks = 200)
 
+# sdd
 sdd <-rast('./snow_metric_rasters/terra_rasters/averages/sdd_mean.tif')
 hist(sdd, breaks = 200)
-
-# quick plot
-plot(mwa)
-plot(snsr, add = TRUE, lwd = .15)
-
-# quick hist s
-hist(mwa, breaks = 200)
 
 # convert to df for geom_raster
 mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
@@ -87,14 +81,13 @@ sdd_df <-as.data.frame(sdd, xy = TRUE, cells = TRUE)
 ######################
 
 # set scale 
-display.brewer.all()
 mwa_scale <-brewer.pal(9, 'YlOrRd')
 
 # plot
 mwa_plot <-ggplot(mwa_df) +
        geom_tile(mapping = aes(x,y, fill = mean)) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = scale, limits = c(0,30), na.value="gray40") +
+       scale_fill_gradientn(colors = mwa_scale, limits = c(0,30), na.value="gray40") +
        labs(fill = "MWA (cm)") +
        theme(panel.border = element_rect(color = NA, fill=NA),
              axis.title.y = element_blank(),
@@ -102,15 +95,16 @@ mwa_plot <-ggplot(mwa_df) +
              axis.text.x = element_blank(),
              axis.text.y = element_blank(),
              axis.ticks = element_blank(),
-             legend.position = "bottom") +
+             legend.position = "bottom",
+             plot.margin = unit(c(0,0,0,0), "cm")) +
        guides(fill = guide_colorbar(direction = "horizontal",
                                     barwidth = 16,
                                     barheight = 1))
-       
+
 # save
 ggsave(mwa_plot,
        file = "./plots/mwa_test_v9.png",
-       width = 5.5, 
+       width = 5, 
        height = 9,
        dpi = 600)
 
@@ -124,7 +118,6 @@ system("open ./plots/mwa_test_v9.png")
 ######################
 
 # set scale 
-display.brewer.all()
 max_scale <-brewer.pal(9, 'Blues')
 
 # plot
@@ -139,7 +132,8 @@ max_plot <-ggplot(max_df) +
         axis.text.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks = element_blank(),
-        legend.position = "bottom") +
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm"))+
   guides(fill = guide_colorbar(direction = "horizontal",
                                barwidth = 16,
                                barheight = 1))
@@ -147,7 +141,7 @@ max_plot <-ggplot(max_df) +
 # save
 ggsave(max_plot,
        file = "./plots/max_test_v3.png",
-       width = 5.5, 
+       width = 5, 
        height = 9,
        dpi = 600)
 
@@ -175,7 +169,8 @@ sdd_plot <-ggplot(sdd_df) +
         axis.text.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks = element_blank(),
-        legend.position = "bottom") +
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm")) +
   guides(fill = guide_colorbar(direction = "horizontal",
                                barwidth = 16,
                                barheight = 1))
@@ -183,10 +178,27 @@ sdd_plot <-ggplot(sdd_df) +
 # save
 ggsave(sdd_plot,
        file = "./plots/sdd_test_v3.png",
-       width = 5.5, 
+       width = 5, 
        height = 9,
        dpi = 600)
 
 system("open ./plots/sdd_test_v3.png")
 
+# cowplot test
+full <-plot_grid(mwa_plot, max_plot, sdd_plot,
+                 labels = c("(a)", "(b)", "(c)"),
+                 ncol = 3, 
+                 align = "hv",
+                 label_size = 18,
+                 vjust = 3.5,
+                 hjust = 2.5,
+                 rel_widths = c(1/3, 1/3, 1/3))
+# test save
+ggsave(full,
+       file = "./plots/full_test_v7.png",
+       width = 15, 
+       height = 8,
+       dpi = 600)
+
+system("open ./plots/full_test_v7.png")
   
