@@ -39,7 +39,7 @@ theme_classic <- function(base_size = 11, base_family = "",
 theme_set(theme_classic(12))
 
 # set working dir
-setwd("/Users/jacktarricone/ch1_margulis/")
+setwd("~/ch1_margulis/")
 
 # read in stack american stack
 scf_stack <-rast("./snow_metric_rasters/terra_rasters/scf/scf_american.tif")

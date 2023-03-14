@@ -5,7 +5,7 @@
 library(terra)
 
 #set working directory
-setwd("/Users/jacktarricone/ch1_margulis/snow_metric_rasters/terra_rasters/")
+setwd("~/ch1_margulis/snow_metric_rasters/terra_rasters/")
 
 ##### compute metriccs
 
@@ -16,10 +16,12 @@ setwd("/Users/jacktarricone/ch1_margulis/snow_metric_rasters/terra_rasters/")
 mwa_list <-list.files('./mwa/years', pattern = '.tif', full.names = TRUE)
 mwa <-rast(mwa_list)
 
+mwa_mean <-rast('./averages/mwa_mean.tif')
+
 # mean
 mwa_mean <-app(mwa, fun = "mean", cores=5)
 plot(mwa_mean)
-writeRaster(mwa_mean, "./averages/mwa_mean.tif")
+# writeRaster(mwa_mean, "./averages/mwa_mean.tif")
 
 # median
 mwa_med <-app(mwa, fun = 'median', cores=5)
