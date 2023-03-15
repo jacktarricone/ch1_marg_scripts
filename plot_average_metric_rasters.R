@@ -43,42 +43,45 @@ theme_set(theme_classic(17))
 
 ## bring in SNSR shape file
 # with terra
-snsr <-vect("./static/polygon/SNSR_shp_fixed.shp")
+snsr <-vect("./vectors/snsr_shp.gpkg")
 
 # with sf
-snsr_v1 <-st_read("./static/polygon/SNSR_shp_fixed.shp")
+snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
 snsr_sf <-st_geometry(snsr_v1)
 
 ##############
 ##### mwa ####
 ##############
 
-crop_ext <-ext(-123, -117.6, 35.4, 41.8)
-
-ext(mwa_mm)
-
 #### read in metrics
 # mwa
-mwa_mm <-rast('./snow_metric_rasters/terra_rasters/averages/mwa_mean.tif')
+mwa_mm <-rast('./rasters/snow_metric_averages/mwa_mean.tif')
 mwa_cm_v1 <-mwa_mm/10
-mwa_cm <-crop(mwa_cm_v1, crop_ext)
+mwa_cm <-crop(mwa_cm_v1, ext(snsr))
 hist(mwa_cm, breaks = 200)
 
 # max
-max_mm <-rast('./snow_metric_rasters/terra_rasters/averages/max_mean.tif')
+max_mm <-rast('./rasters/snow_metric_averages/max_mean.tif')
 max_m_v1 <-max_mm/1000
-max_m <-crop(max_m_v1, crop_ext)
+max_m <-crop(max_m_v1, ext(snsr))
 hist(max_m, breaks = 200)
 
 # sdd
-sdd_v1 <-rast('./snow_metric_rasters/terra_rasters/averages/sdd_mean.tif')
-sdd <-crop(sdd_v1, crop_ext)
+sdd_v1 <-rast('./rasters/snow_metric_averages/sdd_mean.tif')
+sdd <-crop(sdd_v1, ext(snsr))
 hist(sdd, breaks = 200)
+
+# max_dowy
+max_dowy_v1 <-rast('./rasters/snow_metric_averages/max_dowy_mean.tif')
+max_dowy <-crop(max_dowy_v1, ext(snsr))
+hist(max_dowy, breaks = 200)
+
 
 # convert to df for geom_raster
 mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
 max_df <-as.data.frame(max_m, xy = TRUE, cells = TRUE)
 sdd_df <-as.data.frame(sdd, xy = TRUE, cells = TRUE)
+max_dowy_df <-as.data.frame(max_dowy, xy = TRUE, cells = TRUE)
 
 
 ######################
@@ -212,6 +215,58 @@ ggsave(sdd_plot,
        dpi = 600)
 
 system("open ./plots/sdd_test_v4.png")
+
+
+######################
+######################
+##### max_dowy #######
+######################
+######################
+
+# set scale 
+display.brewer.all()
+max_dowy_scale <-brewer.pal(9, 'RdYlBu')
+hist(max_dowy, breaks = 100)
+plot(max_dowy)
+hist(max_dowy_df$mean)
+
+# plot
+max_dowy_plot <-ggplot(max_dowy_df) +
+  geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_tile(mapping = aes(x,y, fill = mean)) +
+  # geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,200), na.value="#4575B4") +
+  labs(fill = "Max SWE DOWY (DOWY)") +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme(panel.border = element_rect(color = NA, fill=NA),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 15,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+
+# save
+ggsave(max_dowy_plot,
+       file = "./plots/max_dowy_test_v2.png",
+       width = 4.5, 
+       height = 8,
+       dpi = 600)
+
+system("open ./plots/max_dowy_test_v2.png")
+
+
 
 # cowplot test
 full <-plot_grid(mwa_plot, max_plot, sdd_plot,
