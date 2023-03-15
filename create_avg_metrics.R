@@ -7,7 +7,25 @@ library(terra)
 #set working directory
 setwd("~/ch1_margulis/snow_metric_rasters/terra_rasters/")
 
-##### compute metriccs
+##### compute metrics
+
+####################
+#####  max dowy ####
+####################
+
+dowy_list <-list.files('./snow_metric_rasters/terra_rasters/max_swe_dowy/', pattern = '.tif', full.names = TRUE)
+dowy_stack <-rast(dowy_list)
+
+# mean
+dowy_mean <-app(dowy_stack, fun = "mean", cores = 8)
+plot(dowy_mean)
+hist(dowy_mean, breaks = 200)
+# writeRaster(dowy_mean, "./rasters/snow_metric_averages/max_dowy_mean.tif")
+
+# median
+mwa_med <-app(mwa, fun = 'median', cores=5)
+plot(mwa_med)
+writeRaster(mwa_med, "./averages/mwa_med.tif")
 
 ##############
 ##### mwa ####

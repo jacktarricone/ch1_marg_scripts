@@ -88,6 +88,9 @@ south_stitch <-mosaic(south_list[[1]],south_list[[2]],south_list[[3]],south_list
 plot(south_stitch)
 # writeRaster(south_stitch, "./static/dem_am_cat_south_test.tif")
 
+# merge back together
+dem11_ns_class <-mosaic(north_stitch, south_stitch)
+plot(dem11_ns_class)
 
 ##### add north and south classification
 # b1_n = 1
