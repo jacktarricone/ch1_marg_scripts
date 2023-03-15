@@ -1,10 +1,10 @@
-# classify dem raster
+# classify SNSR DEM into 11 elevation bins and north/south aspect
 # jack tarricone
 # january 18th, 2023
 
 library(terra)
 
-setwd("/Users/jacktarricone/ch1_margulis/")
+setwd("~/ch1_margulis")
 
 # bring in dem raster
 dem_v1 <-rast("./static/rasters/SNSR_DEM.tif")
@@ -32,7 +32,7 @@ dem_cat11 <-classify(dem, rcl = dem_classes_11)
 plot(dem_cat11)
 dem_cat11
 hist(dem_cat11)
-# writeRaster(dem_am_cat, "./static/dem_am_cat.tif")
+# writeRaster(dem_cat11, "./static/dem_11cat.tif")
 
 # bring in aspect ns
 aspect_ns <-rast("./static/aspect_cat_ns.tif")
@@ -63,17 +63,16 @@ ele_bin_list <-seq(1,11,1)
 
 # lapp for north to make a list of rasters
 north_list <-lapply(ele_bin_list, function(x) create_ele_aspect(dem = dem_cat11,
-                                             aspect = aspect_ns,
-                                             bin_dem = x, 
-                                             bin_aspect = 1)) # 1 = north facing
+                                              aspect = aspect_ns,
+                                              bin_dem = x, 
+                                              bin_aspect = 1)) # 1 = north facing
 
 # mosaic back together
 north_stitch <-mosaic(north_list[[1]],north_list[[2]],north_list[[3]],north_list[[4]],north_list[[5]],
                 north_list[[6]],north_list[[7]], north_list[[8]],north_list[[9]],north_list[[10]],north_list[[11]])
 
 plot(north_stitch)
-writeRaster(north_stitch, "./static/dem_am_cat_north_test.tif")
-
+# writeRaster(north_stitch, "./static/dem_am_cat_north_test.tif")
 
 
 # lapp
@@ -87,7 +86,7 @@ south_stitch <-mosaic(south_list[[1]],south_list[[2]],south_list[[3]],south_list
                 south_list[[6]],south_list[[7]], south_list[[8]],south_list[[9]],south_list[[10]],south_list[[11]])
 
 plot(south_stitch)
-writeRaster(south_stitch, "./static/dem_am_cat_south_test.tif")
+# writeRaster(south_stitch, "./static/dem_am_cat_south_test.tif")
 
 
 ##### add north and south classification

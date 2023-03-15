@@ -94,7 +94,7 @@ mwa_scale <-brewer.pal(9, 'YlOrRd')
 mwa_plot <-ggplot(mwa_df) +
        geom_tile(mapping = aes(x,y, fill = mean)) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = mwa_scale, limits = c(0,30), na.value="gray40") +
+       scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value="#800026") + # max of color bar so it saturates
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
        labs(fill = "MWA (cm)") +
@@ -117,12 +117,12 @@ mwa_plot <-ggplot(mwa_df) +
                                     ticks.colour = "black"))
 # save
 ggsave(mwa_plot,
-       file = "./plots/mwa_test_v13.png",
+       file = "./plots/mwa_test_v14.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/mwa_test_v13.png")
+system("open ./plots/mwa_test_v14.png")
 
 
 ######################
@@ -138,8 +138,8 @@ max_scale <-brewer.pal(9, 'Blues')
 max_plot <-ggplot(max_df) +
   geom_tile(mapping = aes(x,y, fill = mean)) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="#08306B") +
-  labs(fill = "Max (m)") +
+  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="#08306B") + # max of color bar so it saturates
+  labs(fill = "Max SWE (m)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -182,7 +182,7 @@ sdd_scale <-brewer.pal(9, 'Spectral')
 sdd_plot <-ggplot(sdd_df) +
   geom_tile(mapping = aes(x,y, fill = mean)) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = sdd_scale, limits = c(100,365), na.value="gray40") +
+  scale_fill_gradientn(colors = sdd_scale, limits = c(130,365), na.value="gray40") +
   labs(fill = "SDD (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -225,10 +225,10 @@ full <-plot_grid(mwa_plot, max_plot, sdd_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/full_test_v12.png",
+       file = "./plots/full_test_v13.png",
        width = 13.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/full_test_v12.png")
+system("open ./plots/full_test_v13.png")
   

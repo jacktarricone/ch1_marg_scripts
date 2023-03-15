@@ -10,7 +10,7 @@ library(parallel)
 library(pbmcapply)
 
 #set working directory
-setwd("/Users/jacktarricone/ch1_margulis/")
+setwd("~/ch1_margulis/")
 
 # list hdf swe files
 swe_list <-list.files("./swe/hdf", pattern = ".h5", full.names = TRUE)
@@ -40,22 +40,19 @@ snow_metric_name <-"max_swe_dowy"
 
 # mcapply function 
 # set number of cores to use
-ncores <-1
+ncores <-2
 
 # check list, looks good
-swe_list
+swe_list_new <-swe_list[-c(1,2,27,28,29,30,31,32)]
+swe_list_new
 
 # run function using progress bar (pb) multi-core lapply
 # make sure to give it proper metric name and function
-system.time(raster_list <-pbmclapply(swe_list[1], 
+system.time(raster_list <-pbmclapply(swe_list_new, 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = max_swe_dowy, 
+                                                                  snow_metric_function = function(x) max_swe_dowy(x,threshold = 5), 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
-
-generate_snow_metric_rasters(swe_list[2], 
-                             snow_metric_function = max_swe_dowy, 
-                             snow_metric_name = snow_metric_name)
 
