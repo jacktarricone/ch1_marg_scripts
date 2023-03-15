@@ -53,19 +53,26 @@ snsr_sf <-st_geometry(snsr_v1)
 ##### mwa ####
 ##############
 
+crop_ext <-ext(-123, -117.6, 35.4, 41.8)
+
+ext(mwa_mm)
+
 #### read in metrics
 # mwa
 mwa_mm <-rast('./snow_metric_rasters/terra_rasters/averages/mwa_mean.tif')
-mwa_cm <-mwa_mm/10 
+mwa_cm_v1 <-mwa_mm/10
+mwa_cm <-crop(mwa_cm_v1, crop_ext)
 hist(mwa_cm, breaks = 200)
 
 # max
 max_mm <-rast('./snow_metric_rasters/terra_rasters/averages/max_mean.tif')
-max_m <-max_mm/1000
+max_m_v1 <-max_mm/1000
+max_m <-crop(max_m_v1, crop_ext)
 hist(max_m, breaks = 200)
 
 # sdd
-sdd <-rast('./snow_metric_rasters/terra_rasters/averages/sdd_mean.tif')
+sdd_v1 <-rast('./snow_metric_rasters/terra_rasters/averages/sdd_mean.tif')
+sdd <-crop(sdd_v1, crop_ext)
 hist(sdd, breaks = 200)
 
 # convert to df for geom_raster
@@ -88,6 +95,8 @@ mwa_plot <-ggplot(mwa_df) +
        geom_tile(mapping = aes(x,y, fill = mean)) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        scale_fill_gradientn(colors = mwa_scale, limits = c(0,30), na.value="gray40") +
+       scale_x_continuous(expand = c(0, 0)) +
+       scale_y_continuous(expand = c(0, 0)) +
        labs(fill = "MWA (cm)") +
        theme(panel.border = element_rect(color = NA, fill=NA),
              axis.title.y = element_blank(),
@@ -96,25 +105,24 @@ mwa_plot <-ggplot(mwa_df) +
              axis.text.y = element_blank(),
              axis.ticks = element_blank(),
              legend.position = "bottom",
-             plot.margin = unit(c(0,0,0,0), "cm")) +
-  guides(fill = guide_colorbar(direction = "horizontal",
-                               label.position = 'top',
-                               title.position ='bottom',
-                               title.hjust = .5,
-                               barwidth = 18,
-                               barheight = 1,
-                               frame.colour = "black", 
-                               ticks.colour = "black"))
-
-
+             plot.margin = unit(c(0,0,0,0), "cm"),
+             legend.box.spacing = unit(0, "pt")) +
+       guides(fill = guide_colorbar(direction = "horizontal",
+                                    label.position = 'top',
+                                    title.position ='bottom',
+                                    title.hjust = .5,
+                                    barwidth = 15,
+                                    barheight = 1,
+                                    frame.colour = "black", 
+                                    ticks.colour = "black"))
 # save
 ggsave(mwa_plot,
-       file = "./plots/mwa_test_v9.png",
-       width = 5, 
-       height = 9,
+       file = "./plots/mwa_test_v13.png",
+       width = 4.5, 
+       height = 8,
        dpi = 600)
 
-system("open ./plots/mwa_test_v9.png")
+system("open ./plots/mwa_test_v13.png")
 
 
 ######################
@@ -130,8 +138,10 @@ max_scale <-brewer.pal(9, 'Blues')
 max_plot <-ggplot(max_df) +
   geom_tile(mapping = aes(x,y, fill = mean)) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="gray40") +
-  labs(fill = "Max SWE (m)") +
+  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="#08306B") +
+  labs(fill = "Max (m)") +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
         axis.title.y = element_blank(),
         axis.title.x = element_blank(),
@@ -139,24 +149,24 @@ max_plot <-ggplot(max_df) +
         axis.text.y = element_blank(),
         axis.ticks = element_blank(),
         legend.position = "bottom",
-        plot.margin = unit(c(0,0,0,0), "cm"))+
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
   guides(fill = guide_colorbar(direction = "horizontal",
                                label.position = 'top',
                                title.position ='bottom',
                                title.hjust = .5,
-                               barwidth = 19,
+                               barwidth = 15,
                                barheight = 1,
                                frame.colour = "black", 
                                ticks.colour = "black"))
-
 # save
 ggsave(max_plot,
-       file = "./plots/max_test_v8.png",
+       file = "./plots/max_test_v11.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_test_v8.png")
+system("open ./plots/max_test_v11.png")
 
 ######################
 ######################
@@ -174,6 +184,8 @@ sdd_plot <-ggplot(sdd_df) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   scale_fill_gradientn(colors = sdd_scale, limits = c(100,365), na.value="gray40") +
   labs(fill = "SDD (DOWY)") +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
         axis.title.y = element_blank(),
         axis.title.x = element_blank(),
@@ -181,42 +193,42 @@ sdd_plot <-ggplot(sdd_df) +
         axis.text.y = element_blank(),
         axis.ticks = element_blank(),
         legend.position = "bottom",
-        plot.margin = unit(c(0,0,0,0), "cm")) +
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
   guides(fill = guide_colorbar(direction = "horizontal",
                                label.position = 'top',
                                title.position ='bottom',
                                title.hjust = .5,
-                               barwidth = 13,
+                               barwidth = 15,
                                barheight = 1,
                                frame.colour = "black", 
                                ticks.colour = "black"))
 
-
 # save
 ggsave(sdd_plot,
-       file = "./plots/sdd_test_v3.png",
-       width = 5, 
-       height = 9,
+       file = "./plots/sdd_test_v4.png",
+       width = 4.5, 
+       height = 8,
        dpi = 600)
 
-system("open ./plots/sdd_test_v3.png")
+system("open ./plots/sdd_test_v4.png")
 
 # cowplot test
 full <-plot_grid(mwa_plot, max_plot, sdd_plot,
                  labels = c("(a)", "(b)", "(c)"),
                  ncol = 3, 
                  align = "hv",
-                 label_size = 26,
+                 label_size = 22,
                  vjust =  2,
-                 hjust = -.5,
+                 hjust = -.2,
                  rel_widths = c(1/3, 1/3, 1/3))
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/full_test_v7.png",
-       width = 16, 
-       height = 9,
+       file = "./plots/full_test_v12.png",
+       width = 13.5, 
+       height = 8,
        dpi = 600)
 
-system("open ./plots/full_test_v7.png")
+system("open ./plots/full_test_v12.png")
   
