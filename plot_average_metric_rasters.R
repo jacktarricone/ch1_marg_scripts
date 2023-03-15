@@ -95,8 +95,8 @@ mwa_scale <-brewer.pal(9, 'YlOrRd')
 
 # plot
 mwa_plot <-ggplot(mwa_df) +
+       geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        geom_tile(mapping = aes(x,y, fill = mean)) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value="#800026") + # max of color bar so it saturates
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
@@ -120,12 +120,12 @@ mwa_plot <-ggplot(mwa_df) +
                                     ticks.colour = "black"))
 # save
 ggsave(mwa_plot,
-       file = "./plots/mwa_test_v14.png",
+       file = "./plots/mwa_test_v15.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/mwa_test_v14.png")
+system("open ./plots/mwa_test_v15.png")
 
 
 ######################
@@ -225,17 +225,16 @@ system("open ./plots/sdd_test_v4.png")
 
 # set scale 
 display.brewer.all()
-max_dowy_scale <-brewer.pal(9, 'RdYlBu')
+max_dowy_scale <-brewer.pal(9, 'RdYlGn')
 hist(max_dowy, breaks = 100)
 plot(max_dowy)
 hist(max_dowy_df$mean)
 
 # plot
 max_dowy_plot <-ggplot(max_dowy_df) +
-  geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   geom_tile(mapping = aes(x,y, fill = mean)) +
-  # geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,200), na.value="#4575B4") +
+  scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,225), na.value="#4575B4") +
   labs(fill = "Max SWE DOWY (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -259,12 +258,12 @@ max_dowy_plot <-ggplot(max_dowy_df) +
 
 # save
 ggsave(max_dowy_plot,
-       file = "./plots/max_dowy_test_v2.png",
+       file = "./plots/max_dowy_test_v3.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_dowy_test_v2.png")
+system("open ./plots/max_dowy_test_v3.png")
 
 
 
