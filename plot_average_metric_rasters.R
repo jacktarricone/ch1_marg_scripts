@@ -97,7 +97,7 @@ mwa_scale <-brewer.pal(9, 'YlOrRd')
 mwa_plot <-ggplot(mwa_df) +
        geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        geom_tile(mapping = aes(x,y, fill = mean)) +
-       scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value="#800026") + # max of color bar so it saturates
+       scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value=min(mwa_scale)) + # max of color bar so it saturates
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
        labs(fill = "MWA (cm)") +
@@ -180,12 +180,13 @@ system("open ./plots/max_test_v11.png")
 # set scale 
 display.brewer.all()
 sdd_scale <-brewer.pal(9, 'Spectral')
+min(sdd_scale)
 
 # plot
 sdd_plot <-ggplot(sdd_df) +
+  geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   geom_tile(mapping = aes(x,y, fill = mean)) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = sdd_scale, limits = c(130,365), na.value="gray40") +
+  scale_fill_gradientn(colors = sdd_scale, limits = c(130,365), na.value="gray90") +
   labs(fill = "SDD (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -209,12 +210,12 @@ sdd_plot <-ggplot(sdd_df) +
 
 # save
 ggsave(sdd_plot,
-       file = "./plots/sdd_test_v4.png",
+       file = "./plots/sdd_test_v5.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/sdd_test_v4.png")
+system("open ./plots/sdd_test_v5.png")
 
 
 ######################
@@ -226,15 +227,12 @@ system("open ./plots/sdd_test_v4.png")
 # set scale 
 display.brewer.all()
 max_dowy_scale <-brewer.pal(9, 'RdYlGn')
-hist(max_dowy, breaks = 100)
-plot(max_dowy)
-hist(max_dowy_df$mean)
 
 # plot
 max_dowy_plot <-ggplot(max_dowy_df) +
   geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   geom_tile(mapping = aes(x,y, fill = mean)) +
-  scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,225), na.value="#4575B4") +
+  scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,225), na.value=min(max_dowy_scale)) +
   labs(fill = "Max SWE DOWY (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -268,21 +266,23 @@ system("open ./plots/max_dowy_test_v3.png")
 
 
 # cowplot test
-full <-plot_grid(mwa_plot, max_plot, sdd_plot,
-                 labels = c("(a)", "(b)", "(c)"),
-                 ncol = 3, 
+full <-plot_grid(mwa_plot, max_plot, sdd_plot, max_dowy_plot, max_dowy_plot, max_dowy_plot,                 
+                 labels = c("(a)", "(b)", "(c)", "(d)","(e)","(f)"),
+                 ncol = 3,
+                 nrow = 2,
                  align = "hv",
                  label_size = 22,
                  vjust =  2,
                  hjust = -.2,
-                 rel_widths = c(1/3, 1/3, 1/3))
+                 rel_widths = c(1/3, 1/3, 1/3),
+                 rel_heights = c(1/2, 1/2))
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/full_test_v13.png",
+       file = "./plots/full_test_v15.png",
        width = 13.5, 
-       height = 8,
+       height = 16,
        dpi = 600)
 
-system("open ./plots/full_test_v13.png")
+system("open ./plots/full_test_v15.png")
   

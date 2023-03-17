@@ -111,6 +111,13 @@ ggsave(dem_plot,
 
 system("open ./plots/dem_test_v3.png")
 
+ggsave(dem_plot,
+       file = "./plots/dem_test_v3.pdf",
+       width = 4.5, 
+       height = 8)
+
+system("open ./plots/dem_test_v3.pdf")
+
 
 
 
