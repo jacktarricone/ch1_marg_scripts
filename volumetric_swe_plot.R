@@ -86,7 +86,7 @@ ymin
 # wy_15 <-filter(daily_vol_swe, wy == "2015")
 
 # make labels
-mean <-paste0(expression('Mean (16 '~(km^{"3"})))
+mean <-paste0(expression('Mean(16'~km^{"3"}))
 
 # rough plot
 ggplot(daily_vol_swe) +
@@ -96,10 +96,10 @@ ggplot(daily_vol_swe) +
   geom_ribbon(data = mean_vol_swe, aes(x= doWY, y = mean_vol_swe,
                                        ymin = ymin, 
                                        ymax = mean_vol_swe + (sd_vol_swe$sd_vol_swe)), color = "grey80", alpha=.3) +
-  geom_line(data = mean_vol_swe, aes(x= doWY, y = mean_vol_swe, color = "Mean"), linewidth = 1) +
+  geom_line(data = mean_vol_swe, aes(x= doWY, y = mean_vol_swe, color = mean), linewidth = 1) +
   geom_line(data = max_vol_swe, aes(x= doWY, y = max_vol_swe, color = "Max"), linewidth = .8) +
   geom_line(data = min_vol_swe, aes(x= doWY, y = min_vol_swe, color = "Min"), linewidth = .8) +
-  scale_colour_manual(values=c(Mean = "black","Min" = "red", "Max" = "darkblue"))+
+  scale_colour_manual(values=c(mean = "black","Min" = "red", "Max" = "darkblue"))+
   scale_y_continuous(limits = c(0,40),breaks = c(seq(0,40,5)), expand = (c(0,.2))) +
   scale_x_continuous(breaks = c(seq(0,350,50)), expand = (c(0,0))) +
   labs(y=(expression('Volumetric SWE'~(km^{"3"}))), x="Day of Water Year") +
