@@ -104,12 +104,12 @@ dem_plot <-ggplot(dem_df) +
                                     ticks.colour = "black")) 
 # save
 ggsave(dem_plot,
-       file = "./plots/dem_test_v8.png",
+       file = "./plots/dem_test_v9.png",
        width = 5.1, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/dem_test_v8.png")
+system("open ./plots/dem_test_v9.png")
 
 #######################
 ##### cc test plot ####
@@ -121,7 +121,7 @@ cc_scale <-brewer.pal(9, 'YlGn')
 
 # plot
 cc_plot <-ggplot(cc_df) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   coord_sf(label_graticule = "N") +
   scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
   geom_tile(mapping = aes(x,y, fill = nlcd_full)) +
@@ -147,7 +147,7 @@ cc_plot <-ggplot(cc_df) +
 # save
 ggsave(cc_plot,
        file = "./plots/cc_test_v4.png",
-       width = 5.1, 
+       width = 4.8, 
        height = 8.5,
        dpi = 600)
 
@@ -160,16 +160,16 @@ full <-plot_grid(dem_plot, cc_plot, cc_plot,
                  ncol = 3, 
                  align = "hv",
                  label_size = 22,
-                 vjust =  2,
-                 hjust = -.2,
+                 vjust =  3,
+                 hjust = -2,
                  rel_widths = c(1/3, 1/3, 1/3))
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/study_area_v2.png",
-       width = 13.5, 
-       height = 8,
+       file = "./plots/study_area_v4.png",
+       width = 15.5, 
+       height = 8.5,
        dpi = 600)
 
-system("open ./plots/study_area_v2.png")
+system("open ./plots/study_area_v4.png")
   
