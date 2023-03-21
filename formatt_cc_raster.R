@@ -101,7 +101,7 @@ cc_scale <-brewer.pal(9, 'Greens')
 cc_plot <-ggplot(cc_df) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        geom_tile(mapping = aes(x,y, fill = nlcd_full)) +
-       scale_fill_gradientn(colors = cc_scale, limits = c(0,100), na.value=min(cc_scale)) + # max of color bar so it saturates
+       scale_fill_gradientn(colors = cc_scale, limits = c(0,100), na.value='white') + # max of color bar so it saturates
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
        labs(fill = "Canopy Cover (%)") +

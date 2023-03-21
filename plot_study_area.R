@@ -63,13 +63,17 @@ dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 dem <-crop(dem_v1, ext(snsr))
 plot(dem)
 
+cc_v1 <-rast("./rasters/nlcd_cc/cc_wNA.tif")
+cc <-crop(cc_v1, ext(snsr))
+plot(cc)
+
 # convert to df for geom_raster
 dem_df <-as.data.frame(dem, xy = TRUE, cells = TRUE)
-
+cc_df <-as.data.frame(cc, xy = TRUE, cells = TRUE)
 
 ######################
 ######################
-######## mwa #########
+######## topo ########
 ######################
 ######################
 
@@ -104,29 +108,59 @@ dem_plot <-ggplot(dem_df) +
                                     ticks.colour = "black"))
 # save
 ggsave(dem_plot,
-       file = "./plots/dem_test_v3.png",
+       file = "./plots/dem_test_v4.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/dem_test_v3.png")
+system("open ./plots/dem_test_v4.png")
 
-ggsave(dem_plot,
-       file = "./plots/dem_test_v3.pdf",
+#######################
+##### cc test plot ####
+#######################
+
+# set scale 
+display.brewer.all()
+cc_scale <-brewer.pal(9, 'YlGn')
+
+# plot
+cc_plot <-ggplot(cc_df) +
+  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_tile(mapping = aes(x,y, fill = nlcd_full)) +
+  scale_fill_gradientn(colors = cc_scale, limits = c(0,100), na.value='white') + # max of color bar so it saturates
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(fill = "Canopy Cover (%)") +
+  theme(panel.border = element_rect(color = NA, fill=NA),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 15,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+
+# save
+ggsave(cc_plot,
+       file = "./plots/cc_test_v2.png",
        width = 4.5, 
-       height = 8)
+       height = 8,
+       dpi = 600)
 
-system("open ./plots/dem_test_v3.pdf")
-
-
-
-
-
-
+system("open ./plots/cc_test_v2.png")
 
 
 # cowplot test
-full <-plot_grid(dem_plot, ##_plot, ##_plot,
+full <-plot_grid(dem_plot, cc_plot, cc_plot,
                  labels = c("(a)", "(b)", "(c)"),
                  ncol = 3, 
                  align = "hv",
@@ -137,10 +171,10 @@ full <-plot_grid(dem_plot, ##_plot, ##_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/full_test_v13.png",
+       file = "./plots/study_area_v2.png",
        width = 13.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/full_test_v13.png")
+system("open ./plots/study_area_v2.png")
   
