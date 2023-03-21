@@ -95,8 +95,9 @@ mwa_scale <-brewer.pal(9, 'YlOrRd')
 
 # plot
 mwa_plot <-ggplot(mwa_df) +
-       geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+       geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        geom_tile(mapping = aes(x,y, fill = mean)) +
+       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value=min(mwa_scale)) + # max of color bar so it saturates
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
@@ -184,9 +185,10 @@ min(sdd_scale)
 
 # plot
 sdd_plot <-ggplot(sdd_df) +
-  geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   geom_tile(mapping = aes(x,y, fill = mean)) +
-  scale_fill_gradientn(colors = sdd_scale, limits = c(130,365), na.value="gray90") +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = sdd_scale, limits = c(130,365), na.value="gray80") +
   labs(fill = "SDD (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -230,8 +232,9 @@ max_dowy_scale <-brewer.pal(9, 'RdYlGn')
 
 # plot
 max_dowy_plot <-ggplot(max_dowy_df) +
-  geom_sf(data = snsr_sf, fill = "gray90", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   geom_tile(mapping = aes(x,y, fill = mean)) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
   scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,225), na.value=min(max_dowy_scale)) +
   labs(fill = "Max SWE DOWY (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
