@@ -1,9 +1,6 @@
 ### plot study area static metrics
-# dem
-# aspect
-# slope
-# classes
-# land cover
+# dem, canopy cover
+
 # jack tarricone
 
 library(terra)
@@ -68,8 +65,8 @@ cc <-crop(cc_v1, ext(snsr))
 plot(cc)
 
 # convert to df for geom_raster
-dem_df <-as.data.frame(dem, xy = TRUE, cells = TRUE)
-cc_df <-as.data.frame(cc, xy = TRUE, cells = TRUE)
+dem_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
+cc_df <-as.data.frame(cc_v1, xy = TRUE, cells = TRUE)
 
 ######################
 ######################
@@ -83,18 +80,17 @@ topo_colors <-c(topo_table$colors)
 
 # plot
 dem_plot <-ggplot(dem_df) +
-       geom_tile(mapping = aes(x,y, fill = SNSR_DEM)) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+       coord_sf(label_graticule = "NW") +
+       scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
+       geom_tile(mapping = aes(x,y, fill = SNSR_DEM)) +
        scale_fill_gradientn(colors = topo_colors, limits = c(1500,3800), na.value="#ebe9eb") + # max of color bar so it saturates
-       scale_x_continuous(expand = c(0, 0)) +
-       scale_y_continuous(expand = c(0, 0)) +
        labs(fill = "Elevation (m)") +
-       theme(panel.border = element_rect(color = NA, fill=NA),
+       theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+             axis.text.x =element_text(color="black"),
              axis.title.y = element_blank(),
              axis.title.x = element_blank(),
-             axis.text.x = element_blank(),
-             axis.text.y = element_blank(),
-             axis.ticks = element_blank(),
+             axis.text.y = element_text(color="black"),
              legend.position = "bottom",
              plot.margin = unit(c(0,0,0,0), "cm"),
              legend.box.spacing = unit(0, "pt")) +
@@ -102,18 +98,18 @@ dem_plot <-ggplot(dem_df) +
                                     label.position = 'top',
                                     title.position ='bottom',
                                     title.hjust = .5,
-                                    barwidth = 15,
+                                    barwidth = 18,
                                     barheight = 1,
                                     frame.colour = "black", 
-                                    ticks.colour = "black"))
+                                    ticks.colour = "black")) 
 # save
 ggsave(dem_plot,
-       file = "./plots/dem_test_v4.png",
-       width = 4.5, 
-       height = 8,
+       file = "./plots/dem_test_v8.png",
+       width = 5.1, 
+       height = 8.5,
        dpi = 600)
 
-system("open ./plots/dem_test_v4.png")
+system("open ./plots/dem_test_v8.png")
 
 #######################
 ##### cc test plot ####
@@ -125,18 +121,17 @@ cc_scale <-brewer.pal(9, 'YlGn')
 
 # plot
 cc_plot <-ggplot(cc_df) +
-  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  coord_sf(label_graticule = "N") +
+  scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
   geom_tile(mapping = aes(x,y, fill = nlcd_full)) +
-  scale_fill_gradientn(colors = cc_scale, limits = c(0,100), na.value='white') + # max of color bar so it saturates
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_gradientn(colors = cc_scale, limits = c(0,80), na.value="#004529") + # max of color bar so it saturates
   labs(fill = "Canopy Cover (%)") +
-  theme(panel.border = element_rect(color = NA, fill=NA),
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        axis.text.x =element_text(color="black"),
         axis.title.y = element_blank(),
         axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
+        axis.text.y = element_text(color="black"),
         legend.position = "bottom",
         plot.margin = unit(c(0,0,0,0), "cm"),
         legend.box.spacing = unit(0, "pt")) +
@@ -144,19 +139,19 @@ cc_plot <-ggplot(cc_df) +
                                label.position = 'top',
                                title.position ='bottom',
                                title.hjust = .5,
-                               barwidth = 15,
+                               barwidth = 18,
                                barheight = 1,
                                frame.colour = "black", 
-                               ticks.colour = "black"))
+                               ticks.colour = "black")) 
 
 # save
 ggsave(cc_plot,
-       file = "./plots/cc_test_v2.png",
-       width = 4.5, 
-       height = 8,
+       file = "./plots/cc_test_v4.png",
+       width = 5.1, 
+       height = 8.5,
        dpi = 600)
 
-system("open ./plots/cc_test_v2.png")
+system("open ./plots/cc_test_v4.png")
 
 
 # cowplot test
