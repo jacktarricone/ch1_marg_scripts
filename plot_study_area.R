@@ -58,10 +58,24 @@ snsr_sf <-st_geometry(snsr_v1)
 #### read in metrics
 dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 cc_v1 <-rast("./rasters/nlcd_cc/cc_wNA.tif")
+an <-rast("./rasters/categorized/dem_am_cat_north_test.tif")
+as <-rast("./rasters/categorized/dem_am_cat_south_test.tif")
+
+aspect <-
+
 
 # convert to df for geom_raster
 dem_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
 cc_df <-as.data.frame(cc_v1, xy = TRUE, cells = TRUE)
+
+## aspect north
+an_df <-as.data.frame(an, xy = TRUE, cells = TRUE)
+an_df$cat <-paste0('n_', an_df$SNSR_DEM)
+
+## aspect south
+as_df <-as.data.frame(an, xy = TRUE, cells = TRUE)
+as_df$cat <-paste0('s_', as_df$SNSR_DEM)
+
 
 ######################
 ######################
@@ -148,6 +162,61 @@ ggsave(cc_plot,
        dpi = 600)
 
 system("open ./plots/cc_test_v5.png")
+
+#######################
+######  aspect ########
+#######################
+
+# set scale 
+display.brewer.all()
+viridis::viridis()
+an_scale <-rev(viridis::mako(10))
+as_scale <-viridis::viridis(9)
+
+an_scale
+"#DEF5E5FF"
+"#0B0405FF"
+
+# plot
+an_plot <-ggplot(an_df) +
+  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .15, inherit.aes = FALSE) + # for gray
+  geom_tile(mapping = aes(x,y, fill = cat)) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # for black line
+  coord_sf(label_graticule = "N") +
+  scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
+  scale_fill_discrete(color = an_scale)
+  
+  scale_fill_gradientn(colors = an_scale, limits = c(1,10), na.value="#DEF5E5FF") + # max of color bar so it saturates
+  geom_tile(data = an_df, mapping = aes(x,y, fill = SNSR_DEM)) +
+  labs(fill = "Binned Aspect Noth") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        axis.text.x =element_text(color="black"),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(color="black"),
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 18,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black")) 
+
+# save
+ggsave(an_plot,
+       file = "./plots/aspect_plot_v3.png",
+       width = 4.8, 
+       height = 8.5,
+       dpi = 600)
+
+system("open ./plots/aspect_plot_v3.png")
+
+
+
 
 
 # cowplot test
