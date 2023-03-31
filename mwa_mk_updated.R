@@ -12,6 +12,28 @@ setwd("~/ch1_margulis/")
 rast_list <-list.files("./rasters/mwa/", full.names = TRUE)
 mwa_stack <-rast(rast_list)
 
+# read in tahoe crop shape
+tahoe_crop <-vect("./vectors/tahoe_crop_mk.geojson")
+tahoe_crop
+mwa_crop <-crop(mwa_stack, tahoe_crop)
+
+# calculate number of non na obs per pixel
+n_obs <-app(mwa_crop, function(x) sum(!is.na(x)))
+plot(n_obs)
+
+# mask for all values below 10
+masking_value <-subst(n_obs, c(0:10), NA)
+plot(masking_value)
+
+# if there are less than 10 obsevations per pixel, make NA
+mwa_crop_v2 <-mask(mwa_crop, masking_value, maskvalues = NA)
+mwa_crop_v2
+
+# calculate number of non na obs per pixel
+n_obs_new <-app(mwa_crop_v2, function(x) sum(!is.na(x)))
+n_obs_new_v2 <-subst(n_obs_new, 0, NA)
+min(n_obs_new_v2)
+
 ###### mk test, trend.slope is full stats, 2 is just p-val and slope stats
 trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,  
                         confidence.pass = FALSE, z.value.pass = FALSE,
@@ -33,24 +55,14 @@ trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,
   return( fit.results )
 }
 
-# test with lapp
-test <-app(mwa_stack[[1:5]], fun = trend.slope2, cores = 10)
+# test with app
+test <-app(mwa_crop, fun = trend.slope2, cores = 10)
 test
 
-
-
-# run it in parallel to see if stripping is gone 
-beginCluster(n=7)
-
-system.time(max_trends_full <- clusterR(max_stack, overlay, args=list(fun=trend.slope2)))
-
-endCluster()
-
-
-plot(max_trends_full[[1]])
-plot(max_trends_full[[2]])
+plot(test[[1]])
+plot(test[[2]])
 
 max_p_value_full <-max_trends_full[[2]]
 max_slope_full <-max_trends_full[[1]]
-writeRaster(max_p_value_full,"/Volumes/jt/projects/margulis/snow_metric_rasters/max_swe/mk_results/max_p_value_full.tif")
-writeRaster(max_slope_full, "/Volumes/jt/projects/margulis/snow_metric_rasters/max_swe/mk_results/max_slope_full.tif")
+writeRaster(max_p_value_full,"./rasters/mk_results/max_p_value_full.tif")
+writeRaster(max_slope_full, "./rasters/max_swe/mk_results/max_slope_full.tif")
