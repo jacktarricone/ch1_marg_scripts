@@ -71,7 +71,11 @@ hist(sig_trend, breaks = 200)
 
 # convert to df for geom_raster
 trend_df <-as.data.frame(trend, xy = TRUE, cells = TRUE)
+
+# sig
 sig_df <-as.data.frame(sig_trend, xy = TRUE, cells = TRUE)
+sig_df$cat <-ifelse(sig_df$max_sig_slope == -1, "Decrease", -1)
+sig_df$cat <-ifelse(sig_df$max_sig_slope == 1, "Increase", "Decrease")
 
 ######################
 ######################
@@ -88,7 +92,7 @@ trend_plot <-ggplot(trend_df) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
        geom_tile(mapping = aes(x,y, fill = max_slope_full)) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = trend_scale, limits = c(-20,20), na.value=min(trend_scale)) + # max of color bar so it saturates
+       scale_fill_gradientn(colors = trend_scale, limits = c(-15,15), na.value=max(trend_scale)) + # max of color bar so it saturates
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
        labs(fill = "Max SWE (mm)") +
@@ -111,12 +115,12 @@ trend_plot <-ggplot(trend_df) +
                                     ticks.colour = "black"))
 # save
 ggsave(trend_plot,
-       file = "./plots/max_trend_test_v2.png",
+       file = "./plots/max_trend_test_v3.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_trend_test_v2.png")
+system("open ./plots/max_trend_test_v3.png")
 
 
 ######################
@@ -125,15 +129,12 @@ system("open ./plots/max_trend_test_v2.png")
 ######################
 ######################
 
-# set scale 
-max_scale <-brewer.pal(9, 'Blues')
-
 # plot
-max_plot <-ggplot(max_df) +
-  geom_tile(mapping = aes(x,y, fill = mean)) +
+sig_plot <-ggplot(sig_df) +
+  geom_tile(mapping = aes(x,y, fill = cat)) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="#08306B") + # max of color bar so it saturates
-  labs(fill = "Max SWE (m)") +
+  # scale_fill_discrete(colors = max_scale, limits = c(0,1.5), na.value="#08306B") + # max of color bar so it saturates
+  labs(fill = "Significant Trends") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -144,23 +145,23 @@ max_plot <-ggplot(max_df) +
         axis.ticks = element_blank(),
         legend.position = "bottom",
         plot.margin = unit(c(0,0,0,0), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "horizontal",
-                               label.position = 'top',
-                               title.position ='bottom',
-                               title.hjust = .5,
-                               barwidth = 15,
-                               barheight = 1,
-                               frame.colour = "black", 
-                               ticks.colour = "black"))
-# save
-ggsave(max_plot,
-       file = "./plots/max_test_v11.png",
+        legend.box.spacing = unit(0, "pt")) 
+#   guides(fill = guide_colorbar(direction = "horizontal",
+#                                label.position = 'top',
+#                                title.position ='bottom',
+#                                title.hjust = .5,
+#                                barwidth = 15,
+#                                barheight = 1,
+#                                frame.colour = "black", 
+#                                ticks.colour = "black"))
+# # save
+ggsave(sig_plot,
+       file = "./plots/sig_max_test_v2.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_test_v11.png")
+system("open ./plots/sig_max_test_v2.png")
 
 ######################
 ######################
