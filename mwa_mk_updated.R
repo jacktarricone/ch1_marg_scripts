@@ -1,38 +1,32 @@
 # mwa mk trend analysis
 # march 31, 2023
 
-
 library(terra)
 library(spatialEco)
 
-
-
-# read in scf rasters to stack
+# read in mwa rasters to stack
 setwd("~/ch1_margulis/")
 rast_list <-list.files("./rasters/mwa/", full.names = TRUE)
 mwa_stack <-rast(rast_list)
 
-# read in tahoe crop shape
-tahoe_crop <-vect("./vectors/tahoe_crop_mk.geojson")
-tahoe_crop
-mwa_crop <-crop(mwa_stack, tahoe_crop)
-
+# # read in tahoe crop shape
+# tahoe_crop <-vect("./vectors/tahoe_crop_mk.geojson")
+# tahoe_crop
+# mwa_crop <-crop(mwa_stack, tahoe_crop)
+# 
 # calculate number of non na obs per pixel
-n_obs <-app(mwa_crop, function(x) sum(!is.na(x)))
-plot(n_obs)
+n_obs <-app(mwa_stack, function(x) sum(!is.na(x)))
+n_obs_v2 <-subst(n_obs, 0, NA)
+plot(n_obs_v2)
+# writeRaster(n_obs_v2, "./rasters/mk_results/mwa_n_obs.tif")
 
-# mask for all values below 10
-masking_value <-subst(n_obs, c(0:10), NA)
+# convert all values below 10 to NA
+masking_value <-subst(n_obs_v2, c(0:25), NA)
 plot(masking_value)
 
-# if there are less than 10 obsevations per pixel, make NA
-mwa_crop_v2 <-mask(mwa_crop, masking_value, maskvalues = NA)
-mwa_crop_v2
-
-# calculate number of non na obs per pixel
-n_obs_new <-app(mwa_crop_v2, function(x) sum(!is.na(x)))
-n_obs_new_v2 <-subst(n_obs_new, 0, NA)
-min(n_obs_new_v2)
+# if there are less than 10 observations per pixel, make NA
+mwa_stack_v2 <-mask(mwa_stack, masking_value, maskvalues = NA)
+mwa_stack_v2
 
 ###### mk test, trend.slope is full stats, 2 is just p-val and slope stats
 trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,  
@@ -55,14 +49,27 @@ trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,
   return( fit.results )
 }
 
-# test with app
-test <-app(mwa_crop, fun = trend.slope2, cores = 10)
-test
+# run mk test
+mk_results <-app(mwa_stack_v2, fun = trend.slope2, cores = 12)
+mk_results
 
-plot(test[[1]])
-plot(test[[2]])
+# pull out results
+mwa_p_val <-mk_results[[2]]
+mwa_slope <-mk_results[[1]]
 
-max_p_value_full <-max_trends_full[[2]]
-max_slope_full <-max_trends_full[[1]]
-writeRaster(max_p_value_full,"./rasters/mk_results/max_p_value_full.tif")
-writeRaster(max_slope_full, "./rasters/max_swe/mk_results/max_slope_full.tif")
+# mask for sig p_val
+mwa_sig_p_val <-mwa_p_val
+values(mwa_sig_p_val)[values(mwa_sig_p_val) > .05] <-NA
+
+# sig slope
+mwa_sig_slope <-mask(mwa_slope, mwa_sig_p_val)
+
+# quick test plots
+plot(mwa_slope)
+plot(mwa_p_val)
+plot(mwa_sig_p_val)
+
+writeRaster(mwa_sig_p_val,"./rasters/mk_results/mwa_sig_p_val.tif")
+writeRaster(mwa_slope, "./rasters/mk_results/mwa_slope.tif")
+writeRaster(mwa_sig_slope, "./rasters/mk_results/mwa_sig_slope.tif")
+
