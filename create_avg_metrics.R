@@ -5,7 +5,7 @@
 library(terra)
 
 #set working directory
-setwd("~/ch1_margulis/snow_metric_rasters/terra_rasters/")
+setwd("~/ch1_margulis")
 
 ##### compute metrics
 
@@ -13,14 +13,22 @@ setwd("~/ch1_margulis/snow_metric_rasters/terra_rasters/")
 #####  max dowy ####
 ####################
 
-dowy_list <-list.files('./snow_metric_rasters/terra_rasters/max_swe_dowy/', pattern = '.tif', full.names = TRUE)
+dowy_list <-list.files('./rasters/snow_metrics/max_swe_dowy/', pattern = '.tif', full.names = TRUE)
 dowy_stack <-rast(dowy_list)
 
 # mean
-dowy_mean <-app(dowy_stack, fun = "mean", cores = 8)
+metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
+
+dowy_mean <-app(dowy_stack, fun = metric_mean, cores = 8)
 plot(dowy_mean)
 hist(dowy_mean, breaks = 200)
-# writeRaster(dowy_mean, "./rasters/snow_metric_averages/max_dowy_mean.tif")
+# writeRaster(dowy_mean, "./rasters/snow_metric_averages/max_dowy_mean_v2.tif")
+
+# calculate number of non na obs per pixel
+dowy_n_obs <-app(dowy_stack, function(x) sum(!is.na(x)))
+dowy_n_obs_v2 <-subst(dowy_n_obs, 0, NA)
+plot(dowy_n_obs_v2)
+writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs.tif")
 
 # median
 mwa_med <-app(mwa, fun = 'median', cores=5)
