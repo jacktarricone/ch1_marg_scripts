@@ -317,18 +317,14 @@ rm(bottom)
 full_max <-rbind(top_max_dowy_mat, bottom_max_dowy_mat)
 r <-rast(full_max) # convert from matrix to raster
 rm(full_max) # trash array
-values(r)[values(r) == -32768] <- NA # change no data to NA
-print("-32768 converted to NA")
 
 # georeference
 ext(r) <-c(-123.3,-117.6,35.4,42) # set extent
 crs(r) <-crs(dem) # set crs from DEM raster
-name <- gsub(".h5", "", hdf_name)
-good_name <- gsub("SN_SWE_", "max_dowy_", name)
+plot(r)
+r
 
-setwd("/Volumes/jt/projects/margulis/snow_metric_rasters/max_dowy/rasters")
-writeRaster(rast, paste0(good_name, ".tif"))
-return(rast)
-}
+writeRaster(r, "./rasters/snow_metrics/melt_rate/melt_rate_WY2016.tif")
+
 
 
