@@ -53,22 +53,38 @@ hist(max_dowy_mean)
 max <-rast("./rasters/snow_metric_averages/max_mean.tif")
 max_cm <-max/10
 
+# mwa 
+mwa <-rast("./rasters/snow_metric_averages/mwa_mean_v2.tif")
+plot(mwa)
+
 # mask dem for same pixels
-dem_v2 <-mask(dem, max_dowy_mean)
-max_v2 <-mask(max_cm, max_dowy_mean)
+dem_v2 <-mask(dem, mwa)
+max_v2 <-mask(max_cm, mwa)
+max_dowy <-mask(max_dowy_mean, mwa)
 
 # convert to df
 dem_df <-as.data.frame(dem_v2, xy = TRUE)
-dowy_df <-as.data.frame(max_dowy_mean, xy = TRUE)
+dowy_df <-as.data.frame(max_dowy, xy = TRUE)
 max_df <-as.data.frame(max_v2, xy = TRUE)
+mwa_df <-as.data.frame(mwa, xy = TRUE)
 
 # bind and rename
-df <-cbind(dem_df, as.integer(dowy_df$lyr.1), max_df$mean)
-colnames(df)[4:5] <- c("max_dowy","max_swe_cm")
+df <-cbind(dem_df, as.integer(dowy_df$lyr.1), max_df$mean, mwa_df$lyr.1)
+colnames(df)[3:6] <- c("dem","max_dowy","max_swe_cm","mwa_mm")
 head(df)
 
 # dowy vs elevation
-ggplot(df, aes(max_dowy, SNSR_DEM)) +
+ggplot(df, aes(mwa_mm, dem)) +
+  geom_hex(bins = 30) +
+  scale_fill_gradient(low = "gray99", high = "black") +
+  scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +
+  scale_x_continuous(limits = c(0, 200),breaks = c(seq(0,200,50)), expand = (c(0,0))) +
+  labs(x = "MWA (mm)", y = "Elevation (m)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        legend.position = c(.13,.75))
+
+# dowy vs elevation
+ggplot(df, aes(max_dowy, dem)) +
   geom_hex(bins = 40) +
   scale_fill_gradient(low = "gray99", high = "black") +
   scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +

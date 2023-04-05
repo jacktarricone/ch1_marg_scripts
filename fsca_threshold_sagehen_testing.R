@@ -37,23 +37,149 @@ sagehen_swe_wy15 <- h5read(swe_list[31], "/SWE", index = list(2523:2621, 2947:31
 sagehen_swe_wy16 <- h5read(swe_list[32], "/SWE", index = list(2523:2621, 2947:3172, 1:365)) #sagehen extent
 
 # # 93 swe vs. fsca
-swe15 <-c(sagehen_swe_wy15[50,80,1:365]/10)
-swe93 <-c(sagehen_swe_wy93[50,80,1:365]/10)
-swe16 <-c(sagehen_swe_wy16[50,80,1:365]/10)
+swe15 <-c(sagehen_swe_wy15[50,80,1:365])
+swe93 <-c(sagehen_swe_wy93[50,80,1:365])
+swe16 <-c(sagehen_swe_wy16[50,80,1:365])
 
-# pull out one pixel time series
-sca15 <-c(sagehen_fsca_wy15[50,80,1:365])
-sca93 <-c(sagehen_fsca_wy93[50,80,1:365])
-sca16 <-c(sagehen_fsca_wy16[50,80,1:365])
+# # pull out one pixel time series
+# sca15 <-c(sagehen_fsca_wy15[50,80,1:365])
+# sca93 <-c(sagehen_fsca_wy93[50,80,1:365])
+# sca16 <-c(sagehen_fsca_wy16[50,80,1:365])
 
 # take means
-# swe15 <-round(apply(sagehen_swe_wy15/10, 3, mean), digits = 2)
-# swe16 <-round(apply(sagehen_swe_wy16/10, 3, mean), digits = 2)
-# swe93 <-round(apply(sagehen_swe_wy93/10, 3, mean), digits = 2)
-# 
+swe15_mean <-round(apply(sagehen_swe_wy15, 3, mean), digits = 2)
+swe16_mean <-round(apply(sagehen_swe_wy16, 3, mean), digits = 2)
+swe93_mean <-round(apply(sagehen_swe_wy93, 3, mean), digits = 2)
+
+plot(swe16_mean)
+
 # sca15 <-round(apply(sagehen_fsca_wy15, 3, mean), digits = 2)
 # sca16 <-round(apply(sagehen_fsca_wy16, 3, mean), digits = 2)
 # sca93 <-round(apply(sagehen_fsca_wy93, 3, mean), digits = 2)
+
+
+
+##### mid winter ablation function function
+sdd <-function(x, percent){
+  
+  # 10 mm
+  if (max(x) < 10){
+    return(NA)
+  } 
+  else{
+    dowy <-as.numeric(max(which(x > percent)))
+    return(dowy)
+  }
+}
+
+max_swe_dowy <-function(x){
+  
+  # set threshold 10 mm
+  if (max(x) < 10){
+    return(NA)
+  } 
+  else{
+    # pull out max value
+    max_swe <-as.numeric(max(x))
+    
+    # use which() funciton for position tracking
+    # nested with max() to have last day of max swe
+    dowy <-as.numeric(max(which(x == max_swe)))
+    return(dowy)
+  }
+}
+
+max_swe <-function(x){
+  max_swe <-as.numeric(max(x))
+  return(max_swe)
+}
+
+sdd(swe16, 5)
+
+max_swe_dowy(swe16)
+
+max_swe(swe16)
+
+x <-swe16
+
+melt_rate <-function(x){
+  
+  max <-max_swe(x)
+  dowy <-max_swe_dowy(x)
+  melt_date <-sdd(x,5)
+  
+  melt_rate_mm <-max/(melt_date-dowy)
+  
+}
+
+# test
+swe_thres(swe16, 1)
+
+ggplot() +
+  geom_line(aes(y = swe16, x = seq(1,365,1)), col = "darkred") +
+  # geom_line(aes(y = swe16_mean, x = seq(1,365,1)), col = "darkblue") +
+  geom_vline(xintercept = swe_thres(swe16, 1)) +
+  geom_vline(xintercept = swe_thres(swe16, 2)) +
+  geom_vline(xintercept = swe_thres(swe16, 5)) +
+  geom_vline(xintercept = swe_thres(swe16, 10)) 
+
+ggplot() +
+  geom_line(aes(y = swe93, x = seq(1,365,1)), col = "darkred") +
+  geom_vline(xintercept = swe_thres(swe93, 1)) +
+  geom_vline(xintercept = swe_thres(swe93, 2)) +
+  geom_vline(xintercept = swe_thres(swe93, 5))
+  
+
+
+# test for wy2015
+mat_wy15 <-apply(sagehen_swe_wy15, c(1,2), function(x) swe_thres(x, 5))
+rast_wy15 <-rast(mat_wy15)
+plot(rast_wy15)
+# writeRaster(rast_wy15, "./snow_metric_rasters/terra_rasters/mwa/tests/sh_wy15.tif")
+
+# test for wy1993
+mat_wy93 <-apply(sagehen_swe_wy93, c(1,2), function(x) swe_thres(x, 5))
+rast_wy93 <-rast(mat_wy93)
+plot(rast_wy93)
+# writeRaster(rast_wy93, "./snow_metric_rasters/terra_rasters/mwa/tests/sh_wy93.tif")
+
+mat_wy16 <-apply(sagehen_swe_wy16, c(1,2), function(x) swe_thres(x, 5))
+rast_wy16 <-rast(mat_wy16)
+plot(rast_wy16)
+
+
+mr_mat_wy16 <-apply(sagehen_swe_wy16, c(1,2), melt_rate)
+mr_rast_wy16 <-rast(mr_mat_wy16)
+plot(mr_rast_wy16)
+
+mr_mat_wy93 <-apply(sagehen_swe_wy93, c(1,2), melt_rate)
+mr_rast_wy93 <-rast(mr_mat_wy93)
+plot(mr_rast_wy93)
+
+mr_mat_wy15 <-apply(sagehen_swe_wy15, c(1,2), melt_rate)
+mr_rast_wy15 <-rast(mr_mat_wy15)
+plot(mr_rast_wy15)
+
+hist(rast_wy16, breaks = 100)
+
+# differene
+diff <-rast_wy93-rast_wy15
+plot(diff)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # dowy
 dowy <-seq(1,length(swe15_mean),1)
@@ -63,9 +189,10 @@ dowy366 <-seq(1,366,1)
 plot_df <-as.data.frame(cbind(dowy,swe15,sca15,swe93,sca93,swe16,sca16))
 plot_df
 
+
 # test plots
 ggplot(plot_df) +
-  geom_line(aes(y = swe16, x = dowy), col = "darkred") +
+  geom_line(aes(y = swe16, x = seq(1,365,1)), col = "darkred") +
   geom_line(aes(y = sca16, x = dowy), col = "darkblue") +  
   scale_y_continuous(limits = c(0,30),breaks = c(seq(0,100,25)), expand = (c(0,.2))) +
   scale_x_continuous(breaks = c(seq(0,350,50)), expand = (c(0,0))) +
@@ -161,45 +288,8 @@ ggplot() +
     scale_x_continuous(breaks = c(seq(0,350,50)), expand = (c(0,0))) +
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
-150-(150*.9)
-max(swe16)-max(swe16)*.9
 
-head(lake_15)
-##### mid winter ablation function function
-fsca_thres <-function(x, percent){
-  
-    if (max(x) < percent){
-      return(NA)
-    } 
-    else{
-      dowy <-as.numeric(max(which(x > percent)))
-      return(dowy)
-    }
-  }
 
-# test
-fsca_thres(z, 25)
-
-# test for wy2015
-mat_wy15 <-apply(sagehen_wy15, c(1,2), function(x) fsca_thres(x, 15))
-rast_wy15 <-rast(mat_wy15)
-plot(rast_wy15)
-# writeRaster(rast_wy15, "./snow_metric_rasters/terra_rasters/mwa/tests/sh_wy15.tif")
-
-# test for wy1993
-mat_wy93 <-apply(sagehen_wy93, c(1,2), function(x) fsca_thres(x, 15))
-rast_wy93 <-rast(mat_wy93)
-plot(rast_wy93)
-# writeRaster(rast_wy93, "./snow_metric_rasters/terra_rasters/mwa/tests/sh_wy93.tif")
-
-mat_wy16 <-apply(sagehen_fsca_wy16, c(1,2), function(x) fsca_thres(x, 15))
-rast_wy16 <-rast(mat_wy16)
-plot(rast_wy16)
-hist(rast_wy16, breaks = 100)
-
-# differene
-diff <-rast_wy93-rast_wy15
-plot(diff)
 
 max_swe_dowy_raster <-function(x){
   

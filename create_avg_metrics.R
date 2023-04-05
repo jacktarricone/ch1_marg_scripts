@@ -40,7 +40,7 @@ mwa
 # mean
 mwa_mean <-app(mwa, fun = metric_mean, cores=5)
 plot(mwa_mean)
-# writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_mean_v2.tif")
+writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_mean_v2.tif")
 
 ##############
 ##### max ####
