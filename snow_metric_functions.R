@@ -160,7 +160,7 @@ max_swe_dowy <-function(x, threshold){
   } 
   else{
     # pull out max value
-    max_swe<-as.numeric(max(x))
+    max_swe <-as.numeric(max(x))
     
     # use which() funciton for position tracking
     # nested with max() to have last day of max swe

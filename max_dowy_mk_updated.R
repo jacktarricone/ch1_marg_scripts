@@ -61,8 +61,8 @@ p_val <-mk_results[[2]]
 slope <-mk_results[[1]]
 
 # mask for sig p_val
-sig_p_val <-mwa_p_val
-values(mwa_sig_p_val)[values(sig_p_val) > .05] <-NA
+sig_p_val <-p_val
+values(sig_p_val)[values(sig_p_val) > .05] <-NA
 
 # sig slope
 sig_slope <-mask(slope, sig_p_val)

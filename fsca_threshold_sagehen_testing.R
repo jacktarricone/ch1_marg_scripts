@@ -102,15 +102,26 @@ max_swe(swe16)
 
 x <-swe16
 
-melt_rate <-function(x){
+melt_rate <-function(x, percent){
   
   max <-max_swe(x)
   dowy <-max_swe_dowy(x)
-  melt_date <-sdd(x,5)
+  melt_date <-sdd(x, percent)
   
-  melt_rate_mm <-max/(melt_date-dowy)
+  melt_rate_mm_day <-max/(melt_date-dowy)
+  return(melt_rate_mm_day)
   
 }
+
+melt_rate(swe16, 5)
+sdd(swe16, 5)
+max_swe_dowy(swe16)
+max_swe(swe16)
+
+range <-seq(1,15,1)
+melt_rate_range <-sapply(range, function(x) melt_rate(swe16, x))
+hist(melt_rate_range)
+
 
 # test
 swe_thres(swe16, 1)
@@ -289,26 +300,29 @@ ggplot() +
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 
+dem <-rast("./rasters/static/SNSR_DEM.tif")
 
 
-max_swe_dowy_raster <-function(x){
-  
 #### top half
-top <- h5read(hdf_file, "/SWE", index = list(1:3300,1:5701,1:365))
-top_max_dowy_mat <-as.matrix(apply(top, c(1,2), max_swe_dowy))
+top <-h5read(swe_list[32], "/SWE", index = list(1:3300,1:5701,1:365))
+top_max_dowy_mat <-as.matrix(apply(top, c(1,2), function(x) melt_rate(x, 5)))
 rm(top)
 
 #### bottomhalf half
-bottom <- h5read(hdf_file, "/SWE", index = list(3301:6601,1:5701,1:365))
-bottom_max_dowy_mat <-as.matrix(apply(bottom, c(1,2), max_dowy))
+bottom <- h5read(swe_list[32], "/SWE", index = list(3301:6601,1:5701,1:365))
+bottom_max_dowy_mat <-as.matrix(apply(bottom, c(1,2), function(x) melt_rate(x, 5)))
 rm(bottom)
 
 #bind chunks together
-full <-rbind(top_max_dowy_mat, bottom_max_dowy_mat)
-rast <-raster(full, xmn=-123.3, xmx=-117.6, ymn=35.4, ymx=42, CRS("+proj=leac +ellps=clrk66"))
-plot(rast)
-hist(rast)
+full_max <-rbind(top_max_dowy_mat, bottom_max_dowy_mat)
+r <-rast(full_max) # convert from matrix to raster
+rm(full_max) # trash array
+values(r)[values(r) == -32768] <- NA # change no data to NA
+print("-32768 converted to NA")
 
+# georeference
+ext(r) <-c(-123.3,-117.6,35.4,42) # set extent
+crs(r) <-crs(dem) # set crs from DEM raster
 name <- gsub(".h5", "", hdf_name)
 good_name <- gsub("SN_SWE_", "max_dowy_", name)
 
