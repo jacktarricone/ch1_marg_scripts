@@ -4,10 +4,11 @@
 
 library(terra)
 
-#set working directory
+# set working directory
 setwd("~/ch1_margulis")
 
-##### compute metrics
+# define mean function with na.rm
+metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
 
 ####################
 #####  max dowy ####
@@ -16,10 +17,8 @@ setwd("~/ch1_margulis")
 dowy_list <-list.files('./rasters/snow_metrics/max_swe_dowy/', pattern = '.tif', full.names = TRUE)
 dowy_stack <-rast(dowy_list)
 
-# mean
-metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
 
-dowy_mean <-app(dowy_stack, fun = metric_mean, cores = 8)
+dowy_mean <-app(dowy_stack, fun = metric_mean, cores = 4)
 plot(dowy_mean)
 hist(dowy_mean, breaks = 200)
 # writeRaster(dowy_mean, "./rasters/snow_metric_averages/max_dowy_mean_v2.tif")
@@ -30,58 +29,30 @@ dowy_n_obs_v2 <-subst(dowy_n_obs, 0, NA)
 plot(dowy_n_obs_v2)
 writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs.tif")
 
-# median
-mwa_med <-app(mwa, fun = 'median', cores=5)
-plot(mwa_med)
-writeRaster(mwa_med, "./averages/mwa_med.tif")
-
 ##############
 ##### mwa ####
 ##############
 
-mwa_list <-list.files('./mwa/years', pattern = '.tif', full.names = TRUE)
+mwa_list <-list.files('./rasters/snow_metrics/mwa', pattern = '.tif', full.names = TRUE)
 mwa <-rast(mwa_list)
-
-mwa_mean <-rast('./averages/mwa_mean.tif')
+mwa
 
 # mean
-mwa_mean <-app(mwa, fun = "mean", cores=5)
+mwa_mean <-app(mwa, fun = metric_mean, cores=5)
 plot(mwa_mean)
-# writeRaster(mwa_mean, "./averages/mwa_mean.tif")
-
-# median
-mwa_med <-app(mwa, fun = 'median', cores=5)
-plot(mwa_med)
-writeRaster(mwa_med, "./averages/mwa_med.tif")
-
-# compare
-global(mwa_mean, 'mean', na.rm = TRUE)
-global(mwa_med, 'mean', na.rm = TRUE)
-hist(mwa_mean, breaks = 100)
-hist(mwa_med, breaks = 100)
+# writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_mean_v2.tif")
 
 ##############
 ##### max ####
 ##############
 
-max_list <-list.files('./max_swe/years', pattern = '.tif', full.names = TRUE)
+max_list <-list.files('./rasters/snow_metrics/max', pattern = '.tif', full.names = TRUE)
 max <-rast(max_list)
 
 # mean
-max_mean <-app(max, fun = "mean", cores=5)
+max_mean <-app(max, fun = metric_mean, cores=5)
 plot(max_mean)
-writeRaster(max_mean, "./averages/max_mean.tif")
-
-# median
-max_med <-app(max, fun = 'median', cores=5)
-plot(max_med)
-writeRaster(max_med, "./averages/max_med.tif")
-
-# compare
-global(max_mean, 'mean', na.rm = TRUE)
-global(max_med, 'mean', na.rm = TRUE)
-hist(max_mean, breaks = 100)
-hist(max_med, breaks = 100)
+writeRaster(max_mean, "./averages/max_mean_v2.tif")
 
 ##############
 ##### sdd ####
