@@ -41,6 +41,9 @@ swe15 <-c(sagehen_swe_wy15[50,80,1:365])
 swe93 <-c(sagehen_swe_wy93[50,80,1:365])
 swe16 <-c(sagehen_swe_wy16[50,80,1:365])
 
+plot(swe93)
+plot(swe16)
+
 # # pull out one pixel time series
 # sca15 <-c(sagehen_fsca_wy15[50,80,1:365])
 # sca93 <-c(sagehen_fsca_wy93[50,80,1:365])
@@ -60,21 +63,21 @@ plot(swe16_mean)
 
 
 ##### mid winter ablation function function
-sdd <-function(x, percent){
+sdd <-function(x){
   
   # 10 mm
   if (max(x) < 10){
     return(NA)
   } 
   else{
-    dowy <-as.numeric(max(which(x > percent)))
+    dowy <-as.numeric(max(which(x > 25.4)))
     return(dowy)
   }
 }
 
 max_swe_dowy <-function(x){
   
-  # set threshold 10 mm
+  # set threshold 1 inch (25.4 mm)
   if (max(x) < 10){
     return(NA)
   } 
@@ -104,23 +107,104 @@ x <-swe16
 
 melt_rate <-function(x, percent){
   
+  # define and calc max
+  max_swe <-function(x){as.numeric(max(x))}
   max <-max_swe(x)
+  
+  # define and calc max_dowy
+  max_swe_dowy <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
   dowy <-max_swe_dowy(x)
-  melt_date <-sdd(x, percent)
   
-  melt_rate_mm_day <-max/(melt_date-dowy)
-  return(melt_rate_mm_day)
+  # define and calc sdd
+  sdd <-function(x){
+    
+    # 25.4 mm (1 inch)
+    if (max(x) < 25.4){
+      return(NA)
+    } 
+    else{
+      dowy <-as.numeric(max(which(x > 25.4)))
+      return(dowy)
+    }
+  }
+  melt_date <-sdd(x)
   
+  # subtract for melt date
+  msl <-melt_date-dowy
+  
+  # calc melt rate
+  melt_rate_mm <-max/msl
+  return(melt_rate_mm)
 }
 
-melt_rate(swe16, 5)
-sdd(swe16, 5)
+msl <-function(x){
+  
+  # define and calc max_dowy
+  max_swe_dowy <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
+  dowy <-max_swe_dowy(x)
+  
+  # define and calc sdd
+  sdd <-function(x, threshold = 25.4){
+    
+    # 25.4 mm (1 inch)
+    if (max(x) < threshold){
+      return(NA)
+    } 
+    else{
+      dowy <-as.numeric(max(which(x > threshold)))
+      return(dowy)
+    }
+  }
+  melt_date <-sdd(x)
+  
+  # subtract for melt date
+  msl <-melt_date-dowy
+  return(msl)
+}
+
+melt_rate(swe16)
+melt_rate()
+msl(swe16)
+sdd(swe16)
 max_swe_dowy(swe16)
 max_swe(swe16)
 
-range <-seq(1,15,1)
+range <-seq(1,10,1)
 melt_rate_range <-sapply(range, function(x) melt_rate(swe16, x))
 hist(melt_rate_range)
+
+msl_range <-sapply(range, function(x) msl(swe16, x))
+hist(msl_range)
 
 
 # test
@@ -129,53 +213,65 @@ swe_thres(swe16, 1)
 ggplot() +
   geom_line(aes(y = swe16, x = seq(1,365,1)), col = "darkred") +
   # geom_line(aes(y = swe16_mean, x = seq(1,365,1)), col = "darkblue") +
-  geom_vline(xintercept = swe_thres(swe16, 1)) +
-  geom_vline(xintercept = swe_thres(swe16, 2)) +
-  geom_vline(xintercept = swe_thres(swe16, 5)) +
-  geom_vline(xintercept = swe_thres(swe16, 10)) 
+  geom_hline(yintercept = 5) +
+  geom_hline(yintercept = 10) +
+  geom_hline(yintercept = 15) +
+  geom_hline(yintercept = 20)
+  # geom_vline(xintercept = swe_thres(swe16, 1)) +
+  # geom_vline(xintercept = swe_thres(swe16, 2)) +
+  # geom_vline(xintercept = swe_thres(swe16, 5)) +
+  # geom_vline(xintercept = swe_thres(swe16, 10)) 
 
 ggplot() +
   geom_line(aes(y = swe93, x = seq(1,365,1)), col = "darkred") +
   geom_vline(xintercept = swe_thres(swe93, 1)) +
   geom_vline(xintercept = swe_thres(swe93, 2)) +
   geom_vline(xintercept = swe_thres(swe93, 5))
-  
 
 
 # test for wy2015
-mat_wy15 <-apply(sagehen_swe_wy15, c(1,2), function(x) swe_thres(x, 5))
+mat_wy15 <-apply(sagehen_swe_wy15, c(1,2), melt_rate)
 rast_wy15 <-rast(mat_wy15)
 plot(rast_wy15)
 # writeRaster(rast_wy15, "./snow_metric_rasters/terra_rasters/mwa/tests/sh_wy15.tif")
 
 # test for wy1993
-mat_wy93 <-apply(sagehen_swe_wy93, c(1,2), function(x) swe_thres(x, 5))
+mat_wy93 <-apply(sagehen_swe_wy93, c(1,2), melt_rate)
 rast_wy93 <-rast(mat_wy93)
 plot(rast_wy93)
 # writeRaster(rast_wy93, "./snow_metric_rasters/terra_rasters/mwa/tests/sh_wy93.tif")
 
-mat_wy16 <-apply(sagehen_swe_wy16, c(1,2), function(x) swe_thres(x, 5))
+mat_wy16 <-apply(sagehen_swe_wy16, c(1,2), melt_rate)
 rast_wy16 <-rast(mat_wy16)
 plot(rast_wy16)
 
+plot(swe16)
+msl(swe16)
+melt_rate(swe16)
+max_swe_dowy(swe16)
+max_swe(swe16)
 
-mr_mat_wy16 <-apply(sagehen_swe_wy16, c(1,2), melt_rate)
+mr_mat_wy16 <-apply(sagehen_swe_wy16, c(1,2), function(x) msl(x, 5))
 mr_rast_wy16 <-rast(mr_mat_wy16)
 plot(mr_rast_wy16)
+hist(mr_rast_wy16)
 
 mr_mat_wy93 <-apply(sagehen_swe_wy93, c(1,2), melt_rate)
 mr_rast_wy93 <-rast(mr_mat_wy93)
 plot(mr_rast_wy93)
+hist(mr_rast_wy93)
 
 mr_mat_wy15 <-apply(sagehen_swe_wy15, c(1,2), melt_rate)
 mr_rast_wy15 <-rast(mr_mat_wy15)
 plot(mr_rast_wy15)
+hist(mr_rast_wy15)
 
 hist(rast_wy16, breaks = 100)
 
 # differene
 diff <-rast_wy93-rast_wy15
 plot(diff)
+
 
 
 
@@ -303,8 +399,10 @@ ggplot() +
 dem <-rast("./rasters/static/SNSR_DEM.tif")
 
 
+
+??h5read
 #### top half
-top <-h5read(swe_list[32], "/SWE", index = list(1:3300,1:5701,1:365))
+top <-h5_read(swe_list[32], name = "/SWE", index = list(1:3300,1:5701,1))
 top_max_dowy_mat <-as.matrix(apply(top, c(1,2), function(x) melt_rate(x, 5)))
 rm(top)
 
@@ -325,6 +423,32 @@ plot(r)
 r
 
 writeRaster(r, "./rasters/snow_metrics/melt_rate/melt_rate_WY2016.tif")
+
+#### top half
+top_rast <-rast(h5read(swe_list[32], name = "/SWE", index = list(1:3300,1:5701,1:365)))
+top_snow_metric <-app(top_rast, fun = msl, cores = 10)
+plot(top_snow_metric)
+hist(top_snow_metric)
+
+top_melt_rate <-app(top_rast, fun = melt_rate, cores = 14)
+plot(top_melt_rate)
+
+#### bottomhalf half
+bottom <- h5read(swe_list[32], "/SWE", index = list(3301:6601,1:5701,1:10))
+bottom_max_dowy_mat <-as.matrix(apply(bottom, c(1,2), function(x) msl(x, 5)))
+rm(bottom)
+
+#bind chunks together
+full_max <-rbind(top_max_dowy_mat, bottom_max_dowy_mat)
+r <-rast(full_max) # convert from matrix to raster
+rm(full_max) # trash array
+
+# georeference
+ext(r) <-c(-123.3,-117.6,35.4,42) # set extent
+crs(r) <-crs(dem) # set crs from DEM raster
+plot(r)
+
+writeRaster(r, "./rasters/snow_metrics/msl/msl_WY2016.tif")
 
 
 
