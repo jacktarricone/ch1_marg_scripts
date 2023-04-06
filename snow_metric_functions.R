@@ -9,15 +9,13 @@
 
 # list names
 
-function_names <-c("max_swe", "max_swe_dowy","mwa","msl","melt_rate")
-
+function_names <-c("max_swe", "max_swe_dowy","mwa","msl","melt_rate","sdd")
 
 #######################################
 ############   max_swe   ##############
 #######################################
 
 ##### maximum annual of SWE (mm)
-
 
 max_swe <-function(x){
 
@@ -249,7 +247,7 @@ msl <-function(x, swe_thres){
 ### function for creating rasters ####
 #########################################
 
-generate_snow_metric_rasters <- function(swe_list, snow_metric_function, snow_metric_name) {
+generate_snow_metric_rasters <-function(swe_list, snow_metric_function, snow_metric_name) {
   
   # reset wd
   setwd("/Users/jacktarricone/ch1_margulis/") 

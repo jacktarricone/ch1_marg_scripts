@@ -1,6 +1,7 @@
 ### creating pixel-wise annual rasters for:
-#### sdd
-# april 6th 2023
+#### melt_rate
+
+# february 15th 2022
 # jack tarricone
 
 library(rhdf5)
@@ -48,8 +49,8 @@ swe_list[32]
 # run function using progress bar (pb) multi-core lapply
 system.time(raster_list <-pbmclapply(swe_list[32], 
                                      function(x)
-                                       generate_snow_metric_rasters(x, 
-                                                                    snow_metric_function = function(x) melt_rate(x, swe_thres = 25.4), 
-                                                                    snow_metric_name = snow_metric_name),
+                                     generate_snow_metric_rasters(x, 
+                                                                  snow_metric_function = function(x) melt_rate(x, swe_thres = 25.4), 
+                                                                  snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
