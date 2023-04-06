@@ -36,7 +36,7 @@ devtools::source_url(url)
 ###########################
 
 # metric creating with this script
-snow_metric_name <-function_names[5]
+snow_metric_name <-function_names[4]
 snow_metric_name
 
 # mcapply function 
@@ -50,7 +50,7 @@ swe_list[32]
 system.time(raster_list <-pbmclapply(swe_list[32], 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = function(x) melt_rate(x, swe_thres = 25.4), 
+                                                                  snow_metric_function = function(x) msl(x, swe_thres = 25.4), 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))

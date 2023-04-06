@@ -250,7 +250,7 @@ msl <-function(x, swe_thres){
 generate_snow_metric_rasters <-function(swe_list, snow_metric_function, snow_metric_name) {
   
   # reset wd
-  setwd("/Users/jacktarricone/ch1_margulis/") 
+  setwd("~/ch1_margulis") 
   
   # pull out number of days in given year
   test <-h5ls(swe_list) # contains 3 groups: lat, long, and SCA
@@ -292,7 +292,7 @@ generate_snow_metric_rasters <-function(swe_list, snow_metric_function, snow_met
   
   # set saving director to correct folder
   # doesn't need to change for each metric bc include at top of script
-  saving_location <-list.files("./snow_metric_rasters/terra_rasters",
+  saving_location <-list.files("./rasters/snow_metrics/",
                                pattern = paste0("*",snow_metric_name,"$"), 
                                full.names = TRUE)
   # save
