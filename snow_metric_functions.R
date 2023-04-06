@@ -162,8 +162,8 @@ melt_rate <-function(x, swe_thres){
   # define and calc sdd
   sdd <-function(x){
     
-    # 25.4 mm (1 inch)
-    if (max(x) < 25.4){
+    # 10 mm (1 cm)
+    if (max(x) < 10){
       return(NA)
     } 
     else{
@@ -227,8 +227,8 @@ msl <-function(x, swe_thres){
   # define and calc sdd
   sdd <-function(x){
     
-    # 25.4 mm (1 inch)
-    if (max(x) < 25.4){
+    # 10 mm (1 cm)
+    if (max(x) < 10){
       return(NA)
     } 
     else{
