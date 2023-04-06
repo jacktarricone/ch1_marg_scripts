@@ -160,7 +160,7 @@ melt_rate <-function(x, swe_thres){
   dowy <-max_swe_dowy(x, swe_thres)
   
   # define and calc sdd
-  sdd <-function(x, swe_thres){
+  sdd <-function(x){
     
     # 25.4 mm (1 inch)
     if (max(x) < 25.4){
@@ -225,7 +225,7 @@ msl <-function(x, swe_thres){
   dowy <-max_swe_dowy(x)
   
   # define and calc sdd
-  sdd <-function(x, swe_thres){
+  sdd <-function(x){
     
     # 25.4 mm (1 inch)
     if (max(x) < 25.4){
