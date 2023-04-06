@@ -9,138 +9,43 @@
 
 # list names
 
-function_names <-c("scf","sdd","max_swe_dowy","mwa","md")
+function_names <-c("max_swe", "max_swe_dowy","mwa","msl","melt_rate")
 
-#######################################
-############      md     ##############
-#######################################
-
-# melt out day defined by DHSVM
-
-md <-function(x, threshold){
-  
-  # x = swe data time series
-  # threshold = number in (mm) that should be considered
-  
-  max_swe_dowy <-function(x){
-    
-    # set threshold so that pixel is NA if never hiss 5 mm
-    if (max(x) < threshold){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe<-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-  # calc ms_dowy
-  # return NA for values that never reach the 5 mm threshold
-  if (is.na(max_swe_dowy(x))){
-    return(NA)
-  } else {
-    
-    # calc mox_swe dowy
-    ms_dowy <-max_swe_dowy(x)
-    
-    # create dowy_vec
-    dowy_vect <-seq(1,length(x),1)
-    
-    # find spot on vector where SWE is less first 5 mm
-    # and date is greater than max_swe doy
-    melt_out_dowy_vect <-which(x < threshold & dowy_vect > ms_dowy)
-    
-    # pull out fist element of vect aka first day snow is gone
-    melt_out_dowy <-melt_out_dowy_vect[1]
-  }
-  if (length(melt_out_dowy_vect) == 0){
-    # if condition is never met, or snow never goes below 5 mm after max_dowy
-    # return last dowy (365 or 366)
-    return(length(dowy_vect))
-  } else {
-    return(melt_out_dowy)
-  }
-}
 
 #######################################
 ############   max_swe   ##############
 #######################################
 
-# maximum annual of SWE
-# abbr: max_swe
+##### maximum annual of SWE (mm)
 
-# just max...
 
-#######################################
-############     scf      #############
-#######################################
+max_swe <-function(x){
 
-# create snow cover frequency function
-# number of days there is snow on the ground vs total days in a given year
-# set threshold to 5.1 mm or .2 inches because thats the accuracy a SNTOEL site has
-# this will also reduce the long tails seen on the data and unrealistically large scf number
-# abbr: scf
-
-scf <-function(x){
-  
-  length(which(x > 5.1))/length(x)
-  
-} 
+  # 10 mm (1 cm threshold)  
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      max_swe_mm <-as.numeric(max(x))
+      return(max_swe_mm) }
+  }
 
 #######################################
 ############     sdd      #############
 #######################################
 
-# snow disappearance date: dowy snow is gone
-# need 14 days of continuous snow cover to be considered
-# abbr: sdd
+# snow disappearance date: dowy snow is goes below certain threshold (1 inch (25.4 mm))
 
-sdd <-function(x){
+# define and calc sdd
+sdd <-function(x, swe_thres){
   
-  # return 0 for values that never reach the 5.1 mm threshold
-  if (max(x) < 5.1){
-    return(0)
-  } else {
-    # use which function to index the days that meet condition
-    # reverse the vector
-    days_vector <-as.numeric(rev(which(x > 5.1)))
-    
-    # take the difference of each vector point and make positive
-    # we do this bc we are looking for the first point that meets condition
-    # and does this for 14 consecutive days
-    diff_vect <-diff(days_vector*-1)
-    
-    # use rle function to calc the lengths of continuous number sequences
-    # if there isnt a 14 days with continuous snow cover, make pixel 0
-    # this fixes the code bc accounts for pixels which may have had 10 days of sc
-    
-    # which therefore was out of the previous condition set and caused the error
-    # found this about by testing different areas, and saw was more in east half
-    result <- rle(diff_vect)
-    if (max(result$lengths) < 14){
-      return(0)
-    } else{
-      #represents place on rle vector where condition is met
-      meets <-as.numeric(min(which(result$lengths >= 14)))
-      
-      #if its the first rle value, this means day 365 so max of days_vector
-      if (meets == 1) {
-        sdd1 <- max(days_vector)
-        return(sdd1)
-      } else {
-        #calculate legnth needed to be cut off days vector from rle
-        values_to_cut <-result$lengths[1:(meets-1)]
-        #sum the lengths
-        index_values_until_start <-as.numeric(sum(values_to_cut))
-        #subtract that many values off to get your SDD
-        sdd2 <-max(days_vector[-c(1:index_values_until_start)])
-        return(sdd2)
-      }
-    }
+  # 10 mm (1 cm)
+  if (max(x) < 10){
+    return(NA)
+  } 
+  else{
+    dowy <-as.numeric(max(which(x > swe_thres)))
+    return(dowy)
   }
 }
 
@@ -148,14 +53,13 @@ sdd <-function(x){
 ############   max_dowy     ###########
 #######################################
 
-# day of water year that max swe occurs on
-# abbr: max_swe_dowy
+###### day of water year that max swe occurs on
+###### abbr: max_swe_dowy
 
-
-max_swe_dowy <-function(x, threshold){
+max_swe_dowy <-function(x){
   
-  # set threshold
-  if (max(x) < threshold){
+  # set threshold of 10 mm
+  if (max(x) < 10){
     return(NA)
   } 
   else{
@@ -174,17 +78,25 @@ max_swe_dowy <-function(x, threshold){
 ############      mwa       ###########
 #######################################
 
+###### mid winter ablation (mm)
+
 mwa <-function(x){
   
-  # define max_swe_dowy
   max_swe_dowy <-function(x){
-    if (max(x) < 5.1){
+    
+    # set threshold
+    if (max(x) < 10){
       return(NA)
     } 
     else{
+      # pull out max value
       max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
       dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)} 
+      return(dowy)
+    }
   }
   
   # calc ms_dowy
@@ -206,6 +118,132 @@ mwa <-function(x){
   }
 }
 
+#######################################
+######      melt_rate       ###########
+#######################################
+
+####### (mm/day)
+
+melt_rate <-function(x, swe_thres){
+  
+  # define and calc max
+  max_swe <-function(x){
+    
+    # 10 mm (1 cm threshold)  
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      max_swe_mm <-as.numeric(max(x))
+      return(max_swe_mm) }
+  }
+  max <-max_swe(x)
+  
+  # sub tract the threhold
+  max_w_thres <-max-swe_thres
+  
+  # define and calc max_dowy
+  max_swe_dowy <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
+  dowy <-max_swe_dowy(x, swe_thres)
+  
+  # define and calc sdd
+  sdd <-function(x, swe_thres){
+    
+    # 25.4 mm (1 inch)
+    if (max(x) < 25.4){
+      return(NA)
+    } 
+    else{
+      dowy <-as.numeric(max(which(x > swe_thres)))
+      return(dowy)
+    }
+  }
+  melt_date <-sdd(x)
+  
+  # subtract for melt date
+  msl <-melt_date-dowy
+  
+  # calc melt rate
+  melt_rate_mm <-max_w_thres/msl
+  return(melt_rate_mm)
+}
+
+#######################################
+############      msl       ###########
+#######################################
+
+##### melt season length (days)
+
+msl <-function(x, swe_thres){
+  
+  # define and calc max
+  max_swe <-function(x){
+    
+    # 10 mm (1 cm threshold)  
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      max_swe_mm <-as.numeric(max(x))
+      return(max_swe_mm) }
+  }
+  max <-max_swe(x)
+  
+  # sub tract the threhold
+  max_w_thres <-max-swe_thres
+  
+  # define and calc max_dowy
+  max_swe_dowy <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
+  dowy <-max_swe_dowy(x)
+  
+  # define and calc sdd
+  sdd <-function(x, swe_thres){
+    
+    # 25.4 mm (1 inch)
+    if (max(x) < 25.4){
+      return(NA)
+    } 
+    else{
+      dowy <-as.numeric(max(which(x > swe_thres)))
+      return(dowy)
+    }
+  }
+  melt_date <-sdd(x)
+  
+  # subtract for melt date
+  msl_days <-melt_date-dowy
+  return(msl_days)
+}
 
 #########################################
 ### function for creating rasters ####

@@ -63,14 +63,14 @@ plot(swe16_mean)
 
 
 ##### mid winter ablation function function
-sdd <-function(x){
+sdd <-function(x, swe_thres){
   
   # 10 mm
   if (max(x) < 10){
     return(NA)
   } 
   else{
-    dowy <-as.numeric(max(which(x > 25.4)))
+    dowy <-as.numeric(max(which(x > swe_thres)))
     return(dowy)
   }
 }
@@ -105,7 +105,7 @@ max_swe(swe16)
 
 x <-swe16
 
-melt_rate <-function(x, percent){
+melt_rate <-function(x, swe_thres){
   
   # define and calc max
   max_swe <-function(x){as.numeric(max(x))}
@@ -128,17 +128,18 @@ melt_rate <-function(x, percent){
       return(dowy)
     }
   }
-  dowy <-max_swe_dowy(x)
+  
+  dowy <-max_swe_dowy(x, swe_thres)
   
   # define and calc sdd
-  sdd <-function(x){
+  sdd <-function(x, swe_thres){
     
     # 25.4 mm (1 inch)
     if (max(x) < 25.4){
       return(NA)
     } 
     else{
-      dowy <-as.numeric(max(which(x > 25.4)))
+      dowy <-as.numeric(max(which(x > swe_thres)))
       return(dowy)
     }
   }
