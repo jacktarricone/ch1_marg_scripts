@@ -144,7 +144,7 @@ melt_rate <-function(x, swe_thres){
   max_swe_dowy <-function(x){
     
     # set threshold 10 mm
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
@@ -163,7 +163,7 @@ melt_rate <-function(x, swe_thres){
   sdd <-function(x){
     
     # 10 mm (1 cm)
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
@@ -209,7 +209,7 @@ msl <-function(x, swe_thres){
   max_swe_dowy <-function(x){
     
     # set threshold 10 mm
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
@@ -228,7 +228,7 @@ msl <-function(x, swe_thres){
   sdd <-function(x){
     
     # 10 mm (1 cm)
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
