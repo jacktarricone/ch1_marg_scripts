@@ -12,9 +12,6 @@ library(ggplot2)
 # reset wd
 setwd("~/ch1_margulis") 
 
-# metric creating with this script
-snow_metric <-"fsca_thres"
-
 # list sca files
 swe_list <-list.files("./swe/hdf", full.names = TRUE)
 print(swe_list) # static and wy2015 SCA
@@ -39,7 +36,7 @@ devtools::source_url(url)
 ######################
 
 # 1993
-melt_rate_wy93 <-apply(sagehen_swe_wy93, c(1,2), function(x) melt_rate(x, 25.4))
+melt_rate_wy93 <-apply(sagehen_swe_wy93, c(1,2), function(x) melt_rate(x, swe_thres = 25.4))
 plot(melt_rate_wy93)
 
 # 2015
@@ -55,31 +52,90 @@ plot(melt_rate_wy16)
 ######################
 
 # 1993
-sdd_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), function(x) sdd(x, 25.4)))
+sdd_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), function(x) sdd(x, swe_thres = 25.4)))
 plot(sdd_wy93)
 
 # 2015
-sdd_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), function(x) sdd(x, 25.4)))
+sdd_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), function(x) sdd(x, swe_thres = 25.4)))
 plot(sdd_wy15)
 
 # 2016
-sdd_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), function(x) sdd(x, 25.4)))
+sdd_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), function(x) sdd(x, swe_thres = 25.4)))
 plot(sdd_wy16)
 
 ######################
 ######    msl    #####
 ######################
 
+x <-sagehen_swe_wy93[70,50,1:365]
+swe_thres <- 25.4
+
+msl <-function(x, swe_thres){
+  
+  # define and calc max
+  max_swe <-function(x){
+    
+    # 10 mm (1 cm threshold)  
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      max_swe_mm <-as.numeric(max(x))
+      return(max_swe_mm) }
+  }
+  max <-max_swe(x)
+  
+  # sub tract the threhold
+  max_w_thres <-max-swe_thres
+  
+  # define and calc max_dowy
+  max_swe_dowy <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < 10){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
+  dowy <-max_swe_dowy(x)
+  
+  # define and calc sdd
+  sdd <-function(x){
+    
+    # 25.4 mm (1 inch)
+    if (max(x) < 25.4){
+      return(NA)
+    } 
+    else{
+      dowy <-as.numeric(max(which(x > swe_thres)))
+      return(dowy)
+    }
+  }
+  melt_date <-sdd(x)
+  
+  # subtract for melt date
+  msl_days <-melt_date-dowy
+  return(msl_days)
+}
+
 # 1993
-msl_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), msl))
+msl_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), function(x) msl(x, swe_thres = 25.4)))
 plot(msl_wy93)
 
 # 2015
-msl_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), msl))
+msl_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), function(x) msl(x, swe_thres = 25.4)))
 plot(msl_wy15)
 
 # 2016
-msl_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), msl))
+msl_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), function(x) msl(x, swe_thres = 25.4)))
 plot(msl_wy16)
 
 #########################

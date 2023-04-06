@@ -157,7 +157,7 @@ melt_rate <-function(x, swe_thres){
       return(dowy)
     }
   }
-  dowy <-max_swe_dowy(x, swe_thres)
+  dowy <-max_swe_dowy(x)
   
   # define and calc sdd
   sdd <-function(x){
