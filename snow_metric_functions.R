@@ -17,10 +17,10 @@ function_names <-c("max_swe", "max_swe_dowy","mwa","msl","melt_rate","sdd")
 
 ##### maximum annual of SWE (mm)
 
-max_swe <-function(x){
+max_swe <-function(x, swe_thres){
 
   # 10 mm (1 cm threshold)  
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
@@ -38,7 +38,7 @@ max_swe <-function(x){
 sdd <-function(x, swe_thres){
   
   # 10 mm (1 cm)
-  if (max(x) < 10){
+  if (max(x) < swe_thres){
     return(NA)
   } 
   else{
@@ -54,10 +54,10 @@ sdd <-function(x, swe_thres){
 ###### day of water year that max swe occurs on
 ###### abbr: max_swe_dowy
 
-max_swe_dowy <-function(x){
+max_swe_dowy <-function(x, swe_thres){
   
   # set threshold of 10 mm
-  if (max(x) < 10){
+  if (max(x) < swe_thres){
     return(NA)
   } 
   else{
@@ -78,12 +78,12 @@ max_swe_dowy <-function(x){
 
 ###### mid winter ablation (mm)
 
-mwa <-function(x){
+mwa <-function(x, swe_thres){
   
   max_swe_dowy <-function(x){
     
     # set threshold
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
@@ -128,7 +128,7 @@ melt_rate <-function(x, swe_thres){
   max_swe <-function(x){
     
     # 10 mm (1 cm threshold)  
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
@@ -193,7 +193,7 @@ msl <-function(x, swe_thres){
   max_swe <-function(x){
     
     # 10 mm (1 cm threshold)  
-    if (max(x) < 10){
+    if (max(x) < swe_thres){
       return(NA)
     } 
     else{
