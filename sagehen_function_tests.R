@@ -1,12 +1,12 @@
-# testing making metric for
-# date at which fsca goes below certain (15%?) threshold
+# testing new metrics in sagehen area
+# april 6th, 2023
 
 library(rhdf5)
 library(terra)
 library(ggplot2)
 
 #######################################################
-##### code for bringing block to test functions on
+##### code for bringing block to test functions on ####
 #######################################################
 
 # reset wd
@@ -30,6 +30,7 @@ sagehen_swe_wy16 <- h5read(path_2016, "/SWE", index = list(2523:2621, 2947:3172,
 # this file has all the snow metric functions and the raster creation one
 url <-"https://raw.githubusercontent.com/jacktarricone/ch1_marg_scripts/main/snow_metric_functions.R"
 devtools::source_url(url)
+
 
 ######################
 ###### melt_rate #####
@@ -84,15 +85,15 @@ plot(msl_wy16)
 #########################
 
 # 1993
-max_swe_dowy_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), max_swe_dowy))
+max_swe_dowy_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), function(x) max_swe_dowy(x, swe_thres = 25.4)))
 plot(max_swe_dowy_wy93)
 
 # 2015
-max_swe_dowy_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), max_swe_dowy))
+max_swe_dowy_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), function(x) max_swe_dowy(x, swe_thres = 25.4)))
 plot(max_swe_dowy_wy15)
 
 # 2016
-max_swe_dowy_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), max_swe_dowy))
+max_swe_dowy_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), function(x) max_swe_dowy(x, swe_thres = 25.4)))
 plot(max_swe_dowy_wy16)
 
 #####################
@@ -100,15 +101,15 @@ plot(max_swe_dowy_wy16)
 #####################
 
 # 1993
-max_swe_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), max_swe))
+max_swe_wy93 <-rast(apply(sagehen_swe_wy93, c(1,2), function(x) max_swe(x, swe_thres = 25.4)))
 plot(max_swe_wy93)
 
 # 2015
-max_swe_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), max_swe))
+max_swe_wy15 <-rast(apply(sagehen_swe_wy15, c(1,2), function(x) max_swe(x, swe_thres = 25.4)))
 plot(max_swe_wy15)
 
 # 2016
-max_swe_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), max_swe))
+max_swe_wy16 <-rast(apply(sagehen_swe_wy16, c(1,2), function(x) max_swe(x, swe_thres = 25.4)))
 plot(max_swe_wy16)
 
 
