@@ -8,12 +8,48 @@ library(lubridate)
 
 setwd('~/ch1_margulis')
 
+# set custom plot theme
+theme_classic <-function(base_size = 11, base_family = "",
+                         base_line_size = base_size / 22,
+                         base_rect_size = base_size / 22) {
+  theme_bw(
+    base_size = base_size,
+    base_family = base_family,
+    base_line_size = base_line_size,
+    base_rect_size = base_rect_size
+  ) %+replace%
+    theme(
+      # no background and no grid
+      panel.border     = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      
+      # show axes
+      # axis.line      = element_line(colour = "black", linewidth = rel(1)),
+      
+      # match legend key to panel.background
+      legend.key       = element_blank(),
+      
+      # simple, black and white strips
+      strip.background = element_rect(fill = "white", colour = "black", linewidth = rel(2)),
+      # NB: size is 1 but clipped, it looks like the 0.5 of the axes
+      
+      complete = TRUE
+    )
+}
+
+theme_set(theme_classic(14))
+
 # bring in real snotel locations
 snotel_locs <-read.csv("./csvs/SNOTEL_MASTER (1).csv")
 head(snotel_locs)
 
 # bring in mwa 2016
 mwa16 <-rast('./rasters/snow_metrics/mwa/mwa_WY2016.tif')
+
+# read in stack
+mwa_list <-list.files('./rasters/snow_metrics/mwa/', full.names = TRUE)
+mwa_stack <-rast(mwa_list)
 
 # filter for CA
 snotel_ca_v1 <-filter(snotel_locs, State == "CA")
@@ -57,10 +93,10 @@ url <-"https://raw.githubusercontent.com/jacktarricone/ch1_marg_scripts/main/sno
 devtools::source_url(url)
 
 # calc snotel mwa for 2016
-snotel_mwa_16 <-big_df16 %>%
+snotel_mwa_16 <-as.data.frame(big_df16 %>%
   group_by(site_name) %>% 
-  summarise(mwa = mwa(snow_water_equivalent, swe_thres = 25.4))
-head(snotel_mwa_16)
+  summarise(mwa = mwa(snow_water_equivalent, swe_thres = 25.4)))
+
 
 # filter for palisades
 pt16 <-filter(big_df16, site_name == "palisades tahoe ")
@@ -94,4 +130,29 @@ ggplot(pt)+
   geom_line(aes(y = snow_water_equivalent, x = date))
 
 
+# extract snotel locations
+snsr_mwa_snotel <-terra::extract(mwa_stack, ca_points_snsr,  cells = TRUE, xy = TRUE, method = 'bilinear')
+head(snsr_mwa_snotel)
+head(snotel_mwa_16)
 
+# rename cols
+years <-seq(1985,2016,1)
+colnames(snsr_mwa_snotel)[2:33] <-years
+
+# -c(cell,x,y,SNSR_aspect), 
+snsr_mwa_df <-as.data.frame(pivot_longer(snsr_mwa_snotel, cols = 2:33, 
+                                         names_to = "year",
+                                         values_to = "snsr_mwa_mm"))
+
+head(snsr_mwa_df)
+
+compare_df <-cbind(snsr_mwa_snotel, snotel_mwa_16)
+head(compare_df)
+
+ggplot(compare_df)+
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = lyr.1, y = mwa), size = .9)+
+  scale_y_continuous(limits = c(0,200),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,200),expand = (c(0,0))) +
+  ylab("SNSR MWA (mm)") + xlab("SNOTEL MWA (mm)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
