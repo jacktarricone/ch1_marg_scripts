@@ -46,7 +46,7 @@ theme_classic <-function(base_size = 11, base_family = "",
 theme_set(theme_classic(14))
 
 # bring in real snotel locations
-snotel_locs <-read.csv("./csvs/SNOTEL_MASTER_pt_update.csv")
+snotel_locs <-read.csv("./csvs/SNOTEL_MASTER (1).csv")
 head(snotel_locs)
 
 # read in stack
@@ -54,18 +54,16 @@ max_list <-list.files('./rasters/snow_metrics/max_swe/years', full.names = TRUE)
 max_stack <-rast(max_list)
 
 # stations in CA with 32 years of record in the SNSR
-good_stations <-as.integer(c(356, 428, 462, 463, 473, 508, 518, 539, 
-                  540, 541, 575, 697, 724, 771, 778, 784, 809, 834, 846, 848))
+good_stations <-as.integer(c(784))
 
 # filter for CA
 snotel_ca <-filter(snotel_locs, Site_ID %in% good_stations)
-snotel_ca
 
 # convert to vect
 ca_points <-vect(snotel_ca, geom = c("Longitude","Latitude"), crs = crs(max_stack))
 
 # crop down to extent of points test
-crop_ext <-ext(-120.79192, -119, 38, 39.8)
+crop_ext <-ext(-120.6, -120, 39.1, 39.25)
 max_snotel_ext <-crop(max_stack, crop_ext)
 ca_points_snsr <-crop(ca_points, crop_ext)
 
@@ -105,51 +103,55 @@ snotel_max_df <-as.data.frame(snotel_df %>%
   summarise(max = as.integer(max_swe(snow_water_equivalent, swe_thres = 25.4))))
 
 colnames(snotel_max_df)[3] <-"snotel_max_mm"
-head(snotel_max_df)
+snotel_max_df
 
-# # extract cell number from pit lat/lon point
-# snotel_cell_numbers <-as.data.frame(cells(max_stack, ca_points_snsr))
-# snotel_cell_numbers 
-# 
-# ## loop to pull create string of snotel cell and 8 surrounding 
-# 
-# dummy_list <-list()
-# for (i in seq_along(snotel_cell_numbers$cell)){
-#   neighbor_cells <-c(adjacent(max_stack, cells = snotel_cell_numbers$cell[i], directions ="8"))
-#   dummy_list[[i]] <-c(snotel_cell_numbers$cell[i], neighbor_cells)
-# }
-# 
-# # extract using that vector
-# nine_cells <-terra::extract(max_stack, dummy_list[[20]], xy = TRUE)
-# nine_cells
+# extract cell number from pit lat/lon point
+snotel_cell_numbers <-as.data.frame(cells(max_stack, ca_points_snsr))
+snotel_cell_numbers 
 
+## loop to pull create string of snotel cell and 8 surrounding 
+
+dummy_list <-list()
+for (i in seq_along(snotel_cell_numbers$cell)){
+  neighbor_cells <-c(adjacent(max_stack, cells = snotel_cell_numbers$cell[i], directions ="8"))
+  dummy_list[[i]] <-c(snotel_cell_numbers$cell[i], neighbor_cells)
+}
+
+# extract using that vector
+nine_cells <-terra::extract(max_stack, dummy_list[[1]], xy = TRUE)
+nine_cells
+
+# rename cols
+years <-seq(1985,2016,1)
+colnames(nine_cells)[3:34] <-years
+nine_cells
+
+# extract snotel locations
 snsr_max_snotel <-terra::extract(max_stack, ca_points_snsr, 
                                  names = TRUE, 
                                  cells = TRUE, 
                                  xy = TRUE, 
                                  ID = TRUE,
                                  method = 'simple')
+head(snsr_max_snotel)
+
 # rename cols
 years <-seq(1985,2016,1)
 colnames(snsr_max_snotel)[2:33] <-years
-snsr_max_snotel <-cbind(unique(snotel_df$site_name), snsr_max_snotel)
-colnames(snsr_max_snotel)[1] <-"site_name"
-snsr_max_snotel
+
 
 # -c(cell,x,y,SNSR_aspect), 
-snsr_max_df <-as.data.frame(pivot_longer(snsr_max_snotel, cols = 3:34, 
+snsr_max_df <-as.data.frame(pivot_longer(snsr_max_snotel, cols = 2:33, 
                                          names_to = "year",
                                          values_to = "snsr_max_mm"))
-snsr_max_df
-snotel_max_df
 
 # make df for plotting
-compare_df_v2 <-inner_join(snsr_max_df, snotel_max_df, by = "site_name")
-head(compare_df_v2)
+compare_df <-cbind(snsr_max_df, snotel_max_df)
+compare_df
 
 ggplot(compare_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = snsr_max_mm, y = snotel_max_mm), size = .9)+
+  geom_point(aes(y = snsr_max_mm, x = snotel_max_mm), size = .9)+
   scale_y_continuous(limits = c(0,3000),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3000),expand = (c(0,0))) +
   ylab("SNSR Max SWE (mm)") + xlab("SNOTEL Max (mm)") +
