@@ -50,7 +50,7 @@ snotel_locs <-read.csv("./csvs/SNOTEL_MASTER_pt_update.csv")
 head(snotel_locs)
 
 # read in stack
-max_list <-list.files('./rasters/snow_metrics/max_swe/years', full.names = TRUE)
+max_list <-list.files('./rasters/snow_metrics/max_swe_dowy/', full.names = TRUE)
 max_stack <-rast(max_list)
 
 # stations in CA with 32 years of record in the SNSR
@@ -102,9 +102,9 @@ head(snotel_df)
 # calc snotel max for 2016
 snotel_max_df <-as.data.frame(snotel_df %>%
   group_by(site_name, waterYear) %>%
-  summarise(max = as.integer(max_swe(snow_water_equivalent, swe_thres = 25.4))))
+  summarise(snotel_max_dowy = as.integer(max_swe_dowy(snow_water_equivalent, swe_thres = 25.4))))
 
-colnames(snotel_max_df)[3] <-"snotel_max_mm"
+# colnames(snotel_max_df)[3] <-"snotel_max_mm"
 head(snotel_max_df)
 
 # check to see if names are the same
@@ -143,7 +143,9 @@ snsr_max_snotel
 # -c(cell,x,y,SNSR_aspect), 
 snsr_max_df <-as.data.frame(pivot_longer(snsr_max_snotel, cols = 3:34, 
                                          names_to = "year",
-                                         values_to = "snsr_max_mm"))
+                                         values_to = "snsr_max_dowy"))
+# round to int
+snsr_max_df$snsr_max_dowy <-as.integer(snsr_max_df$snsr_max_dowy)
 head(snsr_max_df)
 head(snotel_max_df)
 
@@ -153,13 +155,13 @@ head(compare_df)
 
 ggplot(compare_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = snsr_max_mm, y = snotel_max_mm), size = .9, color = "darkred") +
-  scale_y_continuous(limits = c(0,3000),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,3000),expand = (c(0,0))) +
-  ylab("SNSR Max SWE (mm)") + xlab("SNOTEL Max (mm)") +
+  geom_point(aes(y = snsr_max_dowy, x = snotel_max_dowy), size = .9, color = "goldenrod") +
+  scale_y_continuous(limits = c(50, 300),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(50, 300),expand = (c(0,0))) +
+  ylab("SNSR Max SWE DOWY") + xlab("SNOTEL Max DOWY") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
-cor(compare_df$snotel_max_mm, compare_df$snsr_max_mm, use = "complete.obs")
+cor(compare_df$snsr_max_dowy, compare_df$snotel_max_dowy, use = "complete.obs")
 
 # filter for 2016
 big_df16 <-filter(snotel, date >= "2015-10-01" & date <= "2016-09-30")
