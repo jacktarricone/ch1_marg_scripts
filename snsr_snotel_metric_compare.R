@@ -70,26 +70,70 @@ snotel_df <-bind_rows(snotel_df_list, .id = "network")
 snotel_df$date <-ymd(snotel_df$date)
 
 # add water year
-colnames(big_df)[12] <-"Date"
+colnames(snotel_df)[12] <-"Date"
+colnames(snotel_df)[13] <-"snotel_swe_mm"
 snotel_df <-dataRetrieval::addWaterYear(snotel_df)
 head(snotel_df)
 
 # filter to start at 85
-snotel_df_v1 <-filter(big_df, start <= as.Date("1984-10-10"))
-head(snotel_df_v1)
+snotel_df <-filter(snotel_df, start <= as.Date("1984-10-10"))
+head(snotel_df)
 
 # one ones that don't have the full time series
-snotel_df <-filter(snotel_df_v1, waterYear >= 1985 & waterYear <= 2016)
+snotel_df <-filter(snotel_df, waterYear >= 1985 & waterYear <= 2016)
 head(snotel_df)
 
 
+#########################
+#########################
+## read in SNSR data ##
+#########################
+#########################
 
-# bring in real snotel locations
-snsr_snotel_list <-list.files("./csvs/snsr_snotel_data/", full.names = TRUE)
+#### fix name
+
+# # read in csvs
+# files_list <-list.files("~/ch1_margulis/csvs/rename_snsr_snotel_data")
+# rename_file <-function(x){
+# 
+#       # read
+#       file_name_v1 <-basename(x)
+# 
+#       # remove csv
+#       file_name <-substr(file_name_v1,1,nchar(file_name_v1)-4)
+# 
+#       # pull out first 8 char
+#       swe_year <-substr(file_name, 1, 8)
+# 
+#       # pull out name
+#       name_v1 <-substr(file_name, 9, nchar(file_name))
+#       name <-substr(name_v1, 2, nchar(name_v1))
+# 
+#       # paste back together for new name
+#       new_name <-paste0(name,"_",swe_year,".csv")
+#       
+#       setwd("~/ch1_margulis/csvs/rename_snsr_snotel_data")
+#       # rename
+#       file.rename(from = x, to = new_name)
+# }
+# lapply(files_list, rename_file)
+
+# csvs <-list.files("~/ch1_margulis", pattern = ".csv", full.names = TRUE)
+# file.remove(csvs)
+
+# read in csvs
+snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
 snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 
 # bind together
-snsr_snotel_df <-bind_rows(snsr_snotel_data)
+snsr_df <-bind_rows(snsr_snotel_data)
+
+
+# bind SNSR and snotel data together
+
+
+
+
 
 # calc snotel max for 2016
 max_snsr_snotel_df <-as.data.frame(snsr_snotel_df %>%

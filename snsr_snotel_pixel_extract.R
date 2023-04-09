@@ -121,4 +121,6 @@ snotel_snsr_extract <-function(x){
 }
 
 # apply function to list of hdf files
-pbmclapply(hdf_paths, function(x) snotel_snsr_extract(x), mc.cores = 14, mc.cleanup = TRUE)
+# pbmclapply(hdf_paths, function(x) snotel_snsr_extract(x), mc.cores = 14, mc.cleanup = TRUE)
+lapply(hdf_paths[14], function(x) snotel_snsr_extract(x))
+
