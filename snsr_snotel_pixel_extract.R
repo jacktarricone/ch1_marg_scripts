@@ -112,8 +112,8 @@ snotel_snsr_extract <-function(x){
     head(final_df)
     
     # create saving information
-    saving_location <-file.path("./csvs/snsr_snotel_csvs/")
-    full_saving_name <-paste0(saving_location,"swe_",year,"_",site_name,".csv")
+    saving_location <-file.path("./csvs/snsr_snotel_data/")
+    full_saving_name <-paste0(saving_location,"swe_",year,"_",snotel_name,".csv")
     
     # save
     write.csv(final_df, full_saving_name, row.names=FALSE)
@@ -121,4 +121,4 @@ snotel_snsr_extract <-function(x){
 }
 
 # apply function to list of hdf files
-pbmclapply(hdf_paths[1], function(x) snotel_snsr_extract(x), mc.cores = 10, mc.cleanup = TRUE)
+pbmclapply(hdf_paths, function(x) snotel_snsr_extract(x), mc.cores = 14, mc.cleanup = TRUE)
