@@ -59,8 +59,7 @@ colnames(snsr_snotels)[14:15] <-c("cell_lon","cell_lat")
 
 # fine hdf swe files
 hdf_paths <-list.files("./swe/hdf", full.names = TRUE) # set paths
-x <-hdf_paths[8]
-
+# x <-hdf_paths[8]
 
 # define function
 snotel_snsr_extract <-function(x){
@@ -79,8 +78,8 @@ snotel_snsr_extract <-function(x){
     # use df which has SNOTEL station SNSR cell numbers
     # to read in single pixel where snotel station is
     swe_raw <-h5read(x, "/SWE", 
-                          index = list(snsr_snotels$y_cell_num[1], 
-                                       snsr_snotels$x_cell_num[1], 
+                          index = list(snsr_snotels$y_cell_num[i], 
+                                       snsr_snotels$x_cell_num[i], 
                                        1:nday))
     
     # convert to df
@@ -92,19 +91,19 @@ snotel_snsr_extract <-function(x){
     year <- gsub("SN_SWE_WY", "", year_v1) # take of begining letters
     
     # format names, remove spaces
-    snotel_name_v1 <-snsr_snotels$Site_Name[1]
+    snotel_name_v1 <-snsr_snotels$Site_Name[i]
     snotel_name <-gsub(" ", "_", snotel_name_v1)
     
     # pull out other data
     wy <-rep(year,nday)
     site_name <-rep(snotel_name,nday) 
-    latitude <-rep(snsr_snotels$cell_lat[1], nday)
-    longitude <-rep(snsr_snotels$cell_lon[1], nday)
-    ele_m <-rep(snsr_snotels$Elevation_m[1], nday)
-    station_id <-rep(snsr_snotels$cell_lat[1], nday)
-    cell_number <-rep(snsr_snotels$cell[1], nday)
-    x_cell <-rep(snsr_snotels$x_cell_num[1], nday)
-    y_cell <-rep(snsr_snotels$y_cell_num[1], nday)
+    latitude <-rep(snsr_snotels$cell_lat[i], nday)
+    longitude <-rep(snsr_snotels$cell_lon[i], nday)
+    ele_m <-rep(snsr_snotels$Elevation_m[i], nday)
+    station_id <-rep(snsr_snotels$cell_lat[i], nday)
+    cell_number <-rep(snsr_snotels$cell[i], nday)
+    x_cell <-rep(snsr_snotels$x_cell_num[i], nday)
+    y_cell <-rep(snsr_snotels$y_cell_num[i], nday)
     
     # make df
     final_df <-cbind(site_name, wy, snsr_swe_mm, 
@@ -122,4 +121,4 @@ snotel_snsr_extract <-function(x){
 }
 
 # apply function to list of hdf files
-pbmclapply(hdf_paths, function(x) snotel_snsr_extract(x), mc.cores = 10, mc.cleanup = TRUE)
+pbmclapply(hdf_paths[1], function(x) snotel_snsr_extract(x), mc.cores = 10, mc.cleanup = TRUE)
