@@ -52,74 +52,14 @@ theme_set(theme_classic(14))
 #########################
 #########################
 
-# bring in real snotel locations
-snotel_locs <-read.csv("./csvs/snsr_snotels.csv")
-head(snotel_locs)
-
-# create list to loop the dataframes into
-snotel_df_list <-as.list(rep(NA, nrow(snotel_locs)))
-head(snotel_df_list)
-
-# read in SNOTEL CSVs using ID number and name from meta data
-for (i in seq_along(snotel_locs$Site_Name)){
-  snotel_df_list[[i]] <-as.data.frame(snotel_download(snotel_locs$Site_ID[i], path = tempdir(), internal = TRUE))
-}
-
-# convert from list of dfs to one big one
-snotel_df <-bind_rows(snotel_df_list, .id = "network")
-snotel_df$date <-ymd(snotel_df$date)
-
-# add water year
-colnames(snotel_df)[12] <-"Date"
-colnames(snotel_df)[13] <-"snotel_swe_mm"
-snotel_df <-dataRetrieval::addWaterYear(snotel_df)
+snotel_df <-read.csv("./csvs/snotel_df.csv")
 head(snotel_df)
 
-# filter to start at 85
-snotel_df <-filter(snotel_df, start <= as.Date("1984-10-10"))
-head(snotel_df)
-
-# one ones that don't have the full time series
-snotel_df <-filter(snotel_df, waterYear >= 1985 & waterYear <= 2016)
-head(snotel_df)
-
-
 #########################
 #########################
-## read in SNSR data ##
+###  read in SNSR data ##
 #########################
 #########################
-
-#### fix name
-
-# # read in csvs
-# files_list <-list.files("~/ch1_margulis/csvs/rename_snsr_snotel_data")
-# rename_file <-function(x){
-# 
-#       # read
-#       file_name_v1 <-basename(x)
-# 
-#       # remove csv
-#       file_name <-substr(file_name_v1,1,nchar(file_name_v1)-4)
-# 
-#       # pull out first 8 char
-#       swe_year <-substr(file_name, 1, 8)
-# 
-#       # pull out name
-#       name_v1 <-substr(file_name, 9, nchar(file_name))
-#       name <-substr(name_v1, 2, nchar(name_v1))
-# 
-#       # paste back together for new name
-#       new_name <-paste0(name,"_",swe_year,".csv")
-#       
-#       setwd("~/ch1_margulis/csvs/rename_snsr_snotel_data")
-#       # rename
-#       file.rename(from = x, to = new_name)
-# }
-# lapply(files_list, rename_file)
-
-# csvs <-list.files("~/ch1_margulis", pattern = ".csv", full.names = TRUE)
-# file.remove(csvs)
 
 # read in csvs
 snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
