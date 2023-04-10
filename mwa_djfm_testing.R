@@ -1,4 +1,4 @@
-swe_dat <-read.csv("./csvs/rename_snsr_snotel_data/BLUE_LAKES_swe_1993.csv")
+swe_dat <-read.csv("./csvs/rename_snsr_snotel_data/BLUE_LAKES_swe_2016.csv")
 x <-swe_dat$snsr_swe_mm
 
 ###### mid winter ablation (mm)
@@ -113,3 +113,4 @@ mwa_djfm_rate <-function(x, swe_thres){
 mwa_djfm_total(x, 25.4)
 mwa_djfm_days(x, 25.4)
 mwa_djfm_rate(x, 25.4)
+

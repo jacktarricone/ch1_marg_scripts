@@ -123,7 +123,7 @@ max_25 <-ggplot(max_df) +
   geom_label(x = .8, y = 2.4, label = max_mae_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
-  xlab("SNOTEL Max (mm)") + ylab("SNSR Max SWE (mm)") +
+  xlab("SNOTEL Max SWE (m)") + ylab("SNSR Max SWE (m)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
@@ -189,50 +189,52 @@ system("open ./plots/max_dowy_metric_compare_v3.pdf")
 
 #########################
 #########################
-##     sdd swe     ##
+##     mwa_djfm swe     ##
 #########################
 #########################
 
 # calc metric 
-sdd_df <-as.data.frame(swe_df %>%
+mwa_djfm_df <-as.data.frame(swe_df %>%
                        group_by(site_name, waterYear) %>%
-                       summarise(sdd_snotel_0 = sdd(snotel_swe_mm, swe_thres = 0),
-                                 sdd_snsr_0   = sdd(snsr_swe_mm, swe_thres = 0),
-                                 sdd_snotel_25.4 = sdd(snotel_swe_mm, swe_thres = 25.4),
-                                 sdd_snsr_25.4   = sdd(snsr_swe_mm, swe_thres = 25.4),
-                                 sdd_snotel_50.8 = sdd(snotel_swe_mm, swe_thres = 50.8),
-                                 sdd_snsr_50.8   = sdd(snsr_swe_mm, swe_thres = 50.8)))
+                       summarise(mwa_djfm_snotel_0 = mwa_djfm_total(snotel_swe_mm, swe_thres = 0),
+                                 mwa_djfm_snsr_0   = mwa_djfm_total(snsr_swe_mm, swe_thres = 0),
+                                 mwa_djfm_snotel_25.4 = mwa_djfm_total(snotel_swe_mm, swe_thres = 25.4),
+                                 mwa_djfm_snsr_25.4   = mwa_djfm_total(snsr_swe_mm, swe_thres = 25.4),
+                                 mwa_djfm_snotel_50.8 = mwa_djfm_total(snotel_swe_mm, swe_thres = 50.8),
+                                 mwa_djfm_snsr_50.8   = mwa_djfm_total(snsr_swe_mm, swe_thres = 50.8)))
 
 
 # calculate metric to report
 # R
-sdd_corr <-round(cor(sdd_df$sdd_snotel_25.4, sdd_df$sdd_snsr_25.4, 
+mwa_djfm_corr <-round(cor(mwa_djfm_df$mwa_djfm_snotel_25.4, mwa_djfm_df$mwa_djfm_snsr_25.4, 
                                  use = "complete.obs", method = 'pearson'), digits = 2)
-sdd_corr_lab <-paste0("R = ", sdd_corr)
+mwa_djfm_corr_lab <-paste0("R = ", mwa_djfm_corr)
 
 # rmse and mae
-sdd_rmse <-round(hydroGOF::rmse(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
-sdd_mae <-round(hydroGOF::mae(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
-sdd_rmse_lab <-paste0("RMSE = ",sdd_rmse," (days)")
-sdd_mae_lab <-paste0("MAE = ",sdd_mae," (days)") 
+mwa_djfm_rmse <-round(hydroGOF::rmse(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 0)
+mwa_djfm_mae <-round(hydroGOF::mae(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 0)
+mwa_djfm_rmse_lab <-paste0("RMSE = ",mwa_djfm_rmse," (mm)")
+mwa_djfm_mae_lab <-paste0("MAE = ",mwa_djfm_mae," (mm)") 
 
 # plot
-sdd_25 <-ggplot(sdd_df) +
+mwa_djfm_25 <-ggplot(mwa_djfm_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = sdd_snotel_25.4, y = sdd_snsr_25.4), shape = 3, size = .5, color = "darkgreen") +
-  geom_label(x = 120, y = 350, label = sdd_corr_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = 120, y = 335, label = sdd_rmse_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = 120, y = 320, label = sdd_mae_lab, label.size = NA, fontface = "bold") +
-  scale_y_continuous(limits = c(50,366),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(50,366),expand = (c(0,0))) +
-  xlab("SNOTEL SDD (DOWY)") + ylab("SNSR SSD (DOWY)") +
+  geom_point(aes(x = mwa_djfm_snotel_25.4, y = mwa_djfm_snsr_25.4), shape = 3, size = .5, color = "goldenrod") +
+  geom_label(x = 120, y = 480, label = mwa_djfm_corr_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 450, label = mwa_djfm_rmse_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 420, label = mwa_djfm_mae_lab, label.size = NA, fontface = "bold") +
+  scale_y_continuous(limits = c(0,500),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,500),expand = (c(0,0))) +
+  xlab("SNOTEL MWA (mm)") + ylab("SNSR MWA (mm)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave( "./plots/sdd_metric_compare_v1.pdf",
-        sdd_25,
+ggsave( "./plots/mwa_djfm_metric_compare_v1.pdf",
+        mwa_djfm_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/sdd_metric_compare_v1.pdf")
+system("open ./plots/mwa_djfm_metric_compare_v1.pdf")
+
+
