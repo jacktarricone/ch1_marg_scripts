@@ -53,7 +53,7 @@ theme_set(theme_classic(14))
 #########################
 
 snotel_df <-read.csv("./csvs/snotel_df.csv")
-snotel_df <-subset(snotel_df, select=-c("x", "network")) # move bad one
+snotel_df <-subset(snotel_df, select=-c(X, network)) # move bad one
 head(snotel_df)
 
 #########################
@@ -63,22 +63,24 @@ head(snotel_df)
 #########################
 
 # read in csvs
-snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
+snsr_snotel_list <-sort(list.files("./csvs/rename_snsr_snotel_data", full.names = TRUE))
 snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 
 # bind together
 snsr_df <-bind_rows(snsr_snotel_data) # make df
-# snsr_df$site_id <-snotel_df$site_id # add correct site id col
 snsr_df <-subset(snsr_df, select=-c(station_id)) # move bad one
 colnames(snsr_df)[c(1,4,5)] <-c('site_name_v2','lat','lon')
 head(snsr_df)
-
-# test to see if ID numbers are the same
-true <-ifelse(snotel_df$site_id == snotel_df$site_id, TRUE, FALSE)
+unique(snsr_df$site_name_v2)
+unique(snotel_df$site_name)
 
 # bind together
 swe_df <-cbind(snotel_df, snsr_df)
 head(swe_df)
+
+# test to see if wy match
+year_match_test <-ifelse(swe_df$wy == swe_df$waterYear, TRUE, FALSE)
+unique(year_match_test)
 
 #########################
 #########################
@@ -89,34 +91,25 @@ head(swe_df)
 # calc snotel max 
 max_df <-as.data.frame(swe_df %>%
                        group_by(site_name, waterYear) %>%
-                       summarise(max_snotel_0 = as.integer(max_swe(snotel_swe_mm, swe_thres = 0)),
-                                 max_snsr_0   = as.integer(max_swe(snsr_swe_mm, swe_thres = 0)),
-                                 max_snotel_25.4 = as.integer(max_swe(snotel_swe_mm, swe_thres = 25.4)),
-                                 max_snsr_25.4   = as.integer(max_swe(snsr_swe_mm, swe_thres = 25.4)),
-                                 max_snotel_50.8 = as.integer(max_swe(snotel_swe_mm, swe_thres = 50.8)),
-                                 max_snsr_50.8   = as.integer(max_swe(snsr_swe_mm, swe_thres = 50.8)),)) 
-  
-
-# calc snotel max 
-max_snsr_df <-as.data.frame(snsr_df %>%
-                            group_by(site_name_v2, wy) %>%
-                            summarise(max_snsr_swe_mm = max_swe(snsr_swe_mm, swe_thres = 25.4)))
-
-# bind for plotting
-max_df <-cbind(max_snotel_df, max_snsr_df)
-head(max_df)
+                       summarise(max_snotel_0 = max_swe(snotel_swe_mm, swe_thres = 0),
+                                 max_snsr_0   = max_swe(snsr_swe_mm, swe_thres = 0),
+                                 max_snotel_25.4 = max_swe(snotel_swe_mm, swe_thres = 25.4),
+                                 max_snsr_25.4   = max_swe(snsr_swe_mm, swe_thres = 25.4),
+                                 max_snotel_50.8 = max_swe(snotel_swe_mm, swe_thres = 50.8),
+                                 max_snsr_50.8   = max_swe(snsr_swe_mm, swe_thres = 50.8)))
 
 # plot
 ggplot(max_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_snotel_swe_mm, y = max_snsr_swe_mm), shape = 3, size = .9, color = "darkred") +
+  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, size = .9, color = "darkred") +
+  # geom_point(aes(x = max_snotel_50.8, y = max_snsr_50.8), shape = 3, size = .9, color = "darkred") +
   scale_y_continuous(limits = c(0,3000),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3000),expand = (c(0,0))) +
   xlab("SNOTEL Max (mm)") + ylab("SNSR Max SWE (mm)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # calc correlation
-cor(max_df$max_snotel_swe_mm, max_df$max_snsr_swe_mm, use = "complete.obs")
+cor(max_df$max_snotel_50.8, max_df$max_snsr_50.8, use = "complete.obs")
 
 #########################
 #########################
@@ -137,6 +130,9 @@ max_dowy_snsr_df <-as.data.frame(snsr_df %>%
 # bind for plotting
 max_dowy_df <-cbind(max_dowy_snotel_df, max_dowy_snsr_df)
 head(max_dowy_df)
+
+ifelse(swe_df$waterYear == swe_df$wy, TRUE, FALSE)
+wy_tst <-cbind(swe_df$waterYear, swe_df$wy)
 
 # plot
 ggplot(max_dowy_df) +
