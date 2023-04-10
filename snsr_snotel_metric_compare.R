@@ -67,86 +67,136 @@ snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 
 # bind together
 snsr_df <-bind_rows(snsr_snotel_data)
+colnames(snsr_df)[1] <-'site_name_v2'
 
+# test to see if ID numbers are the same
+true <-ifelse(snotel_df$site_id == snotel_df$site_id, TRUE, FALSE)
 
-# bind SNSR and snotel data together
+#########################
+#########################
+##     max swe     ##
+#########################
+#########################
 
+# calc snotel max 
+max_snotel_df <-as.data.frame(snotel_df %>%
+                              group_by(site_name, waterYear) %>%
+                              summarise(max_snotel_swe_mm = max_swe(snotel_swe_mm, swe_thres = 25.4)))
 
+# calc snotel max 
+max_snsr_df <-as.data.frame(snsr_df %>%
+                            group_by(site_name_v2, wy) %>%
+                            summarise(max_snsr_swe_mm = max_swe(snsr_swe_mm, swe_thres = 25.4)))
 
+# bind for plotting
+max_df <-cbind(max_snotel_df, max_snsr_df)
+head(max_df)
 
-
-# calc snotel max for 2016
-max_snsr_snotel_df <-as.data.frame(snsr_snotel_df %>%
-  group_by(site_name, wy) %>%
-  summarise(max_swe_mm = max_swe(snsr_swe_mm, swe_thres = 25.4)))
-
-head(max_snsr_snotel_df)
-
-# check to see if names are the same
-unique(snotel_max_df$site_name)
-unique(snotel_ca$Site_Name)
-
-# # extract cell number from pit lat/lon point
-# snotel_cell_numbers <-as.data.frame(cells(max_stack, ca_points_snsr))
-# snotel_cell_numbers 
-# 
-# ## loop to pull create string of snotel cell and 8 surrounding 
-# 
-# dummy_list <-list()
-# for (i in seq_along(snotel_cell_numbers$cell)){
-#   neighbor_cells <-c(adjacent(max_stack, cells = snotel_cell_numbers$cell[i], directions ="8"))
-#   dummy_list[[i]] <-c(snotel_cell_numbers$cell[i], neighbor_cells)
-# }
-# 
-# # extract using that vector
-# nine_cells <-terra::extract(max_stack, dummy_list[[20]], xy = TRUE)
-# nine_cells
-
-snsr_max_snotel <-terra::extract(max_stack, ca_points_snsr, 
-                                 names = TRUE, 
-                                 cells = TRUE, 
-                                 xy = TRUE, 
-                                 ID = TRUE,
-                                 method = 'bilinear')
-# rename cols
-years <-seq(1985,2016,1)
-snsr_max_snotel <-cbind(unique(snotel_df$site_name), snsr_max_snotel)
-colnames(snsr_max_snotel)[3:34] <-years
-colnames(snsr_max_snotel)[1] <-"site_name_v2"
-snsr_max_snotel
-
-# -c(cell,x,y,SNSR_aspect), 
-snsr_max_df <-as.data.frame(pivot_longer(snsr_max_snotel, cols = 3:34, 
-                                         names_to = "year",
-                                         values_to = "snsr_max_mm"))
-head(snsr_max_df)
-head(snotel_max_df)
-
-# make df for plotting
-compare_df <-cbind(snsr_max_df, snotel_max_df)
-head(compare_df)
-
-ggplot(compare_df) +
+# plot
+ggplot(max_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = snsr_max_mm, y = snotel_max_mm), size = .9, color = "darkred") +
+  geom_point(aes(x = max_snotel_swe_mm, y = max_snsr_swe_mm), size = .9, color = "darkred") +
   scale_y_continuous(limits = c(0,3000),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3000),expand = (c(0,0))) +
-  ylab("SNSR Max SWE (mm)") + xlab("SNOTEL Max (mm)") +
+  xlab("SNOTEL Max (mm)") + ylab("SNSR Max SWE (mm)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
-cor(compare_df$snotel_max_mm, compare_df$snsr_max_mm, use = "complete.obs")
+# calc correlation
+cor(max_df$max_snotel_swe_mm, max_df$max_snsr_swe_mm, use = "complete.obs")
 
-# filter for 2016
-big_df16 <-filter(snotel, date >= "2015-10-01" & date <= "2016-09-30")
+#########################
+#########################
+##     max dowy swe    ##
+#########################
+#########################
 
-ggplot(big_df16)+
-  geom_line(aes(y = snow_water_equivalent, x = date, group = site_name), alpha = .4)
+# calc snotel 
+max_dowy_snotel_df <-as.data.frame(snotel_df %>%
+                                group_by(site_name, waterYear) %>%
+                                summarise(max_dowy_snotel = max_swe_dowy(snotel_swe_mm, swe_thres = 0)))
 
-# filter for palisades
-pt <-filter(snotel_df, site_name == "palisades tahoe ")
-pt95 <-filter(pt, waterYear == 1995)
+# calc snsr 
+max_dowy_snsr_df <-as.data.frame(snsr_df %>%
+                              group_by(site_name_v2, wy) %>%
+                              summarise(max_dowy_snsr = max_swe_dowy(snsr_swe_mm, swe_thres = 0)))
+
+# bind for plotting
+max_dowy_df <-cbind(max_dowy_snotel_df, max_dowy_snsr_df)
+head(max_dowy_df)
+
+# plot
+ggplot(max_dowy_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = max_dowy_snotel, y = max_dowy_snsr), shape = 3, size = .9, color = "darkviolet") +
+  scale_y_continuous(limits = c(50,300),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(50,300),expand = (c(0,0))) +
+  xlab("SNOTEL Max DOWY") + ylab("SNSR Max DOWY") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
+# calc correlation
+cor(max_dowy_df$max_dowy_snotel, max_dowy_df$max_dowy_snsr, use = "complete.obs")
 
 
-ggplot(pt95)+
-  geom_line(aes(y = snow_water_equivalent, x = Date))
+#########################
+#########################
+##        sdd          ##
+#########################
+#########################
 
+# calc snotel sdd 
+sdd_snotel_df <-as.data.frame(snotel_df %>%
+                                group_by(site_name, waterYear) %>%
+                                summarise(sdd_snotel = sdd(snotel_swe_mm, swe_thres = 100)))
+
+# calc snotel sdd 
+sdd_snsr_df <-as.data.frame(snsr_df %>%
+                              group_by(site_name_v2, wy) %>%
+                              summarise(sdd_snsr = sdd(snsr_swe_mm, swe_thres = 100)))
+
+# bind for plotting
+sdd_df <-cbind(sdd_snotel_df, sdd_snsr_df)
+head(sdd_df)
+
+# plot
+ggplot(sdd_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = sdd_snotel, y = sdd_snsr), shape =3, size = .9, color = "black") +
+  scale_y_continuous(limits = c(100,365),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(100,365),expand = (c(0,0))) +
+  xlab("SNOTEL SDD (dowy)") + ylab("SNSR SDD SWE (dowy)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
+# calc correlation
+cor(sdd_df$sdd_snotel, sdd_df$sdd_snsr, use = "complete.obs")
+
+#########################
+#########################
+##     melt_rate      ##
+#########################
+#########################
+
+# calc snotel melt_rate 
+melt_rate_snotel_df <-as.data.frame(snotel_df %>%
+                                group_by(site_name, waterYear) %>%
+                                summarise(melt_rate_snotel_swe_mm = melt_rate(snotel_swe_mm, swe_thres = 0)))
+
+# calc snotel melt_rate 
+melt_rate_snsr_df <-as.data.frame(snsr_df %>%
+                              group_by(site_name_v2, wy) %>%
+                              summarise(melt_rate_snsr_swe_mm = melt_rate(snsr_swe_mm, swe_thres = 25.4)))
+
+# bind for plotting
+melt_rate_df <-cbind(melt_rate_snotel_df, melt_rate_snsr_df)
+head(melt_rate_df)
+
+# plot
+ggplot(melt_rate_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = melt_rate_snotel_swe_mm, y = melt_rate_snsr_swe_mm), shape =3, size = .9, color = "darkred") +
+  scale_y_continuous(limits = c(0,20),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,20),expand = (c(0,0))) +
+  xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
+# calc correlation
+cor(melt_rate_df$melt_rate_snotel_swe_mm, melt_rate_df$melt_rate_snsr_swe_mm, use = "complete.obs")
