@@ -5,6 +5,8 @@ library(dplyr)
 library(ggplot2)
 library(snotelr)
 library(lubridate)
+library(Metrics)
+library(cowplot)
 
 setwd('~/ch1_margulis')
 
@@ -88,28 +90,49 @@ unique(year_match_test)
 #########################
 #########################
 
-# calc snotel max 
+# calc metric 
 max_df <-as.data.frame(swe_df %>%
                        group_by(site_name, waterYear) %>%
-                       summarise(max_snotel_0 = max_swe(snotel_swe_mm, swe_thres = 0),
-                                 max_snsr_0   = max_swe(snsr_swe_mm, swe_thres = 0),
-                                 max_snotel_25.4 = max_swe(snotel_swe_mm, swe_thres = 25.4),
-                                 max_snsr_25.4   = max_swe(snsr_swe_mm, swe_thres = 25.4),
-                                 max_snotel_50.8 = max_swe(snotel_swe_mm, swe_thres = 50.8),
-                                 max_snsr_50.8   = max_swe(snsr_swe_mm, swe_thres = 50.8)))
+                       summarise(max_snotel_0 = max_swe(snotel_swe_mm, swe_thres = 0)/1000,
+                                 max_snsr_0   = max_swe(snsr_swe_mm, swe_thres = 0)/1000,
+                                 max_snotel_25.4 = max_swe(snotel_swe_mm, swe_thres = 25.4)/1000,
+                                 max_snsr_25.4   = max_swe(snsr_swe_mm, swe_thres = 25.4)/1000,
+                                 max_snotel_50.8 = max_swe(snotel_swe_mm, swe_thres = 50.8)/1000,
+                                 max_snsr_50.8   = max_swe(snsr_swe_mm, swe_thres = 50.8)/1000))
+
+
+# calculate metric to report
+# R
+correlation <-round(cor(max_df$max_snotel_25.4, max_df$max_snsr_25.4, 
+                        use = "complete.obs", method = ), digits = 2)
+
+# rmse and mae
+max_rmse <-round(hydroGOF::rmse(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+max_mae <-round(hydroGOF::mae(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+max_rmse_lab <-paste0("RMSE = ",max_rmse," (m)")
+max_mae_lab <-paste0("MAE = ",max_mae," (m)") 
+
 
 # plot
-ggplot(max_df) +
+max_25 <-ggplot(max_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, size = .9, color = "darkred") +
-  # geom_point(aes(x = max_snotel_50.8, y = max_snsr_50.8), shape = 3, size = .9, color = "darkred") +
-  scale_y_continuous(limits = c(0,3000),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,3000),expand = (c(0,0))) +
+  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, size = .3, color = "darkred") +
+  geom_label(x = .8, y = 2.7, label = paste0('R = ', correlation), label.size = NA, fontface = "bold") +
+  geom_label(x = .8, y = 2.5, label = max_rmse_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = .8, y = 2.3, label = max_mae_lab, label.size = NA, fontface = "bold") +
+  scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
   xlab("SNOTEL Max (mm)") + ylab("SNSR Max SWE (mm)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
-# calc correlation
-cor(max_df$max_snotel_50.8, max_df$max_snsr_50.8, use = "complete.obs")
+# save
+ggsave("./plots/max_metric_compare_v3.pdf",
+       width = 4,
+       height = 4,
+       units = "in")
+
+system("open ./plots/max_metric_compare_v3.pdf")
+
 
 #########################
 #########################
