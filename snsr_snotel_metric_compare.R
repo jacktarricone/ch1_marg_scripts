@@ -103,7 +103,7 @@ max_df <-as.data.frame(swe_df %>%
 
 # calculate metric to report
 # R
-correlation <-round(cor(max_df$max_snotel_25.4, max_df$max_snsr_25.4, 
+max_correlation <-round(cor(max_df$max_snotel_25.4, max_df$max_snsr_25.4, 
                         use = "complete.obs", method = ), digits = 2)
 
 # rmse and mae
@@ -116,152 +116,70 @@ max_mae_lab <-paste0("MAE = ",max_mae," (m)")
 # plot
 max_25 <-ggplot(max_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, size = .3, color = "darkred") +
-  geom_label(x = .8, y = 2.7, label = paste0('R = ', correlation), label.size = NA, fontface = "bold") +
-  geom_label(x = .8, y = 2.5, label = max_rmse_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = .8, y = 2.3, label = max_mae_lab, label.size = NA, fontface = "bold") +
+  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, size = .5, color = "darkred") +
+  geom_label(x = .8, y = 2.8, label = paste0('R = ', max_correlation), label.size = NA, fontface = "bold") +
+  geom_label(x = .8, y = 2.6, label = max_rmse_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = .8, y = 2.4, label = max_mae_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
   xlab("SNOTEL Max (mm)") + ylab("SNSR Max SWE (mm)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave("./plots/max_metric_compare_v3.pdf",
-       width = 4,
-       height = 4,
+ggsave( "./plots/max_metric_compare_v4.pdf",
+       max_dowy_25,
+       width = 4.5,
+       height = 4.5,
        units = "in")
 
-system("open ./plots/max_metric_compare_v3.pdf")
+system("open ./plots/max_metric_compare_v4.pdf")
 
 
 #########################
 #########################
-##     max dowy swe    ##
+##     max_dowy swe     ##
 #########################
 #########################
 
-# calc snotel 
-max_dowy_snotel_df <-as.data.frame(snotel_df %>%
-                                group_by(site_name, waterYear) %>%
-                                summarise(max_dowy_snotel = max_swe_dowy(snotel_swe_mm, swe_thres = 0)))
+# calc metric 
+max_dowy_df <-as.data.frame(swe_df %>%
+                         group_by(site_name, waterYear) %>%
+                         summarise(max_dowy_snotel_0 = max_swe_dowy(snotel_swe_mm, swe_thres = 0),
+                                   max_dowy_snsr_0   = max_swe_dowy(snsr_swe_mm, swe_thres = 0),
+                                   max_dowy_snotel_25.4 = max_swe_dowy(snotel_swe_mm, swe_thres = 25.4),
+                                   max_dowy_snsr_25.4   = max_swe_dowy(snsr_swe_mm, swe_thres = 25.4),
+                                   max_dowy_snotel_50.8 = max_swe_dowy(snotel_swe_mm, swe_thres = 50.8),
+                                   max_dowy_snsr_50.8   = max_swe_dowy(snsr_swe_mm, swe_thres = 50.8)))
 
-# calc snsr 
-max_dowy_snsr_df <-as.data.frame(snsr_df %>%
-                              group_by(site_name_v2, wy) %>%
-                              summarise(max_dowy_snsr = max_swe_dowy(snsr_swe_mm, swe_thres = 0)))
 
-# bind for plotting
-max_dowy_df <-cbind(max_dowy_snotel_df, max_dowy_snsr_df)
-head(max_dowy_df)
+# calculate metric to report
+# R
+max_dowy_correlation <-round(cor(max_dowy_df$max_dowy_snotel_25.4, max_dowy_df$max_dowy_snsr_25.4, 
+                        use = "complete.obs", method = ), digits = 2)
 
-ifelse(swe_df$waterYear == swe_df$wy, TRUE, FALSE)
-wy_tst <-cbind(swe_df$waterYear, swe_df$wy)
+# rmse and mae
+max_dowy_rmse <-round(hydroGOF::rmse(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, na.rm = TRUE), digits = 2)
+max_dowy_mae <-round(hydroGOF::mae(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, na.rm = TRUE), digits = 2)
+max_dowy_rmse_lab <-paste0("RMSE = ",max_dowy_rmse," (days)")
+max_dowy_mae_lab <-paste0("MAE = ",max_dowy_mae," (days)") 
 
 # plot
-ggplot(max_dowy_df) +
+max_dowy_25 <-ggplot(max_dowy_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_dowy_snotel, y = max_dowy_snsr), shape = 3, size = .9, color = "darkviolet") +
+  geom_point(aes(x = max_dowy_snotel_25.4, y = max_dowy_snsr_25.4), shape = 3, size = .5, color = "darkviolet") +
+  geom_label(x = 120, y = 290, label = paste0('R = ', correlation), label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 275, label = max_dowy_rmse_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 260, label = max_dowy_mae_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(50,300),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(50,300),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(50,300),expand = (c(0,.1))) +
   xlab("SNOTEL Max DOWY") + ylab("SNSR Max DOWY") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
-# calc correlation
-cor(max_dowy_df$max_dowy_snotel, max_dowy_df$max_dowy_snsr, use = "complete.obs")
+# save
+ggsave( "./plots/max_dowy_metric_compare_v3.pdf",
+       max_dowy_25,
+       width = 4.5,
+       height = 4.5,
+       units = "in")
 
-
-#########################
-#########################
-##        sdd          ##
-#########################
-#########################
-
-# calc snotel sdd 
-sdd_snotel_df <-as.data.frame(snotel_df %>%
-                                group_by(site_name, waterYear) %>%
-                                summarise(sdd_snotel = sdd(snotel_swe_mm, swe_thres = 25.4)))
-
-# calc snotel sdd 
-sdd_snsr_df <-as.data.frame(snsr_df %>%
-                              group_by(site_name_v2, wy) %>%
-                              summarise(sdd_snsr = sdd(snsr_swe_mm, swe_thres = 25.4)))
-
-# bind for plotting
-sdd_df <-cbind(sdd_snotel_df, sdd_snsr_df)
-head(sdd_df)
-
-# plot
-ggplot(sdd_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = sdd_snotel, y = sdd_snsr), shape =3, size = .9, color = "black") +
-  scale_y_continuous(limits = c(100,365),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(100,365),expand = (c(0,0))) +
-  xlab("SNOTEL SDD (dowy)") + ylab("SNSR SDD SWE (dowy)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
-
-# calc correlation
-cor(sdd_df$sdd_snotel, sdd_df$sdd_snsr, use = "complete.obs")
-
-#########################
-#########################
-##     melt_rate      ##
-#########################
-#########################
-
-# calc snotel melt_rate 
-melt_rate_snotel_df <-as.data.frame(snotel_df %>%
-                                group_by(site_name, waterYear) %>%
-                                summarise(melt_rate_snotel_swe_mm = melt_rate(snotel_swe_mm, swe_thres = 25.4)))
-
-# calc snsr
-melt_rate_snsr_df <-as.data.frame(snsr_df %>%
-                              group_by(site_name_v2, wy) %>%
-                              summarise(melt_rate_snsr_swe_mm = melt_rate(snsr_swe_mm, swe_thres = 25.4)))
-
-# bind for plotting
-melt_rate_df <-cbind(melt_rate_snotel_df, melt_rate_snsr_df)
-head(melt_rate_df)
-
-# plot
-ggplot(melt_rate_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = melt_rate_snotel_swe_mm, y = melt_rate_snsr_swe_mm), shape =3, size = .9, color = "darkred") +
-  scale_y_continuous(limits = c(0,30),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,30),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
-
-# calc correlation
-cor(melt_rate_df$melt_rate_snotel_swe_mm, melt_rate_df$melt_rate_snsr_swe_mm, use = "complete.obs")
-
-#########################
-#########################
-##        msl          ##
-#########################
-#########################
-
-# calc snotel msl 
-msl_snotel_df <-as.data.frame(snotel_df %>%
-                                group_by(site_name, waterYear) %>%
-                                summarise(msl_snotel = msl(snotel_swe_mm, swe_thres = 25.4)))
-
-# calc snotel msl 
-msl_snsr_df <-as.data.frame(snsr_df %>%
-                              group_by(site_name_v2, wy) %>%
-                              summarise(msl_snsr = msl(snsr_swe_mm, swe_thres = 25.4)))
-
-# bind for plotting
-msl_df <-cbind(msl_snotel_df, msl_snsr_df)
-head(msl_df)
-
-# plot
-ggplot(msl_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = msl_snotel, y = msl_snsr), shape =3, size = .9, color = "darkgreen") +
-  scale_y_continuous(limits = c(0,200),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,200),expand = (c(0,0))) +
-  xlab("SNOTEL MSL (days)") + ylab("SNSR MSL (days)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
-
-# calc correlation
-cor(msl_df$msl_snotel, msl_df$msl_snsr, use = "complete.obs")
+system("open ./plots/max_dowy_metric_compare_v3.pdf")
