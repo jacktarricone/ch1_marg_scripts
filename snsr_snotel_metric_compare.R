@@ -187,11 +187,120 @@ ggsave( "./plots/max_dowy_metric_compare_v3.pdf",
 
 system("open ./plots/max_dowy_metric_compare_v3.pdf")
 
+
+
+
 #########################
 #########################
-##     mwa_djfm swe     ##
+######     sdd      #####
 #########################
 #########################
+
+# calc metric 
+sdd_df <-as.data.frame(swe_df %>%
+                         group_by(site_name, waterYear) %>%
+                         summarise(sdd_snotel_0 = sdd(snotel_swe_mm, swe_thres = 0),
+                                   sdd_snsr_0   = sdd(snsr_swe_mm, swe_thres = 0),
+                                   sdd_snotel_25.4 = sdd(snotel_swe_mm, swe_thres = 25.4),
+                                   sdd_snsr_25.4   = sdd(snsr_swe_mm, swe_thres = 25.4),
+                                   sdd_snotel_50.8 = sdd(snotel_swe_mm, swe_thres = 50.8),
+                                   sdd_snsr_50.8   = sdd(snsr_swe_mm, swe_thres = 50.8)))
+
+
+# calculate metric to report
+# R
+sdd_corr <-round(cor(sdd_df$sdd_snotel_25.4, sdd_df$sdd_snsr_25.4, 
+                     use = "complete.obs", method = 'pearson'), digits = 2)
+sdd_corr_lab <-paste0("R = ", sdd_corr)
+
+# rmse and mae
+sdd_rmse <-round(hydroGOF::rmse(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
+sdd_mae <-round(hydroGOF::mae(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
+sdd_rmse_lab <-paste0("RMSE = ",sdd_rmse," (days)")
+sdd_mae_lab <-paste0("MAE = ",sdd_mae," (days)") 
+
+# plot
+sdd_25 <-ggplot(sdd_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = sdd_snotel_25.4, y = sdd_snsr_25.4), shape = 3, size = .5, color = "darkgreen") +
+  geom_label(x = 120, y = 350, label = sdd_corr_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 335, label = sdd_rmse_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 320, label = sdd_mae_lab, label.size = NA, fontface = "bold") +
+  scale_y_continuous(limits = c(50,366),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(50,366),expand = (c(0,0))) +
+  xlab("SNOTEL SDD (DOWY)") + ylab("SNSR SDD (DOWY)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
+# save
+ggsave( "./plots/sdd_metric_compare_v1.pdf",
+        sdd_25,
+        width = 4.5,
+        height = 4.5,
+        units = "in")
+
+system("open ./plots/sdd_metric_compare_v1.pdf")
+
+
+
+#########################
+#########################
+######     melt_rate      #####
+#########################
+#########################
+
+# calc metric 
+melt_rate_df <-as.data.frame(swe_df %>%
+                         group_by(site_name, waterYear) %>%
+                         summarise(melt_rate_snotel_0 = melt_rate(snotel_swe_mm, swe_thres = 0),
+                                   melt_rate_snsr_0   = melt_rate(snsr_swe_mm, swe_thres = 0),
+                                   melt_rate_snotel_25.4 = melt_rate(snotel_swe_mm, swe_thres = 25.4),
+                                   melt_rate_snsr_25.4   = melt_rate(snsr_swe_mm, swe_thres = 25.4),
+                                   melt_rate_snotel_50.8 = melt_rate(snotel_swe_mm, swe_thres = 50.8),
+                                   melt_rate_snsr_50.8   = melt_rate(snsr_swe_mm, swe_thres = 50.8)))
+
+melt_rate_df[sapply(melt_rate_df, is.infinite)] <- NA
+
+
+# calculate metric to report
+# R
+melt_rate_corr <-round(cor(melt_rate_df$melt_rate_snotel_25.4, melt_rate_df$melt_rate_snsr_25.4, 
+                     use = "complete.obs", method = 'pearson'), digits = 2)
+melt_rate_corr_lab <-paste0("R = ", melt_rate_corr)
+
+# rmse and mae
+melt_rate_rmse <-round(hydroGOF::rmse(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, na.rm = TRUE), digits = 2)
+melt_rate_mae <-round(hydroGOF::mae(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, na.rm = TRUE), digits = 2)
+melt_rate_rmse_lab <-paste0("RMSE = ",melt_rate_rmse," (mm/day)")
+melt_rate_mae_lab <-paste0("MAE = ",melt_rate_mae," (mm/day)") 
+
+# plot
+melt_rate_25 <-ggplot(melt_rate_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, size = .5, color = "darkorange") +
+  geom_label(x = 13, y = 38, label = melt_rate_corr_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 13, y = 36, label = melt_rate_rmse_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 13, y = 34, label = melt_rate_mae_lab, label.size = NA, fontface = "bold") +
+  scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
+  xlab("SNOTEL Melt Rate (mm/day)") + ylab("Melt Rate (mm/day") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
+# save
+ggsave( "./plots/melt_rate_metric_compare_v1.pdf",
+        melt_rate_25,
+        width = 4.5,
+        height = 4.5,
+        units = "in")
+
+system("open ./plots/melt_rate_metric_compare_v1.pdf")
+
+
+
+##########################
+##########################
+##     mwa_djfm_total   ##
+##########################
+##########################
 
 # calc metric 
 mwa_djfm_df <-as.data.frame(swe_df %>%
@@ -236,5 +345,60 @@ ggsave( "./plots/mwa_djfm_metric_compare_v1.pdf",
         units = "in")
 
 system("open ./plots/mwa_djfm_metric_compare_v1.pdf")
+
+
+
+
+##########################
+##########################
+##     mwa_djfm_days    ##
+##########################
+##########################
+
+# calc metric 
+mwa_djfm_days_df <-as.data.frame(swe_df %>%
+                              group_by(site_name, waterYear) %>%
+                              summarise(mwa_djfm_days_snotel_0 = mwa_djfm_days(snotel_swe_mm, swe_thres = 0),
+                                        mwa_djfm_days_snsr_0   = mwa_djfm_days(snsr_swe_mm, swe_thres = 0),
+                                        mwa_djfm_days_snotel_25.4 = mwa_djfm_days(snotel_swe_mm, swe_thres = 25.4),
+                                        mwa_djfm_days_snsr_25.4   = mwa_djfm_days(snsr_swe_mm, swe_thres = 25.4),
+                                        mwa_djfm_days_snotel_50.8 = mwa_djfm_days(snotel_swe_mm, swe_thres = 50.8),
+                                        mwa_djfm_days_snsr_50.8   = mwa_djfm_days(snsr_swe_mm, swe_thres = 50.8)))
+
+
+# calculate metric to report
+# R
+mwa_djfm_days_corr <-round(cor(mwa_djfm_days_df$mwa_djfm_days_snotel_25.4, mwa_djfm_days_df$mwa_djfm_days_snsr_25.4, 
+                          use = "complete.obs", method = 'pearson'), digits = 2)
+mwa_djfm_days_corr_lab <-paste0("R = ", mwa_djfm_days_corr)
+
+# rmse and mae
+mwa_djfm_days_rmse <-round(hydroGOF::rmse(mwa_djfm_days_df$mwa_djfm_days_snsr_25.4, mwa_djfm_days_df$mwa_djfm_days_snotel_25.4, na.rm = TRUE), digits = 0)
+mwa_djfm_days_mae <-round(hydroGOF::mae(mwa_djfm_days_df$mwa_djfm_days_snsr_25.4, mwa_djfm_days_df$mwa_djfm_days_snotel_25.4, na.rm = TRUE), digits = 0)
+mwa_djfm_days_rmse_lab <-paste0("RMSE = ",mwa_djfm_days_rmse," (days)")
+mwa_djfm_days_mae_lab <-paste0("MAE = ",mwa_djfm_days_mae," (days)") 
+
+# plot
+mwa_djfm_days_25 <-ggplot(mwa_djfm_days_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = mwa_djfm_days_snotel_25.4, y = mwa_djfm_days_snsr_25.4), shape = 3, size = .5, color = "grey40") +
+  geom_label(x = 50, y = 20, label = mwa_djfm_days_corr_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 50, y = 16, label = mwa_djfm_days_rmse_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 50, y = 12, label = mwa_djfm_days_mae_lab, label.size = NA, fontface = "bold") +
+  scale_y_continuous(limits = c(0,70),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,70),expand = (c(0,0))) +
+  xlab("SNOTEL MWA (# days)") + ylab("SNSR MWA (# days)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
+# save
+ggsave( "./plots/mwa_djfm_days_metric_compare_v1.pdf",
+        mwa_djfm_days_25,
+        width = 4.5,
+        height = 4.5,
+        units = "in")
+
+system("open ./plots/mwa_djfm_days_metric_compare_v1.pdf")
+
+
 
 
