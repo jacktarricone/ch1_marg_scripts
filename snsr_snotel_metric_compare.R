@@ -95,7 +95,7 @@ head(max_df)
 # plot
 ggplot(max_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_snotel_swe_mm, y = max_snsr_swe_mm), size = .9, color = "darkred") +
+  geom_point(aes(x = max_snotel_swe_mm, y = max_snsr_swe_mm), shape = 3, size = .9, color = "darkred") +
   scale_y_continuous(limits = c(0,3000),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3000),expand = (c(0,0))) +
   xlab("SNOTEL Max (mm)") + ylab("SNSR Max SWE (mm)") +
@@ -146,12 +146,12 @@ cor(max_dowy_df$max_dowy_snotel, max_dowy_df$max_dowy_snsr, use = "complete.obs"
 # calc snotel sdd 
 sdd_snotel_df <-as.data.frame(snotel_df %>%
                                 group_by(site_name, waterYear) %>%
-                                summarise(sdd_snotel = sdd(snotel_swe_mm, swe_thres = 100)))
+                                summarise(sdd_snotel = sdd(snotel_swe_mm, swe_thres = 25.4)))
 
 # calc snotel sdd 
 sdd_snsr_df <-as.data.frame(snsr_df %>%
                               group_by(site_name_v2, wy) %>%
-                              summarise(sdd_snsr = sdd(snsr_swe_mm, swe_thres = 100)))
+                              summarise(sdd_snsr = sdd(snsr_swe_mm, swe_thres = 25.4)))
 
 # bind for plotting
 sdd_df <-cbind(sdd_snotel_df, sdd_snsr_df)
@@ -178,9 +178,9 @@ cor(sdd_df$sdd_snotel, sdd_df$sdd_snsr, use = "complete.obs")
 # calc snotel melt_rate 
 melt_rate_snotel_df <-as.data.frame(snotel_df %>%
                                 group_by(site_name, waterYear) %>%
-                                summarise(melt_rate_snotel_swe_mm = melt_rate(snotel_swe_mm, swe_thres = 0)))
+                                summarise(melt_rate_snotel_swe_mm = melt_rate(snotel_swe_mm, swe_thres = 25.4)))
 
-# calc snotel melt_rate 
+# calc snsr
 melt_rate_snsr_df <-as.data.frame(snsr_df %>%
                               group_by(site_name_v2, wy) %>%
                               summarise(melt_rate_snsr_swe_mm = melt_rate(snsr_swe_mm, swe_thres = 25.4)))
@@ -193,10 +193,42 @@ head(melt_rate_df)
 ggplot(melt_rate_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
   geom_point(aes(x = melt_rate_snotel_swe_mm, y = melt_rate_snsr_swe_mm), shape =3, size = .9, color = "darkred") +
-  scale_y_continuous(limits = c(0,20),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,20),expand = (c(0,0))) +
+  scale_y_continuous(limits = c(0,30),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,30),expand = (c(0,0))) +
   xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # calc correlation
 cor(melt_rate_df$melt_rate_snotel_swe_mm, melt_rate_df$melt_rate_snsr_swe_mm, use = "complete.obs")
+
+#########################
+#########################
+##        msl          ##
+#########################
+#########################
+
+# calc snotel msl 
+msl_snotel_df <-as.data.frame(snotel_df %>%
+                                group_by(site_name, waterYear) %>%
+                                summarise(msl_snotel = msl(snotel_swe_mm, swe_thres = 25.4)))
+
+# calc snotel msl 
+msl_snsr_df <-as.data.frame(snsr_df %>%
+                              group_by(site_name_v2, wy) %>%
+                              summarise(msl_snsr = msl(snsr_swe_mm, swe_thres = 25.4)))
+
+# bind for plotting
+msl_df <-cbind(msl_snotel_df, msl_snsr_df)
+head(msl_df)
+
+# plot
+ggplot(msl_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = msl_snotel, y = msl_snsr), shape =3, size = .9, color = "darkgreen") +
+  scale_y_continuous(limits = c(0,200),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,200),expand = (c(0,0))) +
+  xlab("SNOTEL MSL (days)") + ylab("SNSR MSL (days)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
+# calc correlation
+cor(msl_df$msl_snotel, msl_df$msl_snsr, use = "complete.obs")
