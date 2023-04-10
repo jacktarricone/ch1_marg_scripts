@@ -55,6 +55,7 @@ snsr_snotel_pixel_nums
 # bind and save
 snsr_snotels <-cbind(snotel_ca, snsr_snotel_pixel_nums)
 colnames(snsr_snotels)[14:15] <-c("cell_lon","cell_lat")
+head(snsr_snotels)
 # write.csv(snsr_snotels, "./csvs/snsr_snotels.csv")
 
 # fine hdf swe files
@@ -100,7 +101,7 @@ snotel_snsr_extract <-function(x){
     latitude <-rep(snsr_snotels$cell_lat[i], nday)
     longitude <-rep(snsr_snotels$cell_lon[i], nday)
     ele_m <-rep(snsr_snotels$Elevation_m[i], nday)
-    station_id <-rep(snsr_snotels$cell_lat[i], nday)
+    station_id <-rep(snsr_snotels$Site_ID[i], nday)
     cell_number <-rep(snsr_snotels$cell[i], nday)
     x_cell <-rep(snsr_snotels$x_cell_num[i], nday)
     y_cell <-rep(snsr_snotels$y_cell_num[i], nday)

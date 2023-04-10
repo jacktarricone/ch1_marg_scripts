@@ -53,6 +53,7 @@ theme_set(theme_classic(14))
 #########################
 
 snotel_df <-read.csv("./csvs/snotel_df.csv")
+snotel_df <-subset(snotel_df, select=-c("x", "network")) # move bad one
 head(snotel_df)
 
 #########################
@@ -66,11 +67,18 @@ snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE)
 snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 
 # bind together
-snsr_df <-bind_rows(snsr_snotel_data)
-colnames(snsr_df)[1] <-'site_name_v2'
+snsr_df <-bind_rows(snsr_snotel_data) # make df
+# snsr_df$site_id <-snotel_df$site_id # add correct site id col
+snsr_df <-subset(snsr_df, select=-c(station_id)) # move bad one
+colnames(snsr_df)[c(1,4,5)] <-c('site_name_v2','lat','lon')
+head(snsr_df)
 
 # test to see if ID numbers are the same
 true <-ifelse(snotel_df$site_id == snotel_df$site_id, TRUE, FALSE)
+
+# bind together
+swe_df <-cbind(snotel_df, snsr_df)
+head(swe_df)
 
 #########################
 #########################
@@ -79,9 +87,15 @@ true <-ifelse(snotel_df$site_id == snotel_df$site_id, TRUE, FALSE)
 #########################
 
 # calc snotel max 
-max_snotel_df <-as.data.frame(snotel_df %>%
-                              group_by(site_name, waterYear) %>%
-                              summarise(max_snotel_swe_mm = max_swe(snotel_swe_mm, swe_thres = 25.4)))
+max_df <-as.data.frame(swe_df %>%
+                       group_by(site_name, waterYear) %>%
+                       summarise(max_snotel_0 = as.integer(max_swe(snotel_swe_mm, swe_thres = 0)),
+                                 max_snsr_0   = as.integer(max_swe(snsr_swe_mm, swe_thres = 0)),
+                                 max_snotel_25.4 = as.integer(max_swe(snotel_swe_mm, swe_thres = 25.4)),
+                                 max_snsr_25.4   = as.integer(max_swe(snsr_swe_mm, swe_thres = 25.4)),
+                                 max_snotel_50.8 = as.integer(max_swe(snotel_swe_mm, swe_thres = 50.8)),
+                                 max_snsr_50.8   = as.integer(max_swe(snsr_swe_mm, swe_thres = 50.8)),)) 
+  
 
 # calc snotel max 
 max_snsr_df <-as.data.frame(snsr_df %>%
