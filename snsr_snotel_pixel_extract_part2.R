@@ -27,7 +27,7 @@ snsr_shp <-vect("./vectors/snsr_shp.gpkg")
 plot(snsr_shp)
 
 # stations in CA with 32 years of record in the SNSR
-good_stations <-as.integer(c(356, 428, 462, 463, 473, 508, 518, 539, 
+good_stations <-as.integer(c(356, 428, 462, 463, 473, 508, 518, 539,
                              540, 541, 575, 697, 724, 771, 778, 784, 809, 834, 846, 848))
 
 # filter for CA
@@ -37,9 +37,22 @@ snotel_ca
 # convert to vect
 ca_points <-vect(snotel_ca, geom = c("Longitude","Latitude"), crs = crs(cell_numbers))
 snotel_vect <-vect(snotel_locs, geom = c("Longitude","Latitude"), crs = crs(cell_numbers))
-plot(snotel_vect)
+
+# mask points with snsr shp to get all points in shp
 snsr_snotels <-mask(snotel_vect, snsr_shp)
-plot(snsr_snotels)
+plot(snsr_shp)
+plot(snsr_snotels, add = TRUE)
+
+# back to df after filtering
+new_stations_v2 <-as.data.frame(snsr_snotels)
+old_stations <-snotel_ca$Site_Name
+new_stations <-filter(new_stations_v2, !Site_Name %in% old_stations)
+new_stations
+
+# remove stations we already downloaded
+duplicated(new_stations_v2$Site_Name, snotel_ca$Site_Name)
+yourDataFrame %>%
+  distinct(new_stations_v2$Site_Name, snotel_ca$Site_Name, .keep_all = TRUE)
 
 # crop down to extent of points test
 crop_ext <-ext(-120.79192, -119, 38, 39.8)
