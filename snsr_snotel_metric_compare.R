@@ -279,10 +279,10 @@ melt_rate_25 <-ggplot(melt_rate_df) +
   geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, size = .5, color = "darkorange") +
   geom_label(x = 13, y = 38, label = melt_rate_corr_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 13, y = 36, label = melt_rate_rmse_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = 13, y = 34, label = melt_rate_mae_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 13, y = 33.8, label = melt_rate_mae_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate (mm/day)") + ylab("Melt Rate (mm/day") +
+  xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
@@ -401,4 +401,18 @@ system("open ./plots/mwa_djfm_days_metric_compare_v1.pdf")
 
 
 
+# stack with cow plot
+plot_grid(max_25,max_dowy_25, sdd_25, melt_rate_25, mwa_djfm_25, mwa_djfm_days_25,
+          labels = c("(a)","(b)","(c)","(d)","(e)","(f)"),
+          align = "hv", 
+          ncol = 3, 
+          rel_widths = c(1/3, 1/3, 1/3))
 
+ggsave2("./plots/big_fig_test_v5.pdf",
+       big_plot,
+       width = 15, 
+       height = 10,
+       units = "in",
+       dpi = 500)
+
+system("open ./plots/big_fig_test_v5.pdf")
