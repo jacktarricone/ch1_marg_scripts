@@ -46,6 +46,7 @@ plot(snsr_snotels, add = TRUE)
 
 ### back to df after filtering
 new_stations_v2 <-as.data.frame(snsr_snotels)
+# write.csv(new_stations_v2, "./csvs/snsr_snotel_stations.csv")
 old_stations <-snotel_ca$Site_Name
 
 # filter for stations no in other string aka new stations!

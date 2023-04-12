@@ -54,9 +54,16 @@ theme_set(theme_classic(14))
 #########################
 #########################
 
-snotel_df <-read.csv("./csvs/snotel_df_v2.csv")
-snotel_df <-subset(snotel_df, select=-c(X, network)) # move bad one
-head(snotel_df)
+snotel_df_v1 <-read.csv("./csvs/snotel_df_v2.csv")
+snotel_df_v1 <-subset(snotel_df_v1, select=-c(X, network)) # move bad one
+head(snotel_df_v1)
+
+# add NaN rows becaues horse meadow only has 357 days in 2004
+# makes df exact same size
+
+missing_days <-snotel_df_v1[rep(119430, 9),]
+snotel_df <-rbind(snotel_df_v1[1:119430,], missing_days, snotel_df_v1[119431:nrow(snotel_df_v1),])
+
 
 #########################
 #########################
@@ -79,15 +86,12 @@ tail(snotel_df)
 unique(snsr_df$site_name_v2)
 unique(snotel_df$site_name)
 
-# remove 9 extra values...
-snsr_df_v2 <-snsr_df %>% filter(row_number() <= n()-9)
-
 # test to see if wy match
 year_match_test <-ifelse(snsr_df$wy == snotel_df$waterYear, TRUE, FALSE)
 unique(year_match_test)
 
 # bind together
-swe_df <-cbind(snotel_df, snsr_df_v2)
+swe_df <-cbind(snotel_df, snsr_df)
 head(swe_df)
 
 
@@ -373,10 +377,10 @@ max_dowy_stats <-gof_func(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_s
 sdd_stats <-gof_func(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, "SDD (DOWY)")
 melt_rate_stats <-gof_func(melt_rate_50_df$melt_rate_snsr_25.4, melt_rate_50_df$melt_rate_snotel_25.4, "Melt Rate (mm/day)")
 mwa_stats <-gof_func(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, "MWA (mm)")
-mwa_days_stats <-gof_func(mwa_djfm_days_df$mwa_djfm_days_snsr_25.4, mwa_djfm_days_df$mwa_djfm_days_snotel_25.4, "MWA (mm)")
+mwa_days_stats <-gof_func(mwa_djfm_days_df$mwa_djfm_days_snsr_25.4, mwa_djfm_days_df$mwa_djfm_days_snotel_25.4, "MWA (# days)")
 
 # make df 
-table <-data.frame(metric_names, max_stats, max_dowy_stats, 
+table <-rbind(metric_names, max_stats, max_dowy_stats, 
               sdd_stats, melt_rate_stats, mwa_stats, mwa_days_stats)
 
 # rename cols
@@ -384,4 +388,5 @@ colnames(table)[1:7] <-table[1,]
 table <-table[-1,]
 table
 
-write.csv(table, "./csvs/snow_metric_error_metric.csv")
+# save
+write.csv(table, "./csvs/snow_metric_error_metric.csv", row.names = FALSE)
