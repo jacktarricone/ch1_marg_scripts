@@ -93,7 +93,7 @@ head(swe_df)
 
 #########################
 #########################
-##     max swe     ##
+##     max swe     ######
 #########################
 #########################
 
@@ -107,11 +107,20 @@ max_df <-as.data.frame(swe_df %>%
                                  max_snotel_50.8 = max_swe(snotel_swe_mm, swe_thres = 50.8)/1000,
                                  max_snsr_50.8   = max_swe(snsr_swe_mm, swe_thres = 50.8)/1000))
 
+# plot
+max_25 <-ggplot(max_df) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, size = .5, color = "darkred") +
+  scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
+  xlab("SNOTEL Max SWE (m)") + ylab("SNSR Max SWE (m)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+
 
 # calculate metric to report
 # R
 max_corr <-round(cor(max_df$max_snotel_25.4, max_df$max_snsr_25.4, 
-                        use = "complete.obs", method = 'pearson'), digits = 2)
+                     use = "complete.obs", method = 'pearson'), digits = 2)
 max_corr_lab <-paste0('R = ', max_corr)
 
 # rmse, mae, me, and pb
@@ -126,20 +135,6 @@ max_mae_lab <-paste0("MAE = ",max_mae," m")
 max_me_lab <-paste0("ME = ",max_me," m")
 max_pb_lab <-paste0("PB = ",max_pb," %") 
 
-
-# plot
-max_25 <-ggplot(max_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, size = .5, color = "darkred") +
-  geom_label(x = .8, y = 2.8, label = max_corr_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = .8, y = 2.6, label = max_rmse_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = .8, y = 2.4, label = max_mae_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = .8, y = 2.2, label = max_me_lab, label.size = NA, fontface = "bold") +
-  geom_label(x = .8, y = 2.0, label = max_pb_lab, label.size = NA, fontface = "bold") +
-  scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
-  xlab("SNOTEL Max SWE (m)") + ylab("SNSR Max SWE (m)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
 ggsave( "./plots/max_metric_compare_v5.pdf",
@@ -233,8 +228,6 @@ sdd_df <-as.data.frame(swe_df %>%
 # calculate metric to report
 # R
 sdd_df[sapply(sdd_df, is.infinite)] <- NA
-sdd_corr <-round(cor(sdd_df$sdd_snotel_25.4, sdd_df$sdd_snsr_25.4, use = "complete.obs", method = 'pearson'), digits = 2)
-sdd_corr_lab <-paste0("R = ", sdd_corr)
 
 # calculate metrics
 # 25.4
@@ -308,18 +301,57 @@ melt_rate_df <-as.data.frame(swe_df %>%
 
 melt_rate_df[sapply(melt_rate_df, is.infinite)] <- NA
 
+# calc metric 
+melt_rate_df <-as.data.frame(swe_df %>%
+                               group_by(site_name, waterYear) %>%
+                               summarise(melt_rate_snotel_0 = melt_rate_50(snotel_swe_mm, swe_thres = 0),
+                                         melt_rate_snsr_0   = melt_rate_50(snsr_swe_mm, swe_thres = 0),
+                                         melt_rate_snotel_25.4 = melt_rate_50(snotel_swe_mm, swe_thres = 25.4),
+                                         melt_rate_snsr_25.4   = melt_rate_50(snsr_swe_mm, swe_thres = 25.4),
+                                         melt_rate_snotel_50.8 = melt_rate_50(snotel_swe_mm, swe_thres = 50.8),
+                                         melt_rate_snsr_50.8   = melt_rate_50(snsr_swe_mm, swe_thres = 50.8)))
 
-# calculate metric to report
-# R
-melt_rate_corr <-round(cor(melt_rate_df$melt_rate_snotel_25.4, melt_rate_df$melt_rate_snsr_25.4, 
-                     use = "complete.obs", method = 'pearson'), digits = 2)
-melt_rate_corr_lab <-paste0("R = ", melt_rate_corr)
+melt_rate_df[sapply(melt_rate_df, is.infinite)] <- NA
 
-# rmse and mae
+
+# calculate metrics
+# 25.4
+melt_rate_corr <-round(hydroGOF::rPearson(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, na.rm = TRUE), digits = 2)
 melt_rate_rmse <-round(hydroGOF::rmse(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, na.rm = TRUE), digits = 2)
 melt_rate_mae <-round(hydroGOF::mae(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, na.rm = TRUE), digits = 2)
-melt_rate_rmse_lab <-paste0("RMSE = ",melt_rate_rmse," (mm/day)")
-melt_rate_mae_lab <-paste0("MAE = ",melt_rate_mae," (mm/day)") 
+melt_rate_me <-round(hydroGOF::me(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, na.rm = TRUE), digits = 2)
+melt_rate_pb <-round(hydroGOF::pbias(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, na.rm = TRUE), digits = 2)
+
+# 0
+melt_rate_corr_0 <-round(cor(melt_rate_df$melt_rate_snotel_0, melt_rate_df$melt_rate_snsr_0, use = "complete.obs", method = 'pearson'), digits = 2)
+melt_rate_rmse_0 <-round(hydroGOF::rmse(melt_rate_df$melt_rate_snsr_0, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+melt_rate_mae_0 <-round(hydroGOF::mae(melt_rate_df$melt_rate_snsr_0, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+melt_rate_me_0 <-round(hydroGOF::me(melt_rate_df$melt_rate_snsr_0, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+melt_rate_pb_0 <-round(hydroGOF::pbias(melt_rate_df$melt_rate_snsr_0, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+
+# 50.8
+melt_rate_corr_50.8 <-round(cor(melt_rate_df$melt_rate_snotel_50.8, melt_rate_df$melt_rate_snsr_50.8, use = "complete.obs", method = 'pearson'), digits = 2)
+melt_rate_rmse_50.8 <-round(hydroGOF::rmse(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_50.8, na.rm = TRUE), digits = 2)
+melt_rate_mae_50.8 <-round(hydroGOF::mae(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_50.8, na.rm = TRUE), digits = 2)
+melt_rate_me_50.8 <-round(hydroGOF::me(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_50.8, na.rm = TRUE), digits = 2)
+melt_rate_pb_50.8 <-round(hydroGOF::pbias(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_50.8, na.rm = TRUE), digits = 2)
+
+
+# 50.8
+melt_rate_corr_50.8 <-round(cor(melt_rate_df$melt_rate_snotel_0, melt_rate_df$melt_rate_snsr_50.8, use = "complete.obs", method = 'pearson'), digits = 2)
+melt_rate_rmse_50.8 <-round(hydroGOF::rmse(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+melt_rate_mae_50.8 <-round(hydroGOF::mae(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+melt_rate_me_50.8 <-round(hydroGOF::me(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+melt_rate_pb_50.8 <-round(hydroGOF::pbias(melt_rate_df$melt_rate_snsr_50.8, melt_rate_df$melt_rate_snotel_0, na.rm = TRUE), digits = 2)
+
+
+# create labels
+melt_rate_corr_lab <-paste0("R = ",melt_rate_corr)
+melt_rate_rmse_lab <-paste0("RMSE = ",melt_rate_rmse," mm/d")
+melt_rate_mae_lab <-paste0("MAE = ",melt_rate_mae," mm/d")
+melt_rate_me_lab <-paste0("ME = ",melt_rate_me," mm/d")
+melt_rate_pb_lab <-paste0("PB = ",melt_rate_pb," %") 
+
 
 # plot
 melt_rate_25 <-ggplot(melt_rate_df) +
@@ -328,19 +360,21 @@ melt_rate_25 <-ggplot(melt_rate_df) +
   geom_label(x = 13, y = 38, label = melt_rate_corr_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 13, y = 36, label = melt_rate_rmse_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 13, y = 33.8, label = melt_rate_mae_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 13, y = 31.6, label = melt_rate_me_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 13, y = 29.5, label = melt_rate_pb_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
   xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave( "./plots/melt_rate_metric_compare_v1.pdf",
+ggsave( "./plots/melt_rate_metric_compare_v3.pdf",
         melt_rate_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/melt_rate_metric_compare_v1.pdf")
+system("open ./plots/melt_rate_metric_compare_v3.pdf")
 
 
 
@@ -361,17 +395,35 @@ mwa_djfm_df <-as.data.frame(swe_df %>%
                                  mwa_djfm_snsr_50.8   = mwa_djfm_total(snsr_swe_mm, swe_thres = 50.8)))
 
 
-# calculate metric to report
-# R
-mwa_djfm_corr <-round(cor(mwa_djfm_df$mwa_djfm_snotel_25.4, mwa_djfm_df$mwa_djfm_snsr_25.4, 
-                                 use = "complete.obs", method = 'pearson'), digits = 2)
-mwa_djfm_corr_lab <-paste0("R = ", mwa_djfm_corr)
+# calculate metrics
+# 25.4
+mwa_djfm_corr <-round(hydroGOF::rPearson(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 2)
+mwa_djfm_rmse <-round(hydroGOF::rmse(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 2)
+mwa_djfm_mae <-round(hydroGOF::mae(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 2)
+mwa_djfm_me <-round(hydroGOF::me(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 2)
+mwa_djfm_pb <-round(hydroGOF::pbias(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 2)
 
-# rmse and mae
-mwa_djfm_rmse <-round(hydroGOF::rmse(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 0)
-mwa_djfm_mae <-round(hydroGOF::mae(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, na.rm = TRUE), digits = 0)
-mwa_djfm_rmse_lab <-paste0("RMSE = ",mwa_djfm_rmse," (mm)")
-mwa_djfm_mae_lab <-paste0("MAE = ",mwa_djfm_mae," (mm)") 
+# 0
+mwa_djfm_corr_0 <-round(cor(mwa_djfm_df$mwa_djfm_snotel_0, mwa_djfm_df$mwa_djfm_snsr_0, use = "complete.obs", method = 'pearson'), digits = 2)
+mwa_djfm_rmse_0 <-round(hydroGOF::rmse(mwa_djfm_df$mwa_djfm_snsr_0, mwa_djfm_df$mwa_djfm_snotel_0, na.rm = TRUE), digits = 2)
+mwa_djfm_mae_0 <-round(hydroGOF::mae(mwa_djfm_df$mwa_djfm_snsr_0, mwa_djfm_df$mwa_djfm_snotel_0, na.rm = TRUE), digits = 2)
+mwa_djfm_me_0 <-round(hydroGOF::me(mwa_djfm_df$mwa_djfm_snsr_0, mwa_djfm_df$mwa_djfm_snotel_0, na.rm = TRUE), digits = 2)
+mwa_djfm_pb_0 <-round(hydroGOF::pbias(mwa_djfm_df$mwa_djfm_snsr_0, mwa_djfm_df$mwa_djfm_snotel_0, na.rm = TRUE), digits = 2)
+
+# 50.8
+mwa_djfm_corr_50.8 <-round(cor(mwa_djfm_df$mwa_djfm_snotel_50.8, mwa_djfm_df$mwa_djfm_snsr_50.8, use = "complete.obs", method = 'pearson'), digits = 2)
+mwa_djfm_rmse_50.8 <-round(hydroGOF::rmse(mwa_djfm_df$mwa_djfm_snsr_50.8, mwa_djfm_df$mwa_djfm_snotel_50.8, na.rm = TRUE), digits = 2)
+mwa_djfm_mae_50.8 <-round(hydroGOF::mae(mwa_djfm_df$mwa_djfm_snsr_50.8, mwa_djfm_df$mwa_djfm_snotel_50.8, na.rm = TRUE), digits = 2)
+mwa_djfm_me_50.8 <-round(hydroGOF::me(mwa_djfm_df$mwa_djfm_snsr_50.8, mwa_djfm_df$mwa_djfm_snotel_50.8, na.rm = TRUE), digits = 2)
+mwa_djfm_pb_50.8 <-round(hydroGOF::pbias(mwa_djfm_df$mwa_djfm_snsr_50.8, mwa_djfm_df$mwa_djfm_snotel_50.8, na.rm = TRUE), digits = 2)
+
+# create labels
+mwa_djfm_corr_lab <-paste0("R = ",mwa_djfm_corr)
+mwa_djfm_rmse_lab <-paste0("RMSE = ",mwa_djfm_rmse," mm")
+mwa_djfm_mae_lab <-paste0("MAE = ",mwa_djfm_mae," mm")
+mwa_djfm_me_lab <-paste0("ME = ",mwa_djfm_me," mm")
+mwa_djfm_pb_lab <-paste0("PB = ",mwa_djfm_pb," %") 
+
 
 # plot
 mwa_djfm_25 <-ggplot(mwa_djfm_df) +
@@ -380,19 +432,21 @@ mwa_djfm_25 <-ggplot(mwa_djfm_df) +
   geom_label(x = 120, y = 480, label = mwa_djfm_corr_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 120, y = 450, label = mwa_djfm_rmse_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 120, y = 420, label = mwa_djfm_mae_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 390, label = mwa_djfm_me_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 360, label = mwa_djfm_pb_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(0,500),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,500),expand = (c(0,0))) +
   xlab("SNOTEL MWA (mm)") + ylab("SNSR MWA (mm)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave( "./plots/mwa_djfm_metric_compare_v1.pdf",
+ggsave( "./plots/mwa_djfm_metric_compare_v2.pdf",
         mwa_djfm_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/mwa_djfm_metric_compare_v1.pdf")
+system("open ./plots/mwa_djfm_metric_compare_v2.pdf")
 
 
 
@@ -464,3 +518,24 @@ ggsave2("./plots/big_fig_test_v5.pdf",
        dpi = 500)
 
 system("open ./plots/big_fig_test_v5.pdf")
+
+
+############
+### max ####
+############
+
+# rmse, mae, me, and pb
+max_corr <-round(hydroGOF::rPearson(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+max_rmse <-round(hydroGOF::rmse(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+max_mae <-round(hydroGOF::mae(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+max_me <-round(hydroGOF::me(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+max_pb <-round(hydroGOF::pbias(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+
+# create labels
+max_corr_lab <-paste0("RMSE = ",max_rmse," m")
+max_rmse_lab <-paste0("RMSE = ",max_rmse," m")
+max_mae_lab <-paste0("MAE = ",max_mae," m")
+max_me_lab <-paste0("ME = ",max_me," m")
+max_pb_lab <-paste0("PB = ",max_pb," %") 
+
+
