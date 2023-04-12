@@ -1,14 +1,35 @@
 library(ggplot2)
 setwd("~/ch1_margulis/")
-swe_dat <-read.csv("./csvs/snsr_snotel_data/CSS_LAB_swe_2003.csv")
+
+#########################
+#########################
+## read in snotel data ##
+#########################
+#########################
+
 snotel_df <-read.csv("./csvs/snotel_df_v2.csv")
-css_03 <-filter(snotel_df, site_name == "css lab " & waterYear == 2003)
-x <-css_03$snotel_swe_mm
-x <-swe_dat$snsr_swe_mm
-plot(x)
+snotel_df <-subset(snotel_df, select=-c(X, network)) # move bad one
+head(snotel_df)
+
+#########################
+#########################
+###  read in SNSR data ##
+#########################
+#########################
+
+# read in csvs
+snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
+snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
+
+# swe_dat <-read.csv("./csvs/snsr_snotel_data/ECHO_PEAK_swe_2003.csv")
+# snotel_df <-read.csv("./csvs/snotel_df_v2.csv")
+# ep_03 <-filter(snotel_df, site_name == "echo peak " & waterYear == 2003)
+# x <-ep_03$snotel_swe_mm
+# x <-swe_dat$snsr_swe_mm
+# plot(x)
 
 ggplot() +
-  geom_point(data = css_03, aes(y = snotel_swe_mm, x = seq(1,365,1))) +
+  geom_point(data = ep_03, aes(y = snotel_swe_mm, x = seq(1,365,1))) +
   geom_point(data = swe_dat, aes(y = snsr_swe_mm, x = seq(1,365,1)), color = 'red') +
   theme_classic(12)
 
@@ -86,10 +107,10 @@ melt_rate_50 <-function(x, swe_thres){
 }
 
 
-melt_rate_50(x, 25.4)
+melt_rate_50(ep_03$snotel_swe_mm, 25.4)
 #melt_rate(x, 25.4)
 
-melt_rate_50(css_03$snotel_swe_mm, 25.4)
+melt_rate_50(swe_dat$snsr_swe_mm, 25.4)
 #melt_rate(css_03$snotel_swe_mm, 25.4)
 
 
