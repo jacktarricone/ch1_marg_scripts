@@ -165,7 +165,7 @@ snotel_snsr_extract <-function(x,snsr_snotels){
     head(final_df)
     
     # create saving information
-    saving_location <-file.path("./csvs/snsr_snotel_round2/")
+    saving_location <-file.path("./csvs/snsr_snotel_data/")
     full_saving_name <-paste0(saving_location,snotel_name,"_swe_",year,".csv")
     
     # save
@@ -178,6 +178,8 @@ pbmclapply(hdf_paths[2:32], function(x) snotel_snsr_extract(x, snsr_snotels = sn
            mc.cores = 14, mc.cleanup = TRUE)
 #lapply(hdf_paths[1], function(x) snotel_snsr_extract(x, snsr_snotels = snsr_snotels_full_ts))
 
+
+
 # burnside (2004), carson (2005), forestdale (2004)
 # horse meadow (2004), leavitt (1990)
 
@@ -188,7 +190,6 @@ forestdale <-filter(snsr_snotels, Site_Name == "FORESTDALE CREEK")
 horse <-filter(snsr_snotels, Site_Name == "HORSE MEADOW")
 leavitt <-filter(snsr_snotels, Site_Name == "LEAVITT LAKE")
 
-rbind(burnside, forestdale, horse)
 # define the years to start from for the other 5 stations
 start_date_df
 start_2004 <-hdf_paths[20:32]
@@ -200,9 +201,9 @@ pbmclapply(start_2004, function(x) snotel_snsr_extract(x, snsr_snotels = rbind(b
            mc.cores = 14, mc.cleanup = TRUE)
 
 # pull out all stations that start in WY 2005 (carson)
-pbmclapply(start_2004, function(x) snotel_snsr_extract(x, snsr_snotels = carson), 
+pbmclapply(start_2005, function(x) snotel_snsr_extract(x, snsr_snotels = carson), 
            mc.cores = 14, mc.cleanup = TRUE)
 
 # pull out all stations that start in WY 1990 (leavitt)
-pbmclapply(start_2004, function(x) snotel_snsr_extract(x, snsr_snotels = carson), 
+pbmclapply(start_1990, function(x) snotel_snsr_extract(x, snsr_snotels = leavitt), 
            mc.cores = 14, mc.cleanup = TRUE)

@@ -54,7 +54,7 @@ theme_set(theme_classic(14))
 #########################
 #########################
 
-snotel_df <-read.csv("./csvs/snotel_df.csv")
+snotel_df <-read.csv("./csvs/snotel_df_v2.csv")
 snotel_df <-subset(snotel_df, select=-c(X, network)) # move bad one
 head(snotel_df)
 
@@ -65,7 +65,7 @@ head(snotel_df)
 #########################
 
 # read in csvs
-snsr_snotel_list <-sort(list.files("./csvs/rename_snsr_snotel_data", full.names = TRUE))
+snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
 snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 
 # bind together
