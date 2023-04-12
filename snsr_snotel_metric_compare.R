@@ -232,15 +232,38 @@ sdd_df <-as.data.frame(swe_df %>%
 
 # calculate metric to report
 # R
-sdd_corr <-round(cor(sdd_df$sdd_snotel_25.4, sdd_df$sdd_snsr_25.4, 
-                     use = "complete.obs", method = 'pearson'), digits = 2)
+sdd_df[sapply(sdd_df, is.infinite)] <- NA
+sdd_corr <-round(cor(sdd_df$sdd_snotel_25.4, sdd_df$sdd_snsr_25.4, use = "complete.obs", method = 'pearson'), digits = 2)
 sdd_corr_lab <-paste0("R = ", sdd_corr)
 
-# rmse and mae
+# calculate metrics
+# 25.4
+sdd_corr <-round(cor(sdd_df$sdd_snotel_25.4, sdd_df$sdd_snsr_25.4, use = "complete.obs", method = 'pearson'), digits = 2)
 sdd_rmse <-round(hydroGOF::rmse(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
 sdd_mae <-round(hydroGOF::mae(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
-sdd_rmse_lab <-paste0("RMSE = ",sdd_rmse," (days)")
-sdd_mae_lab <-paste0("MAE = ",sdd_mae," (days)") 
+sdd_me <-round(hydroGOF::me(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
+sdd_pb <-round(hydroGOF::pbias(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, na.rm = TRUE), digits = 2)
+
+# 0
+sdd_corr_0 <-round(cor(sdd_df$sdd_snotel_0, sdd_df$sdd_snsr_0, use = "complete.obs", method = 'pearson'), digits = 2)
+sdd_rmse_0 <-round(hydroGOF::rmse(sdd_df$sdd_snsr_0, sdd_df$sdd_snotel_0, na.rm = TRUE), digits = 2)
+sdd_mae_0 <-round(hydroGOF::mae(sdd_df$sdd_snsr_0, sdd_df$sdd_snotel_0, na.rm = TRUE), digits = 2)
+sdd_me_0 <-round(hydroGOF::me(sdd_df$sdd_snsr_0, sdd_df$sdd_snotel_0, na.rm = TRUE), digits = 2)
+sdd_pb_0 <-round(hydroGOF::pbias(sdd_df$sdd_snsr_0, sdd_df$sdd_snotel_0, na.rm = TRUE), digits = 2)
+
+# 50.8
+sdd_corr_50.8 <-round(cor(sdd_df$sdd_snotel_50.8, sdd_df$sdd_snsr_50.8, use = "complete.obs", method = 'pearson'), digits = 2)
+sdd_rmse_50.8 <-round(hydroGOF::rmse(sdd_df$sdd_snsr_50.8, sdd_df$sdd_snotel_50.8, na.rm = TRUE), digits = 2)
+sdd_mae_50.8 <-round(hydroGOF::mae(sdd_df$sdd_snsr_50.8, sdd_df$sdd_snotel_50.8, na.rm = TRUE), digits = 2)
+sdd_me_50.8 <-round(hydroGOF::me(sdd_df$sdd_snsr_50.8, sdd_df$sdd_snotel_50.8, na.rm = TRUE), digits = 2)
+sdd_pb_50.8 <-round(hydroGOF::pbias(sdd_df$sdd_snsr_50.8, sdd_df$sdd_snotel_50.8, na.rm = TRUE), digits = 2)
+
+
+# create labels
+sdd_rmse_lab <-paste0("RMSE = ",sdd_rmse," d")
+sdd_mae_lab <-paste0("MAE = ",sdd_mae," d")
+sdd_me_lab <-paste0("ME = ",sdd_me," d")
+sdd_pb_lab <-paste0("PB = ",sdd_pb," %") 
 
 # plot
 sdd_25 <-ggplot(sdd_df) +
@@ -249,25 +272,27 @@ sdd_25 <-ggplot(sdd_df) +
   geom_label(x = 120, y = 350, label = sdd_corr_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 120, y = 335, label = sdd_rmse_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 120, y = 320, label = sdd_mae_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 305, label = sdd_me_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 290, label = sdd_pb_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(50,366),expand = (c(0,0))) +
   scale_x_continuous(limits = c(50,366),expand = (c(0,0))) +
   xlab("SNOTEL SDD (DOWY)") + ylab("SNSR SDD (DOWY)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave( "./plots/sdd_metric_compare_v1.pdf",
+ggsave( "./plots/sdd_metric_compare_v3.pdf",
         sdd_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/sdd_metric_compare_v1.pdf")
+system("open ./plots/sdd_metric_compare_v3.pdf")
 
 
 
 #########################
 #########################
-######     melt_rate      #####
+####    melt_rate   #####
 #########################
 #########################
 
