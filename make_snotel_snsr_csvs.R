@@ -6,43 +6,6 @@ library(lubridate)
 
 setwd('~/ch1_margulis')
 
-# load in functions
-# this file has all the snow metric functions and the raster creation one
-url <-"https://raw.githubusercontent.com/jacktarricone/ch1_marg_scripts/main/snow_metric_functions.R"
-devtools::source_url(url)
-
-# set custom plot theme
-theme_classic <-function(base_size = 11, base_family = "",
-                         base_line_size = base_size / 22,
-                         base_rect_size = base_size / 22) {
-  theme_bw(
-    base_size = base_size,
-    base_family = base_family,
-    base_line_size = base_line_size,
-    base_rect_size = base_rect_size
-  ) %+replace%
-    theme(
-      # no background and no grid
-      panel.border     = element_blank(),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      
-      # show axes
-      # axis.line      = element_line(colour = "black", linewidth = rel(1)),
-      
-      # match legend key to panel.background
-      legend.key       = element_blank(),
-      
-      # simple, black and white strips
-      strip.background = element_rect(fill = "white", colour = "black", linewidth = rel(2)),
-      # NB: size is 1 but clipped, it looks like the 0.5 of the axes
-      
-      complete = TRUE
-    )
-}
-
-theme_set(theme_classic(14))
-
 #########################
 #########################
 ## read in snotel data ##
@@ -73,7 +36,7 @@ snotel_df <-dataRetrieval::addWaterYear(snotel_df)
 head(snotel_df)
 
 # filter to start at 85
-snotel_df <-filter(snotel_df, start <= as.Date("1984-10-10"))
+snotel_df <-filter(snotel_df, start <= as.Date("1984-10-01"))
 head(snotel_df)
 
 # one ones that don't have the full time series

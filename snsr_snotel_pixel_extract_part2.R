@@ -6,6 +6,7 @@ library(terra)
 library(dplyr)
 library(parallel)
 library(pbmcapply)
+library(snotelr)
 
 setwd("~/ch1_margulis/")
 
@@ -43,28 +44,24 @@ snsr_snotels <-mask(snotel_vect, snsr_shp)
 plot(snsr_shp)
 plot(snsr_snotels, add = TRUE)
 
-# back to df after filtering
+### back to df after filtering
 new_stations_v2 <-as.data.frame(snsr_snotels)
 old_stations <-snotel_ca$Site_Name
-new_stations <-filter(new_stations_v2, !Site_Name %in% old_stations)
+
+# filter for stations no in other string aka new stations!
+new_stations_v1 <-filter(new_stations_v2, !Site_Name %in% old_stations)
+
+# filter orginal df to add back lat/lon data
+new_stations <-filter(snotel_locs, Site_Name %in% new_stations_v1$Site_Name)
 new_stations
 
-# remove stations we already downloaded
-duplicated(new_stations_v2$Site_Name, snotel_ca$Site_Name)
-yourDataFrame %>%
-  distinct(new_stations_v2$Site_Name, snotel_ca$Site_Name, .keep_all = TRUE)
+# creat vector
+new_stations_vect <-vect(new_stations, geom = c("Longitude","Latitude"), crs = crs(cell_numbers))
+plot(snsr_shp)
+plot(new_stations_vect, add = TRUE)
 
-# crop down to extent of points test
-crop_ext <-ext(-120.79192, -119, 38, 39.8)
-cn <-crop(cn_v1, crop_ext)
-ca_points_snsr <-crop(ca_points, crop_ext)
-
-# crop 
-plot(cn[[2]])
-plot(ca_points_snsr, add =TRUE)
-
-# extract pixels
-snsr_snotel_pixel_nums <-terra::extract(cn, ca_points_snsr, 
+#### extract pixel numbers
+snsr_snotel_pixel_nums <-terra::extract(cn_v1, new_stations_vect, 
                                  names = TRUE, 
                                  cells = TRUE, 
                                  xy = TRUE, 
@@ -74,17 +71,51 @@ snsr_snotel_pixel_nums <-terra::extract(cn, ca_points_snsr,
 snsr_snotel_pixel_nums
 
 # bind and save
-snsr_snotels <-cbind(snotel_ca, snsr_snotel_pixel_nums)
+snsr_snotels <-cbind(new_stations, snsr_snotel_pixel_nums)
 colnames(snsr_snotels)[14:15] <-c("cell_lon","cell_lat")
-head(snsr_snotels)
+snsr_snotels
 # write.csv(snsr_snotels, "./csvs/snsr_snotels.csv")
+
+# read in data to check the start date on it all
+snotel_df_list <-as.list(rep(NA, nrow(snsr_snotels)))
+
+# read in SNOTEL CSVs using ID number and name from meta data
+for (i in seq_along(snsr_snotels$Site_Name)){
+  snotel_df_list[[i]] <-as.data.frame(snotel_download(snsr_snotels$Site_ID[i], path = tempdir(), internal = TRUE))
+}
+
+# convert from list of dfs to one big one
+snotel_df <-bind_rows(snotel_df_list, .id = "network")
+snotel_df$date <-lubridate::ymd(snotel_df$date)
+head(snotel_df)
+
+# add water year
+colnames(snotel_df)[12] <-"Date"
+colnames(snotel_df)[13] <-"snotel_swe_mm"
+snotel_df <-dataRetrieval::addWaterYear(snotel_df)
+head(snotel_df)
+
+
+# calculate minimum year for each station
+start_date_df <-as.data.frame(snotel_df %>%
+                         group_by(site_name) %>%
+                         summarise(first_year = min(waterYear)))
+
+start_date_df 
+
+# new stations first WY: 
+# burnside (2004), carson (2005), forestdale (2004)
+# horse meadow (2004), leavitt (1990)
+
+# filter for data with the full time series
+snsr_snotels_full_ts <-snsr_snotels[-c(1,3,5,6,7),]
+snsr_snotels_full_ts
 
 # fine hdf swe files
 hdf_paths <-list.files("./swe/hdf", full.names = TRUE) # set paths
-# x <-hdf_paths[8]
 
 # define function
-snotel_snsr_extract <-function(x){
+snotel_snsr_extract <-function(x,snsr_snotels){
   
   # this is sloppy but it works
   for(i in seq_len(nrow(snsr_snotels))) {
@@ -134,8 +165,8 @@ snotel_snsr_extract <-function(x){
     head(final_df)
     
     # create saving information
-    saving_location <-file.path("./csvs/snsr_snotel_data/")
-    full_saving_name <-paste0(saving_location,"swe_",year,"_",snotel_name,".csv")
+    saving_location <-file.path("./csvs/snsr_snotel_round2/")
+    full_saving_name <-paste0(saving_location,snotel_name,"_swe_",year,".csv")
     
     # save
     write.csv(final_df, full_saving_name, row.names=FALSE)
@@ -143,6 +174,35 @@ snotel_snsr_extract <-function(x){
 }
 
 # apply function to list of hdf files
-# pbmclapply(hdf_paths, function(x) snotel_snsr_extract(x), mc.cores = 14, mc.cleanup = TRUE)
-lapply(hdf_paths[14], function(x) snotel_snsr_extract(x))
+pbmclapply(hdf_paths[2:32], function(x) snotel_snsr_extract(x, snsr_snotels = snsr_snotels_full_ts), 
+           mc.cores = 14, mc.cleanup = TRUE)
+#lapply(hdf_paths[1], function(x) snotel_snsr_extract(x, snsr_snotels = snsr_snotels_full_ts))
 
+# burnside (2004), carson (2005), forestdale (2004)
+# horse meadow (2004), leavitt (1990)
+
+# filter for data with the full time series
+burnside <-filter(snsr_snotels, Site_Name == "BURNSIDE LAKE")
+carson <-filter(snsr_snotels, Site_Name == "CARSON PASS")
+forestdale <-filter(snsr_snotels, Site_Name == "FORESTDALE CREEK")
+horse <-filter(snsr_snotels, Site_Name == "HORSE MEADOW")
+leavitt <-filter(snsr_snotels, Site_Name == "LEAVITT LAKE")
+
+rbind(burnside, forestdale, horse)
+# define the years to start from for the other 5 stations
+start_date_df
+start_2004 <-hdf_paths[20:32]
+start_2005 <-hdf_paths[21:32]
+start_1990 <-hdf_paths[6:32]
+
+# pull out all stations that start in WY 2004 (burnside, forestdale, horse)
+pbmclapply(start_2004, function(x) snotel_snsr_extract(x, snsr_snotels = rbind(burnside, forestdale, horse)), 
+           mc.cores = 14, mc.cleanup = TRUE)
+
+# pull out all stations that start in WY 2005 (carson)
+pbmclapply(start_2004, function(x) snotel_snsr_extract(x, snsr_snotels = carson), 
+           mc.cores = 14, mc.cleanup = TRUE)
+
+# pull out all stations that start in WY 1990 (leavitt)
+pbmclapply(start_2004, function(x) snotel_snsr_extract(x, snsr_snotels = carson), 
+           mc.cores = 14, mc.cleanup = TRUE)
