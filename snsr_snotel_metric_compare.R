@@ -72,17 +72,24 @@ snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 snsr_df <-bind_rows(snsr_snotel_data) # make df
 snsr_df <-subset(snsr_df, select=-c(station_id)) # move bad one
 colnames(snsr_df)[c(1,4,5)] <-c('site_name_v2','lat','lon')
-head(snsr_df)
+tail(snsr_df)
+tail(snotel_df)
+
+# print names
 unique(snsr_df$site_name_v2)
 unique(snotel_df$site_name)
 
-# bind together
-swe_df <-cbind(snotel_df, snsr_df)
-head(swe_df)
+# remove 9 extra values...
+snsr_df_v2 <-snsr_df %>% filter(row_number() <= n()-9)
 
 # test to see if wy match
-year_match_test <-ifelse(swe_df$wy == swe_df$waterYear, TRUE, FALSE)
+year_match_test <-ifelse(snsr_df$wy == snotel_df$waterYear, TRUE, FALSE)
 unique(year_match_test)
+
+# bind together
+swe_df <-cbind(snotel_df, snsr_df_v2)
+head(swe_df)
+
 
 #########################
 #########################
@@ -105,13 +112,19 @@ max_df <-as.data.frame(swe_df %>%
 # R
 max_corr <-round(cor(max_df$max_snotel_25.4, max_df$max_snsr_25.4, 
                         use = "complete.obs", method = 'pearson'), digits = 2)
-max_corr_lab <-paste0('R = ', max_correlation)
+max_corr_lab <-paste0('R = ', max_corr)
 
-# rmse and mae
+# rmse, mae, me, and pb
 max_rmse <-round(hydroGOF::rmse(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
 max_mae <-round(hydroGOF::mae(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
-max_rmse_lab <-paste0("RMSE = ",max_rmse," (m)")
-max_mae_lab <-paste0("MAE = ",max_mae," (m)") 
+max_me <-round(hydroGOF::me(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+max_pb <-round(hydroGOF::pbias(max_df$max_snsr_25.4, max_df$max_snotel_25.4, na.rm = TRUE), digits = 2)
+
+# create labels
+max_rmse_lab <-paste0("RMSE = ",max_rmse," m")
+max_mae_lab <-paste0("MAE = ",max_mae," m")
+max_me_lab <-paste0("ME = ",max_me," m")
+max_pb_lab <-paste0("PB = ",max_pb," %") 
 
 
 # plot
@@ -121,19 +134,21 @@ max_25 <-ggplot(max_df) +
   geom_label(x = .8, y = 2.8, label = max_corr_lab, label.size = NA, fontface = "bold") +
   geom_label(x = .8, y = 2.6, label = max_rmse_lab, label.size = NA, fontface = "bold") +
   geom_label(x = .8, y = 2.4, label = max_mae_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = .8, y = 2.2, label = max_me_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = .8, y = 2.0, label = max_pb_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
   xlab("SNOTEL Max SWE (m)") + ylab("SNSR Max SWE (m)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave( "./plots/max_metric_compare_v4.pdf",
+ggsave( "./plots/max_metric_compare_v5.pdf",
        max_25,
        width = 4.5,
        height = 4.5,
        units = "in")
 
-system("open ./plots/max_metric_compare_v4.pdf")
+system("open ./plots/max_metric_compare_v5.pdf")
 
 
 #########################
@@ -163,8 +178,14 @@ max_dowy_corr_lab <-paste0("R = ",max_dowy_corr)
 # rmse and mae
 max_dowy_rmse <-round(hydroGOF::rmse(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, na.rm = TRUE), digits = 2)
 max_dowy_mae <-round(hydroGOF::mae(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, na.rm = TRUE), digits = 2)
-max_dowy_rmse_lab <-paste0("RMSE = ",max_dowy_rmse," (days)")
-max_dowy_mae_lab <-paste0("MAE = ",max_dowy_mae," (days)") 
+max_dowy_me <-round(hydroGOF::me(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, na.rm = TRUE), digits = 2)
+max_dowy_pb <-round(hydroGOF::pbias(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, na.rm = TRUE), digits = 2)
+
+# create labels
+max_dowy_rmse_lab <-paste0("RMSE = ",max_dowy_rmse," d")
+max_dowy_mae_lab <-paste0("MAE = ",max_dowy_mae," d")
+max_dowy_me_lab <-paste0("ME = ",max_dowy_me," d")
+max_dowy_pb_lab <-paste0("PB = ",max_dowy_pb," %") 
 
 # plot
 max_dowy_25 <-ggplot(max_dowy_df) +
@@ -173,19 +194,21 @@ max_dowy_25 <-ggplot(max_dowy_df) +
   geom_label(x = 120, y = 290, label = max_dowy_corr_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 120, y = 275, label = max_dowy_rmse_lab, label.size = NA, fontface = "bold") +
   geom_label(x = 120, y = 260, label = max_dowy_mae_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 245, label = max_dowy_me_lab, label.size = NA, fontface = "bold") +
+  geom_label(x = 120, y = 230, label = max_dowy_pb_lab, label.size = NA, fontface = "bold") +
   scale_y_continuous(limits = c(50,300),expand = (c(0,0))) +
   scale_x_continuous(limits = c(50,300),expand = (c(0,.1))) +
   xlab("SNOTEL Max DOWY") + ylab("SNSR Max DOWY") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave( "./plots/max_dowy_metric_compare_v3.pdf",
+ggsave( "./plots/max_dowy_metric_compare_v4.pdf",
        max_dowy_25,
        width = 4.5,
        height = 4.5,
        units = "in")
 
-system("open ./plots/max_dowy_metric_compare_v3.pdf")
+system("open ./plots/max_dowy_metric_compare_v4.pdf")
 
 
 
