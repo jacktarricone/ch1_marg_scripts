@@ -226,24 +226,26 @@ melt_rate_50_df <-as.data.frame(swe_df %>%
                                          melt_rate_snotel_50.8 = melt_rate_50(snotel_swe_mm, swe_thres = 50.8),
                                          melt_rate_snsr_50.8   = melt_rate_50(snsr_swe_mm, swe_thres = 50.8)))
 
+melt_rate_50_df[sapply(melt_rate_50_df, is.infinite)] <- NA
+
 
 # plot
-melt_rate_25 <-ggplot(melt_rate_50_df) +
+melt_rate_50 <-ggplot(melt_rate_50_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
   geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "deeppink4") +
   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
+  xlab("SNOTEL Melt Rate 50 (mm/day)") + ylab("SNSR Melt Rate 50 (mm/day)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
 # save
-ggsave( "./plots/melt_rate_metric_compare_v4.pdf",
-        melt_rate_25,
+ggsave( "./plots/melt_rate_50_metric_compare_v1.pdf",
+        melt_rate_50,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/melt_rate_metric_compare_v4.pdf")
+system("open ./plots/melt_rate_50_metric_compare_v1.pdf")
 
 
 #########################
@@ -263,18 +265,16 @@ melt_rate_25_df <-as.data.frame(swe_df %>%
                                             melt_rate_snsr_50.8   = melt_rate_25(snsr_swe_mm, swe_thres = 50.8)))
 
 melt_rate_25_df[sapply(melt_rate_25_df, is.infinite)] <- NA
-head(melt_rate_25_df)
+
 
 # plot
 melt_rate_25 <-ggplot(melt_rate_25_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "deeppink4") +
+  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "darkviolet") +
   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
+  xlab("SNOTEL Melt Rate 25 (mm/day)") + ylab("SNSR Melt Rate 25 (mm/day)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
-
-plot(melt_rate_25)
 
 # save
 ggsave( "./plots/melt_rate_25_metric_compare_v1.pdf",
@@ -303,27 +303,27 @@ melt_rate_33_df <-as.data.frame(swe_df %>%
                                             melt_rate_snsr_50.8   = melt_rate_33(snsr_swe_mm, swe_thres = 50.8)))
 
 melt_rate_33_df[sapply(melt_rate_33_df, is.infinite)] <- NA
-head(melt_rate_33_df)
 
-# plot
+
+w# plot
 melt_rate_33 <-ggplot(melt_rate_33_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "deeppink4") +
+  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "deeppink3") +
   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
+  xlab("SNOTEL Melt Rate 33 (mm/day)") + ylab("SNSR Melt Rate 33 (mm/day)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
 
-plot(melt_rate_33)
 
 # save
 ggsave( "./plots/melt_rate_33_metric_compare_v1.pdf",
-        melt_rate_25,
+        melt_rate_33,
         width = 4.5,
         height = 4.5,
         units = "in")
 
 system("open ./plots/melt_rate_33_metric_compare_v1.pdf")
+
 
 
 ##########################
@@ -435,22 +435,28 @@ gof_func <-function(snsr, snotel, metric_name){
   pb <-round(hydroGOF::pbias(snsr, snotel, na.rm = TRUE), digits = 2)
   
   # bind
-  row <-c(metric_name,corr,r2, rmse,mae,me,pb)
+  row <-c(metric_name,corr,r2,rmse,mae,me,pb)
   return(row)
 }
+
+
 
 # create rows
 metric_names <-c("Snow Metric", "R", "R^2", "RMSE", "MAE", "ME", "PB (%)")
 max_stats <-gof_func(max_df$max_snsr_25.4, max_df$max_snotel_25.4, "Max SWE (m)")
 max_dowy_stats <-gof_func(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, "Max SWE (DOWY)")
 sdd_stats <-gof_func(sdd_df$sdd_snsr_25.4, sdd_df$sdd_snotel_25.4, "SDD (DOWY)")
-melt_rate_stats <-gof_func(melt_rate_50_df$melt_rate_snsr_25.4, melt_rate_50_df$melt_rate_snotel_25.4, "Melt Rate (mm/day)")
+melt_rate_stats <-gof_func(melt_rate_df$melt_rate_snsr_25.4, melt_rate_df$melt_rate_snotel_25.4, "Melt Rate (mm/day)")
+melt_rate_50_stats <-gof_func(melt_rate_50_df$melt_rate_snsr_25.4, melt_rate_50_df$melt_rate_snotel_25.4, "Melt Rate 50 (mm/day)")
+melt_rate_33_stats <-gof_func(melt_rate_33_df$melt_rate_snsr_25.4, melt_rate_33_df$melt_rate_snotel_25.4, "Melt Rate 33 (mm/day)")
+melt_rate_25_stats <-gof_func(melt_rate_25_df$melt_rate_snsr_25.4, melt_rate_25_df$melt_rate_snotel_25.4, "Melt Rate 25 (mm/day)")
 mwa_stats <-gof_func(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, "MWA (mm)")
 mwa_days_stats <-gof_func(mwa_djfm_days_df$mwa_djfm_days_snsr_25.4, mwa_djfm_days_df$mwa_djfm_days_snotel_25.4, "MWA (# days)")
 
 # make df 
-table <-rbind(metric_names, max_stats, max_dowy_stats, 
-              sdd_stats, melt_rate_stats, mwa_stats, mwa_days_stats)
+table <-as.data.frame(rbind(metric_names, max_stats, max_dowy_stats, 
+              sdd_stats, melt_rate_stats, melt_rate_50_stats, melt_rate_33_stats, 
+              melt_rate_25_stats, mwa_stats, mwa_days_stats))
 
 # rename cols
 colnames(table)[1:7] <-table[1,]
@@ -458,4 +464,4 @@ table <-table[-1,]
 table
 
 # save
-write.csv(table, "./csvs/snow_metric_error_metric.csv", row.names = FALSE)
+write.csv(table, "./csvs/snow_metric_error_metric_v2_melt_rate.csv", row.names = FALSE)

@@ -21,7 +21,7 @@ head(snotel_df)
 snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
 snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 
-swe_dat <-read.csv("./csvs/snsr_snotel_data/ECHO_PEAK_swe_2004.csv")
+swe_dat <-read.csv("./csvs/snsr_snotel_data/FALLEN_LEAF_swe_2015.csv")
 # snotel_df <-read.csv("./csvs/snotel_df_v2.csv")
 # ep_03 <-filter(snotel_df, site_name == "echo peak " & waterYear == 2003)
 x <-swe_dat$snsr_swe_mm
