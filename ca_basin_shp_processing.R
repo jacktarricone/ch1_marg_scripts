@@ -218,3 +218,32 @@ plot(feather_v2)
 feather_v3 <-aggregate(feather_v2)
 plot(feather_v3)
 # writeVector(feather_v3, "./vectors/ca_basins/feather.gpkg")
+
+
+### bind all together
+basins_list <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
+basins <-lapply(basins_list, vect)
+
+v1 <-union(basins[[1]],basins[[2]])
+v2 <-union(v1, basins[[3]])
+v3 <-union(v2, basins[[4]])
+v4 <-union(v3, basins[[5]])
+v5 <-union(v4, basins[[6]])
+v6 <-union(v5, basins[[7]])
+v7 <-union(v6, basins[[8]])
+v8 <-union(v7, basins[[9]])
+v9 <-union(v8, basins[[10]])
+v10 <-union(v9, basins[[11]])
+v11 <-union(v10, basins[[12]])
+v12 <-union(v11, basins[[13]])
+v13 <-union(v12, basins[[14]])
+v14 <-union(v13, basins[[15]])
+v15 <-union(v14, basins[[16]])
+v16 <-union(v15, basins[[17]])
+v17 <-union(v16, basins[[18]])
+v18 <-union(v17, basins[[19]])
+v19 <-union(v18, basins[[20]])
+plot(v19)
+writeVector(v19, "./vectors/ca_basins/snsr_all_basins.shp")
+
+
