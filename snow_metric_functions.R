@@ -384,6 +384,157 @@ melt_rate <-function(x, swe_thres){
   return(melt_rate_mm)
 }
 
+
+#######################################
+######      melt_rate_33    ###########
+#######################################
+
+melt_rate_33 <-function(x, swe_thres){
+  
+  # define and calc max
+  max_swe <-function(x){
+    
+    # 10 mm (1 cm threshold)  
+    if (max(x) < swe_thres){
+      return(NA)
+    } 
+    else{
+      max_swe_mm <-as.numeric(max(x))
+      return(max_swe_mm) }
+  }
+  
+  # calc max
+  max <-max_swe(x)
+  
+  # calc half
+  two_thirds_max <-max-max*(1/3)
+  one_third_max <-max*(1/3)
+  
+  # define and calc max_dowy
+  max_swe_dowy <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < swe_thres){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
+  
+  max_dowy <-max_swe_dowy(x)
+  
+  # define and calc when half of max swe is gone
+  max_swe_33 <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < swe_thres){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      third_dowy <-as.numeric(max(which(x > two_thirds_max)))
+      return(third_dowy)
+    }
+  }
+  
+  third_max_date <-max_swe_33(x)
+  
+  # subtract for melt date
+  third_msl <-third_max_date-max_dowy
+  
+  # calc melt rate
+  melt_rate_mm <-one_third_max/third_msl
+  return(melt_rate_mm)
+}
+
+
+#######################################
+######      melt_rate_25    ###########
+#######################################
+
+
+melt_rate_25 <-function(x, swe_thres){
+  
+  # define and calc max
+  max_swe <-function(x){
+    
+    # 10 mm (1 cm threshold)  
+    if (max(x) < swe_thres){
+      return(NA)
+    } 
+    else{
+      max_swe_mm <-as.numeric(max(x))
+      return(max_swe_mm) }
+  }
+  
+  # calc max
+  max <-max_swe(x)
+  
+  # calc half
+  three_quarter_max <-max-max*(1/4)
+  one_quarter_max <-max*(1/4)
+  
+  # define and calc max_dowy
+  max_swe_dowy <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < swe_thres){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max_swe <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      dowy <-as.numeric(max(which(x == max_swe)))
+      return(dowy)
+    }
+  }
+  
+  max_dowy <-max_swe_dowy(x)
+  
+  # define and calc when half of max swe is gone
+  max_swe_25 <-function(x){
+    
+    # set threshold 10 mm
+    if (max(x) < swe_thres){
+      return(NA)
+    } 
+    else{
+      # pull out max value
+      max <-as.numeric(max(x))
+      
+      # use which() funciton for position tracking
+      # nested with max() to have last day of max swe
+      third_dowy <-as.numeric(max(which(x > three_quarter_max)))
+      return(third_dowy)
+    }
+  }
+  
+  one_quarter_max_date <-max_swe_25(x)
+  
+  # subtract for melt date
+  quarter_msl <-one_quarter_max_date-max_dowy
+  
+  # calc melt rate
+  melt_rate_mm <-one_quarter_max/quarter_msl
+  return(melt_rate_mm)
+}
+
+
+
 #######################################
 ############      msl       ###########
 #######################################
