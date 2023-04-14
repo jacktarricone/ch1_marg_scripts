@@ -44,10 +44,15 @@ theme_set(theme_classic(17))
 ## bring in SNSR shape file
 # with terra
 snsr <-vect("./vectors/snsr_shp.gpkg")
+snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
 
 # with sf
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
 snsr_sf <-st_geometry(snsr_v1)
+
+# with sf
+snsr_basins_v1 <-st_read("./vectors/ca_basins/snsr_all_basins.shp")
+snsr_basins_sf <-st_geometry(snsr_basins_v1)
 
 ##############
 ##### max ####
@@ -86,16 +91,19 @@ sig_df$cat <-ifelse(sig_df$max_sig_slope == 1, "Increase", "Decrease")
 # set scale 
 display.brewer.all()
 trend_scale <-brewer.pal(9, 'RdBu')
+trend_scale
+
+# "#B2182B" "#D6604D" "#F4A582" "#FDDBC7" "#F7F7F7" "#D1E5F0" "#92C5DE" "#4393C3" "#2166AC"
 
 # plot
 trend_plot <-ggplot(trend_df) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) +
        geom_tile(mapping = aes(x,y, fill = max_slope_full)) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = trend_scale, limits = c(-15,15), na.value=max(trend_scale)) + # max of color bar so it saturates
+       geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
+       scale_fill_gradientn(colors = trend_scale, limits = c(-15,15), na.value=trend_scale[1]) + # max of color bar so it saturates
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
-       labs(fill = "Max SWE (mm/yr)") +
+       labs(fill =(expression(Delta~"Max SWE (mm/yr)")))+
        theme(panel.border = element_rect(color = NA, fill=NA),
              axis.title.y = element_blank(),
              axis.title.x = element_blank(),
@@ -115,12 +123,12 @@ trend_plot <-ggplot(trend_df) +
                                     ticks.colour = "black"))
 # save
 ggsave(trend_plot,
-       file = "./plots/max_trend_test_v3.png",
+       file = "./plots/max_trend_test_v8.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_trend_test_v3.png")
+system("open ./plots/max_trend_test_v8.png")
 
 
 ######################

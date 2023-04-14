@@ -329,7 +329,7 @@ melt_rate_33 <-ggplot(melt_rate_33_df, aes(x = melt_rate_snotel_25.4, y = melt_r
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate 33 (mm/day)") + ylab("SNSR Melt Rate 33 (mm/day)") +
+  xlab("SNOTEL Melt Rate (mm/day)") + ylab("SNSR Melt Rate (mm/day)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
         legend.position = "none")
 
@@ -435,13 +435,13 @@ plot_grid(max_25,max_dowy_25, sdd_25, melt_rate_33, mwa_djfm_25, mwa_djfm_days_2
           ncol = 3, 
           rel_widths = c(1/3, 1/3, 1/3))
 
-ggsave("./plots/snsr_snotel_metric_compare_v5.pdf",
-       width = 13, 
-       height = 8,
+ggsave("./plots/snsr_snotel_metric_compare_v6.pdf",
+       width = 11, 
+       height = 7,
        units = "in",
        dpi = 500)
 
-system("open ./plots/snsr_snotel_metric_compare_v5.pdf")
+system("open ./plots/snsr_snotel_metric_compare_v6.pdf")
 
 
 #########################################

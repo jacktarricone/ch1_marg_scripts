@@ -95,9 +95,9 @@ topo_colors <-c(topo_table$colors)
 
 # plot
 dem_plot <-ggplot(dem_df) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
+       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) +
        geom_tile(mapping = aes(x,y, fill = SNSR_DEM)) +
-       geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # inherit.aes makes this work
+       geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) +
        coord_sf(label_graticule = "NW") +
        scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
        scale_fill_gradientn(colors = topo_colors, limits = c(1500,3800), na.value="#ebe9eb") + # max of color bar so it saturates
