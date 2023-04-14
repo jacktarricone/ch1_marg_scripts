@@ -44,21 +44,26 @@ theme_set(theme_classic(17))
 ## bring in SNSR shape file
 # with terra
 snsr <-vect("./vectors/snsr_shp.gpkg")
+snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
 
 # with sf
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
 snsr_sf <-st_geometry(snsr_v1)
 
+# with sf
+snsr_basins_v1 <-st_read("./vectors/ca_basins/snsr_all_basins.shp")
+snsr_basins_sf <-st_geometry(snsr_basins_v1)
+
 ##############
 ##### mwa ####
 ##############
 
-#### read in metrics
-# mwa
-mwa_mm <-rast('./rasters/snow_metric_averages/mwa_mean.tif')
-mwa_cm_v1 <-mwa_mm/10
-mwa_cm <-crop(mwa_cm_v1, ext(snsr))
-hist(mwa_cm, breaks = 200)
+# #### read in metrics
+# # mwa
+# mwa_mm <-rast('./rasters/snow_metric_averages/mwa_mean.tif')
+# mwa_cm_v1 <-mwa_mm/10
+# mwa_cm <-crop(mwa_cm_v1, ext(snsr))
+# hist(mwa_cm, breaks = 200)
 
 # max
 max_mm <-rast('./rasters/snow_metric_averages/max_mean.tif')
@@ -66,10 +71,10 @@ max_m_v1 <-max_mm/1000
 max_m <-crop(max_m_v1, ext(snsr))
 hist(max_m, breaks = 200)
 
-# sdd
-sdd_v1 <-rast('./rasters/snow_metric_averages/sdd_mean.tif')
-sdd <-crop(sdd_v1, ext(snsr))
-hist(sdd, breaks = 200)
+# # sdd
+# sdd_v1 <-rast('./rasters/snow_metric_averages/sdd_mean.tif')
+# sdd <-crop(sdd_v1, ext(snsr))
+# hist(sdd, breaks = 200)
 
 # max_dowy
 max_dowy_v1 <-rast('./rasters/snow_metric_averages/max_dowy_mean.tif')
@@ -136,12 +141,13 @@ system("open ./plots/mwa_test_v15.png")
 ######################
 
 # set scale 
-max_scale <-brewer.pal(9, 'Blues')
+max_scale <-brewer.pal(9, 'YlGnBu')
 
 # plot
 max_plot <-ggplot(max_df) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
   geom_tile(mapping = aes(x,y, fill = mean)) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # inherit.aes makes this work
   scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="#08306B") + # max of color bar so it saturates
   labs(fill = "Max SWE (m)") +
   scale_x_continuous(expand = c(0, 0)) +
@@ -165,12 +171,12 @@ max_plot <-ggplot(max_df) +
                                ticks.colour = "black"))
 # save
 ggsave(max_plot,
-       file = "./plots/max_test_v11.png",
+       file = "./plots/max_test_v16.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_test_v11.png")
+system("open ./plots/max_test_v16.png")
 
 ######################
 ######################

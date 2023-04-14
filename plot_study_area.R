@@ -45,11 +45,17 @@ setwd("~/ch1_margulis/")
 ## bring in SNSR shape file
 # with terra
 snsr <-vect("./vectors/snsr_shp.gpkg")
+snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
+plot(snsr)
+plot(snsr_basins, add = TRUE)
 
 # with sf
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
 snsr_sf <-st_geometry(snsr_v1)
 
+# with sf
+snsr_basins_v1 <-st_read("./vectors/ca_basins/snsr_all_basins.shp")
+snsr_basins_sf <-st_geometry(snsr_basins_v1)
 
 ##############
 ##### dem ####
@@ -60,9 +66,6 @@ dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 cc_v1 <-rast("./rasters/nlcd_cc/cc_wNA.tif")
 an <-rast("./rasters/categorized/dem_am_cat_north_test.tif")
 as <-rast("./rasters/categorized/dem_am_cat_south_test.tif")
-
-aspect <-
-
 
 # convert to df for geom_raster
 dem_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
@@ -89,8 +92,9 @@ topo_colors <-c(topo_table$colors)
 
 # plot
 dem_plot <-ggplot(dem_df) +
+       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
        geom_tile(mapping = aes(x,y, fill = SNSR_DEM)) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+       geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # inherit.aes makes this work
        coord_sf(label_graticule = "NW") +
        scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
        scale_fill_gradientn(colors = topo_colors, limits = c(1500,3800), na.value="#ebe9eb") + # max of color bar so it saturates
@@ -113,12 +117,12 @@ dem_plot <-ggplot(dem_df) +
                                     ticks.colour = "black")) 
 # save
 ggsave(dem_plot,
-       file = "./plots/dem_test_v10.png",
+       file = "./plots/dem_test_v12.png",
        width = 5.1, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/dem_test_v10.png")
+system("open ./plots/dem_test_v12.png")
 
 #######################
 ##### cc test plot ####
@@ -130,9 +134,9 @@ cc_scale <-brewer.pal(9, 'YlGn')
 
 # plot
 cc_plot <-ggplot(cc_df) +
-  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .15, inherit.aes = FALSE) + # for gray
+   
   geom_tile(mapping = aes(x,y, fill = nlcd_full)) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # for black line
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
   coord_sf(label_graticule = "N") +
   scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
   scale_fill_gradientn(colors = cc_scale, limits = c(0,80), na.value="#004529") + # max of color bar so it saturates
@@ -156,12 +160,12 @@ cc_plot <-ggplot(cc_df) +
 
 # save
 ggsave(cc_plot,
-       file = "./plots/cc_test_v5.png",
+       file = "./plots/cc_test_v7.png",
        width = 4.8, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/cc_test_v5.png")
+system("open ./plots/cc_test_v7.png")
 
 #######################
 ######  aspect ########
