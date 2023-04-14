@@ -1,14 +1,16 @@
 # comparing SNSR and SNOTEL snow metrics
 # jack tarricone
 
-library(terra)
 library(dplyr)
 library(ggplot2)
-library(snotelr)
 library(lubridate)
-library(Metrics)
+library(hydroGOF)
 library(cowplot)
+library(viridis)
+library(ggpointdensity)
 
+
+# set sd
 setwd('~/ch1_margulis')
 
 # load in functions
@@ -55,16 +57,20 @@ theme_set(theme_classic(14))
 #########################
 #########################
 
-snotel_df_v1 <-read.csv("./csvs/snotel_df_v2.csv")
-snotel_df_v1 <-subset(snotel_df_v1, select=-c(X, network)) # move bad one
+# snotel_df_v1 <-read.csv("./csvs/snotel_df_v2.csv")
+# snotel_df_v1 <-subset(snotel_df_v1, select=-c(X, network)) # move bad one
+# head(snotel_df_v1)
+# 
+# # add NaN rows becaues horse meadow only has 357 days in 2004
+# # makes df exact same size
+# 
+# missing_days <-snotel_df_v1[rep(119430, 9),]
+# snotel_df <-rbind(snotel_df_v1[1:119430,], missing_days, snotel_df_v1[119431:nrow(snotel_df_v1),])
+# write.csv(snotel_df, "./csvs/snotel_df_v3.csv")
+
+snotel_df_v1 <-read.csv("./csvs/snotel_df_v3.csv")
+snotel_df_v1 <-subset(snotel_df_v1, select=-c(X)) # move bad one
 head(snotel_df_v1)
-
-# add NaN rows becaues horse meadow only has 357 days in 2004
-# makes df exact same size
-
-missing_days <-snotel_df_v1[rep(119430, 9),]
-snotel_df <-rbind(snotel_df_v1[1:119430,], missing_days, snotel_df_v1[119431:nrow(snotel_df_v1),])
-
 
 #########################
 #########################
@@ -102,24 +108,27 @@ max_df <-as.data.frame(swe_df %>%
                                  max_snotel_50.8 = max_swe(snotel_swe_mm, swe_thres = 50.8)/1000,
                                  max_snsr_50.8   = max_swe(snsr_swe_mm, swe_thres = 50.8)/1000))
 
-# plot
-max_25 <-ggplot(max_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_snotel_25.4, y = max_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "darkred") +
+
+max_25 <-ggplot(data = max_df, mapping = aes(x = max_snotel_25.4, y = max_snsr_25.4)) +
+  geom_pointdensity(adjust = .3, size = 1) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
+  scale_color_viridis(option = "H") +
   scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
   xlab("SNOTEL Max SWE (m)") + ylab("SNSR Max SWE (m)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        legend.position = "none")
 
+plot(max_25)
 
 # save
-ggsave( "./plots/max_metric_compare_v6.pdf",
+ggsave( "./plots/max_metric_compare_v7.pdf",
        max_25,
        width = 4.5,
        height = 4.5,
        units = "in")
 
-system("open ./plots/max_metric_compare_v6.pdf")
+system("open ./plots/max_metric_compare_v7.pdf")
 
 
 #########################
@@ -140,22 +149,26 @@ max_dowy_df <-as.data.frame(swe_df %>%
 
 
 # plot
-max_dowy_25 <-ggplot(max_dowy_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = max_dowy_snotel_25.4, y = max_dowy_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "darkviolet") +
+max_dowy_25 <-ggplot(data = max_dowy_df, mapping = aes(x = max_dowy_snotel_25.4, y = max_dowy_snsr_25.4)) +
+  geom_pointdensity(adjust = 10, size = 1) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
+  scale_color_viridis(option = "B") +
   scale_y_continuous(limits = c(50,300),expand = (c(0,3))) +
   scale_x_continuous(limits = c(50,300),expand = (c(0,3))) +
   xlab("SNOTEL Max DOWY") + ylab("SNSR Max DOWY") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        legend.position = "none")
+
+plot(max_dowy_25)
 
 # save
-ggsave( "./plots/max_dowy_metric_compare_v5.pdf",
+ggsave( "./plots/max_dowy_metric_compare_v6.pdf",
        max_dowy_25,
        width = 4.5,
        height = 4.5,
        units = "in")
 
-system("open ./plots/max_dowy_metric_compare_v5.pdf")
+system("open ./plots/max_dowy_metric_compare_v6.pdf")
 
 
 
@@ -179,111 +192,115 @@ sdd_df <-as.data.frame(swe_df %>%
 sdd_df[sapply(sdd_df, is.infinite)] <- NA
 
 # plot
-sdd_25 <-ggplot(sdd_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = sdd_snotel_25.4, y = sdd_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "darkgreen") +
+sdd_25 <-ggplot(sdd_df, aes(x = sdd_snotel_25.4, y = sdd_snsr_25.4)) +
+  geom_pointdensity(adjust = 6, size = 1) +
+  scale_color_viridis(option = "A") +
+  geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
   scale_y_continuous(limits = c(50,366),expand = (c(0,0))) +
   scale_x_continuous(limits = c(50,366),expand = (c(0,0))) +
   xlab("SNOTEL SDD (DOWY)") + ylab("SNSR SDD (DOWY)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        legend.position = "none")
+
+plot(sdd_25)
 
 # save
-ggsave( "./plots/sdd_metric_compare_v4.pdf",
+ggsave( "./plots/sdd_metric_compare_v5.pdf",
         sdd_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/sdd_metric_compare_v4.pdf")
+system("open ./plots/sdd_metric_compare_v5.pdf")
 
 
 
-#########################
-#########################
-####  melt_rate_50  #####
-#########################
-#########################
-
-# calc metric 
-melt_rate_df <-as.data.frame(swe_df %>%
-                         group_by(site_name, waterYear) %>%
-                         summarise(melt_rate_snotel_0 = melt_rate(snotel_swe_mm, swe_thres = 0),
-                                   melt_rate_snsr_0   = melt_rate(snsr_swe_mm, swe_thres = 0),
-                                   melt_rate_snotel_25.4 = melt_rate(snotel_swe_mm, swe_thres = 25.4),
-                                   melt_rate_snsr_25.4   = melt_rate(snsr_swe_mm, swe_thres = 25.4),
-                                   melt_rate_snotel_50.8 = melt_rate(snotel_swe_mm, swe_thres = 50.8),
-                                   melt_rate_snsr_50.8   = melt_rate(snsr_swe_mm, swe_thres = 50.8)))
-
-melt_rate_df[sapply(melt_rate_df, is.infinite)] <- NA
-
-# calc metric 
-melt_rate_50_df <-as.data.frame(swe_df %>%
-                               group_by(site_name, waterYear) %>%
-                               summarise(melt_rate_snotel_0 = melt_rate_50(snotel_swe_mm, swe_thres = 0),
-                                         melt_rate_snsr_0   = melt_rate_50(snsr_swe_mm, swe_thres = 0),
-                                         melt_rate_snotel_25.4 = melt_rate_50(snotel_swe_mm, swe_thres = 25.4),
-                                         melt_rate_snsr_25.4   = melt_rate_50(snsr_swe_mm, swe_thres = 25.4),
-                                         melt_rate_snotel_50.8 = melt_rate_50(snotel_swe_mm, swe_thres = 50.8),
-                                         melt_rate_snsr_50.8   = melt_rate_50(snsr_swe_mm, swe_thres = 50.8)))
-
-melt_rate_50_df[sapply(melt_rate_50_df, is.infinite)] <- NA
-
-
-# plot
-melt_rate_50 <-ggplot(melt_rate_50_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "deeppink4") +
-  scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate 50 (mm/day)") + ylab("SNSR Melt Rate 50 (mm/day)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
-
-# save
-ggsave( "./plots/melt_rate_50_metric_compare_v1.pdf",
-        melt_rate_50,
-        width = 4.5,
-        height = 4.5,
-        units = "in")
-
-system("open ./plots/melt_rate_50_metric_compare_v1.pdf")
-
-
-#########################
-#########################
-####  melt_rate_25  #####
-#########################
-#########################
-
-# calc metric 
-melt_rate_25_df <-as.data.frame(swe_df %>%
-                                  group_by(site_name, waterYear) %>%
-                                  summarise(melt_rate_snotel_0 = melt_rate_25(snotel_swe_mm, swe_thres = 0),
-                                            melt_rate_snsr_0   = melt_rate_25(snsr_swe_mm, swe_thres = 0),
-                                            melt_rate_snotel_25.4 = melt_rate_25(snotel_swe_mm, swe_thres = 25.4),
-                                            melt_rate_snsr_25.4   = melt_rate_25(snsr_swe_mm, swe_thres = 25.4),
-                                            melt_rate_snotel_50.8 = melt_rate_25(snotel_swe_mm, swe_thres = 50.8),
-                                            melt_rate_snsr_50.8   = melt_rate_25(snsr_swe_mm, swe_thres = 50.8)))
-
-melt_rate_25_df[sapply(melt_rate_25_df, is.infinite)] <- NA
+# #########################
+# #########################
+# ####  melt_rate_50  #####
+# #########################
+# #########################
+# 
+# # calc metric 
+# melt_rate_df <-as.data.frame(swe_df %>%
+#                          group_by(site_name, waterYear) %>%
+#                          summarise(melt_rate_snotel_0 = melt_rate(snotel_swe_mm, swe_thres = 0),
+#                                    melt_rate_snsr_0   = melt_rate(snsr_swe_mm, swe_thres = 0),
+#                                    melt_rate_snotel_25.4 = melt_rate(snotel_swe_mm, swe_thres = 25.4),
+#                                    melt_rate_snsr_25.4   = melt_rate(snsr_swe_mm, swe_thres = 25.4),
+#                                    melt_rate_snotel_50.8 = melt_rate(snotel_swe_mm, swe_thres = 50.8),
+#                                    melt_rate_snsr_50.8   = melt_rate(snsr_swe_mm, swe_thres = 50.8)))
+# 
+# melt_rate_df[sapply(melt_rate_df, is.infinite)] <- NA
+# 
+# # calc metric 
+# melt_rate_50_df <-as.data.frame(swe_df %>%
+#                                group_by(site_name, waterYear) %>%
+#                                summarise(melt_rate_snotel_0 = melt_rate_50(snotel_swe_mm, swe_thres = 0),
+#                                          melt_rate_snsr_0   = melt_rate_50(snsr_swe_mm, swe_thres = 0),
+#                                          melt_rate_snotel_25.4 = melt_rate_50(snotel_swe_mm, swe_thres = 25.4),
+#                                          melt_rate_snsr_25.4   = melt_rate_50(snsr_swe_mm, swe_thres = 25.4),
+#                                          melt_rate_snotel_50.8 = melt_rate_50(snotel_swe_mm, swe_thres = 50.8),
+#                                          melt_rate_snsr_50.8   = melt_rate_50(snsr_swe_mm, swe_thres = 50.8)))
+# 
+# melt_rate_50_df[sapply(melt_rate_50_df, is.infinite)] <- NA
+# 
+# 
+# # plot
+# melt_rate_50 <-ggplot(melt_rate_50_df) +
+#   geom_abline(intercept = 0, slope = 1, linetype = 2) +
+#   geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "deeppink4") +
+#   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
+#   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
+#   xlab("SNOTEL Melt Rate 50 (mm/day)") + ylab("SNSR Melt Rate 50 (mm/day)") +
+#   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+# 
+# # save
+# ggsave( "./plots/melt_rate_50_metric_compare_v1.pdf",
+#         melt_rate_50,
+#         width = 4.5,
+#         height = 4.5,
+#         units = "in")
+# 
+# system("open ./plots/melt_rate_50_metric_compare_v1.pdf")
 
 
-# plot
-melt_rate_25 <-ggplot(melt_rate_25_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "darkviolet") +
-  scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
-  xlab("SNOTEL Melt Rate 25 (mm/day)") + ylab("SNSR Melt Rate 25 (mm/day)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
-
-# save
-ggsave( "./plots/melt_rate_25_metric_compare_v1.pdf",
-        melt_rate_25,
-        width = 4.5,
-        height = 4.5,
-        units = "in")
-
-system("open ./plots/melt_rate_25_metric_compare_v1.pdf")
+# #########################
+# #########################
+# ####  melt_rate_25  #####
+# #########################
+# #########################
+# 
+# # calc metric 
+# melt_rate_25_df <-as.data.frame(swe_df %>%
+#                                   group_by(site_name, waterYear) %>%
+#                                   summarise(melt_rate_snotel_0 = melt_rate_25(snotel_swe_mm, swe_thres = 0),
+#                                             melt_rate_snsr_0   = melt_rate_25(snsr_swe_mm, swe_thres = 0),
+#                                             melt_rate_snotel_25.4 = melt_rate_25(snotel_swe_mm, swe_thres = 25.4),
+#                                             melt_rate_snsr_25.4   = melt_rate_25(snsr_swe_mm, swe_thres = 25.4),
+#                                             melt_rate_snotel_50.8 = melt_rate_25(snotel_swe_mm, swe_thres = 50.8),
+#                                             melt_rate_snsr_50.8   = melt_rate_25(snsr_swe_mm, swe_thres = 50.8)))
+# 
+# melt_rate_25_df[sapply(melt_rate_25_df, is.infinite)] <- NA
+# 
+# 
+# # plot
+# melt_rate_25 <-ggplot(melt_rate_25_df) +
+#   geom_abline(intercept = 0, slope = 1, linetype = 2) +
+#   geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "darkviolet") +
+#   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
+#   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
+#   xlab("SNOTEL Melt Rate 25 (mm/day)") + ylab("SNSR Melt Rate 25 (mm/day)") +
+#   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+# 
+# # save
+# ggsave( "./plots/melt_rate_25_metric_compare_v1.pdf",
+#         melt_rate_25,
+#         width = 4.5,
+#         height = 4.5,
+#         units = "in")
+# 
+# system("open ./plots/melt_rate_25_metric_compare_v1.pdf")
 
 
 #########################
@@ -304,25 +321,29 @@ melt_rate_33_df <-as.data.frame(swe_df %>%
 
 melt_rate_33_df[sapply(melt_rate_33_df, is.infinite)] <- NA
 
-
-w# plot
-melt_rate_33 <-ggplot(melt_rate_33_df) +
+# plot
+melt_rate_33 <-ggplot(melt_rate_33_df, aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4)) +
+  geom_pointdensity(adjust = 2, size = 1) +
+  scale_color_viridis(option = "H") +
+  geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = melt_rate_snotel_25.4, y = melt_rate_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "deeppink3") +
   scale_y_continuous(limits = c(0,40),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,40),expand = (c(0,0))) +
   xlab("SNOTEL Melt Rate 33 (mm/day)") + ylab("SNSR Melt Rate 33 (mm/day)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        legend.position = "none")
+
+plot(melt_rate_33)
 
 
 # save
-ggsave( "./plots/melt_rate_33_metric_compare_v1.pdf",
+ggsave( "./plots/melt_rate_33_metric_compare_v2.pdf",
         melt_rate_33,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/melt_rate_33_metric_compare_v1.pdf")
+system("open ./plots/melt_rate_33_metric_compare_v2.pdf")
 
 
 
@@ -343,22 +364,24 @@ mwa_djfm_df <-as.data.frame(swe_df %>%
                                  mwa_djfm_snsr_50.8   = mwa_djfm_total(snsr_swe_mm, swe_thres = 50.8)))
 
 # plot
-mwa_djfm_25 <-ggplot(mwa_djfm_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = mwa_djfm_snotel_25.4, y = mwa_djfm_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "midnightblue") +
+mwa_djfm_25 <-ggplot(mwa_djfm_df, aes(x = mwa_djfm_snotel_25.4, y = mwa_djfm_snsr_25.4)) +
+  geom_pointdensity(adjust = 15, size = 1) +
+  scale_color_viridis(option = "H") +
+  geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
   scale_y_continuous(limits = c(0,500),expand = (c(0,5))) +
   scale_x_continuous(limits = c(0,500),expand = (c(0,5))) +
   xlab("SNOTEL MWA (mm)") + ylab("SNSR MWA (mm)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        legend.position = "none")
 
 # save
-ggsave( "./plots/mwa_djfm_metric_compare_v5.pdf",
+ggsave( "./plots/mwa_djfm_metric_compare_v6.pdf",
         mwa_djfm_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/mwa_djfm_metric_compare_v5.pdf")
+system("open ./plots/mwa_djfm_metric_compare_v6.pdf")
 
 
 
@@ -382,27 +405,29 @@ mwa_djfm_days_df <-as.data.frame(swe_df %>%
 
 
 # plot
-mwa_djfm_days_25 <-ggplot(mwa_djfm_days_df) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_point(aes(x = mwa_djfm_days_snotel_25.4, y = mwa_djfm_days_snsr_25.4), shape = 3, alpha = .7, size = 1.4, color = "grey20") +
+mwa_djfm_days_25 <-ggplot(mwa_djfm_days_df, aes(x = mwa_djfm_days_snotel_25.4, y = mwa_djfm_days_snsr_25.4)) +
+  geom_pointdensity(adjust = 5, size = 1) +
+  scale_color_viridis(option = "H") +
+  geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
   scale_y_continuous(limits = c(0,70),expand = (c(0,0))) +
   scale_x_continuous(limits = c(0,70),expand = (c(0,0))) +
   xlab("SNOTEL MWA (# days)") + ylab("SNSR MWA (# days)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        legend.position = "none")
 
 # save
-ggsave( "./plots/mwa_djfm_days_metric_compare_v2.pdf",
+ggsave( "./plots/mwa_djfm_days_metric_compare_v3.pdf",
         mwa_djfm_days_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/mwa_djfm_days_metric_compare_v2.pdf")
+system("open ./plots/mwa_djfm_days_metric_compare_v3.pdf")
 
 
 
 # stack with cow plot
-plot_grid(max_25,max_dowy_25, sdd_25, melt_rate_25, mwa_djfm_25, mwa_djfm_days_25,
+plot_grid(max_25,max_dowy_25, sdd_25, melt_rate_33, mwa_djfm_25, mwa_djfm_days_25,
           labels = c("(a)","(b)","(c)","(d)","(e)","(f)"),
           align = "hv",
           vjust =  2,
@@ -410,13 +435,13 @@ plot_grid(max_25,max_dowy_25, sdd_25, melt_rate_25, mwa_djfm_25, mwa_djfm_days_2
           ncol = 3, 
           rel_widths = c(1/3, 1/3, 1/3))
 
-ggsave("./plots/snsr_snotel_metric_compare_v3.pdf",
-       width = 13.5, 
-       height = 9,
+ggsave("./plots/snsr_snotel_metric_compare_v5.pdf",
+       width = 13, 
+       height = 8,
        units = "in",
        dpi = 500)
 
-system("open ./plots/snsr_snotel_metric_compare_v3.pdf")
+system("open ./plots/snsr_snotel_metric_compare_v5.pdf")
 
 
 #########################################
