@@ -64,7 +64,7 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 #### read in metrics
 dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 cc_v1 <-rast("./rasters/nlcd_cc/cc_wNA.tif")
-aspect_nsef <-rast("./rasters/categorized/aspect_thres_4_classes_latlon.tif")
+aspect_nsef <-rast("./rasters/categorized/aspect_thres_4_classes.tif")
 
 # make just north and south
 aspect_ns <-aspect_nsef
@@ -137,7 +137,7 @@ cc_scale <-brewer.pal(9, 'YlGn')
 
 # plot
 cc_plot <-ggplot(cc_df) +
-   
+  geom_sf(data = snsr_sf, fill = "grey95", color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray 
   geom_tile(mapping = aes(x,y, fill = nlcd_full)) +
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
   coord_sf(label_graticule = "N") +
@@ -163,32 +163,23 @@ cc_plot <-ggplot(cc_df) +
 
 # save
 ggsave(cc_plot,
-       file = "./plots/cc_test_v7.png",
+       file = "./plots/cc_test_v8.png",
        width = 4.8, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/cc_test_v7.png")
+system("open ./plots/cc_test_v8.png")
 
 #######################
 ######  aspect ########
 #######################
 
-aspect_colors <-c("darkviolet", "goldenrod")
-
-# plot
-sig_plot <-ggplot(sig_df) +
-  geom_tile(mapping = aes(x,y, fill = cat)) +
-  scale_fill_manual(name = "Binned Aspect",
-                    values = aspect_colors, 
-                    breaks = c("North","Soutn")) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) +
-
+aspect_colors <-c("darkviolet", "darkgreen")
 
 # plot
 aspect_plot <-ggplot(aspect_df) +
-  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
-  geom_tile(data = aspect_df, mapping = aes(x,y, fill = aspect)) +
+  geom_sf(data = snsr_sf, fill = 'gray95', color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
+  geom_tile(data = aspect_df, mapping = aes(x,y, fill = cat)) +
   scale_fill_manual(name = "Binned Aspect",
                     values = aspect_colors, 
                     breaks = c("North","South")) +
@@ -197,34 +188,27 @@ aspect_plot <-ggplot(aspect_df) +
   scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
   labs(fill = "Binned Aspect") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
-        axis.text.x =element_text(color="black"),
         axis.title.y = element_blank(),
         axis.title.x = element_blank(),
-        axis.text.y = element_text(color="black"),
+        axis.text.x = element_text(color="black"),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
         legend.position = "bottom",
         plot.margin = unit(c(0,0,0,0), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "horizontal",
-                               label.position = 'top',
-                               title.position ='bottom',
-                               title.hjust = .5,
-                               barwidth = 18,
-                               barheight = 1,
-                               frame.colour = "black", 
-                               ticks.colour = "black")) 
+        legend.box.spacing = unit(0, "pt")) 
 
 # save
 ggsave(aspect_plot,
-       file = "./plots/aspect_plot_v4.png",
+       file = "./plots/aspect_plot_v8.png",
        width = 4.8, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/aspect_plot_v4.png")
+system("open ./plots/aspect_plot_v8.png")
 
 
 # cowplot test
-full <-plot_grid(dem_plot, cc_plot, cc_plot,
+full <-plot_grid(dem_plot, cc_plot, aspect_plot,
                  labels = c("(a)", "(b)", "(c)"),
                  ncol = 3, 
                  align = "hv",
@@ -235,10 +219,10 @@ full <-plot_grid(dem_plot, cc_plot, cc_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/study_area_v5.png",
+       file = "./plots/study_area_v6.png",
        width = 15.5, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/study_area_v5.png")
+system("open ./plots/study_area_v6.png")
   

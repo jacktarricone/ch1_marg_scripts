@@ -56,9 +56,7 @@ aspect_classes_4
 aspect_cat_4 <-classify(aspect_thres, rcl = aspect_classes_4)
 plot(aspect_cat_4)
 hist(aspect_cat_4)
-aspect_cat_4_repoj <-project(aspect_cat_4, "EPSG:4326")
-writeRaster(aspect_cat_4_repoj, "./rasters/categorized/aspect_thres_4_classes_latlon.tif", overwrite = TRUE)
-
+writeRaster(aspect_cat_4, "./rasters/categorized/aspect_thres_4_classes.tif", overwrite = TRUE)
 
 
 
