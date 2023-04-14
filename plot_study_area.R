@@ -64,21 +64,24 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 #### read in metrics
 dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 cc_v1 <-rast("./rasters/nlcd_cc/cc_wNA.tif")
-an <-rast("./rasters/categorized/dem_am_cat_north_test.tif")
-as <-rast("./rasters/categorized/dem_am_cat_south_test.tif")
+aspect_nsef <-rast("./rasters/categorized/aspect_thres_4_classes_latlon.tif")
+
+# make just north and south
+aspect_ns <-aspect_nsef
+values(aspect_ns)[values(aspect_ns) == 2] = NA
+values(aspect_ns)[values(aspect_ns) == 4] = NA
+aspect_ns
+plot(aspect_ns)
 
 # convert to df for geom_raster
 dem_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
 cc_df <-as.data.frame(cc_v1, xy = TRUE, cells = TRUE)
+aspect_df <-as.data.frame(aspect_ns, xy = TRUE, cells = TRUE)
 
-## aspect north
-an_df <-as.data.frame(an, xy = TRUE, cells = TRUE)
-an_df$cat <-paste0('n_', an_df$SNSR_DEM)
-
-## aspect south
-as_df <-as.data.frame(an, xy = TRUE, cells = TRUE)
-as_df$cat <-paste0('s_', as_df$SNSR_DEM)
-
+# ## aspect north
+aspect_df$cat <-ifelse(aspect_df$aspect == 1, "North", aspect_df$aspect)
+aspect_df$cat <-ifelse(aspect_df$aspect == 3, "South", aspect_df$cat)
+aspect_df
 
 ######################
 ######################
@@ -171,28 +174,28 @@ system("open ./plots/cc_test_v7.png")
 ######  aspect ########
 #######################
 
-# set scale 
-display.brewer.all()
-viridis::viridis()
-an_scale <-rev(viridis::mako(10))
-as_scale <-viridis::viridis(9)
-
-an_scale
-"#DEF5E5FF"
-"#0B0405FF"
+aspect_colors <-c("darkviolet", "goldenrod")
 
 # plot
-an_plot <-ggplot(an_df) +
-  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .15, inherit.aes = FALSE) + # for gray
+sig_plot <-ggplot(sig_df) +
   geom_tile(mapping = aes(x,y, fill = cat)) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # for black line
+  scale_fill_manual(name = "Binned Aspect",
+                    values = aspect_colors, 
+                    breaks = c("North","Soutn")) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) +
+
+
+# plot
+aspect_plot <-ggplot(aspect_df) +
+  geom_sf(data = snsr_sf, fill = 'gray80', color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
+  geom_tile(data = aspect_df, mapping = aes(x,y, fill = aspect)) +
+  scale_fill_manual(name = "Binned Aspect",
+                    values = aspect_colors, 
+                    breaks = c("North","South")) +
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
   coord_sf(label_graticule = "N") +
   scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
-  scale_fill_discrete(color = an_scale)
-  
-  scale_fill_gradientn(colors = an_scale, limits = c(1,10), na.value="#DEF5E5FF") + # max of color bar so it saturates
-  geom_tile(data = an_df, mapping = aes(x,y, fill = SNSR_DEM)) +
-  labs(fill = "Binned Aspect Noth") +
+  labs(fill = "Binned Aspect") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
         axis.text.x =element_text(color="black"),
         axis.title.y = element_blank(),
@@ -211,16 +214,13 @@ an_plot <-ggplot(an_df) +
                                ticks.colour = "black")) 
 
 # save
-ggsave(an_plot,
-       file = "./plots/aspect_plot_v3.png",
+ggsave(aspect_plot,
+       file = "./plots/aspect_plot_v4.png",
        width = 4.8, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/aspect_plot_v3.png")
-
-
-
+system("open ./plots/aspect_plot_v4.png")
 
 
 # cowplot test

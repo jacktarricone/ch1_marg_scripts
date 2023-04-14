@@ -7,32 +7,68 @@ library(terra)
 setwd("/Users/jacktarricone/ch1_margulis/")
 
 # bring in dem raster
-dem_v1 <-rast("./static/rasters/SNSR_DEM.tif")
-dem <-project(dem_v1, 'EPSG:4326')
+dem <-rast("./rasters/static/SNSR_DEM.tif")
 plot(dem)
 hist(dem, breaks = 100)
 
+# compute metrics
+aspect <-terrain(dem, v = "aspect", neighbors = 8, unit = "degrees")
+slope <-terrain(dem, v = "slope", neighbors = 8, unit = "degrees")
+
+# thres hold aspect to nan under two degrees
+slope_thres <-slope
+values(slope_thres)[values(slope_thres) < 4] = NA
+writeRaster(slope_thres, "./rasters/categorized/slope_4_na.tif", overwrite = TRUE)
+
+# 
+aspect_thres <-mask(aspect, slope_thres, maskvalue = NA)
+plot(aspect_thres)
+writeRaster(aspect_thres, "./rasters/categorized/aspect_thres_4.tif", overwrite = TRUE)
+
 # bin into 11 elevation categories by 250m
-dem_classes_11 <-matrix(c(1500,1750,1, # 1 = north
-                          1750,2000,2,          # 2 = south
-                          2000,2250,3,
-                          2250,2500,4,
-                          2500,2750,5,
-                          2750,3000,6,
-                          3000,3250,7,
-                          3250,3500,8,
-                          3500,3750,9,
-                          3750,4000,10,
-                          4000,4360,11),           # 3 = east 
-                        ncol=3, byrow=TRUE)
-dem_classes_11
+aspect_classes <-matrix(c(0,45,1, # 1 = north
+                          45,90,2,
+                          90,135,3, # 2 = south
+                          135,180,4,
+                          180,225,5,
+                          225,270,6,
+                          270,316,7,
+                          315,360,8), # 3 = east 
+                          ncol=3, byrow=TRUE)
+aspect_classes
 
 # classify using matrix
-dem_am_cat <-classify(dem_am, rcl = dem_classes_3)
-plot(dem_am_cat)
-dem_am_cat
-hist(dem_am_cat)
-# writeRaster(dem_am_cat, "./static/dem_am_cat.tif")
+aspect_cat <-classify(aspect_thres, rcl = aspect_classes)
+plot(aspect_cat)
+hist(aspect_cat)
+writeRaster(aspect_cat, "./rasters/categorized/aspect_thres_8_classes.tif", overwrite = TRUE)
+
+# bin into 11 elevation categories by 250m
+aspect_classes_4 <-matrix(c(0,45,1, # 1  north
+                            315,360,1,
+                            45,135,2, # 2 = south
+                            135,225,3,
+                            225,315,4),
+                            ncol=3, byrow=TRUE)
+aspect_classes_4
+
+# classify using matrix
+aspect_cat_4 <-classify(aspect_thres, rcl = aspect_classes_4)
+plot(aspect_cat_4)
+hist(aspect_cat_4)
+aspect_cat_4_repoj <-project(aspect_cat_4, "EPSG:4326")
+writeRaster(aspect_cat_4_repoj, "./rasters/categorized/aspect_thres_4_classes_latlon.tif", overwrite = TRUE)
+
+
+
+
+
+
+
+
+
+
+
 
 # bring in aspect ns
 aspect_ns <-rast("./static/aspect_cat_ns.tif")
@@ -45,7 +81,6 @@ plot(aspect_ns_am)
 plot(dem_am_cat)
 
 ##### add north and south classification
-
 # b1_n = 1
 test <-dem_am_cat == 1 &  # b1
        aspect_ns_am == 1  # n
