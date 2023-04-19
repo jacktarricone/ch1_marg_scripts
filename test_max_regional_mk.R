@@ -24,25 +24,27 @@ plot(max_kern[[1]])
 
 # bring in classes 4
 classes <-rast("./rasters/categorized/aspect_4deg_ns.tif")
-plot(classes, add = TRUE)
 
 # classes kern
 kern_classes_v1 <-crop(classes, kern)
 kern_classes <-mask(kern_classes_v1, kern)
 plot(kern_classes)
 
+# kern south
+kern_south <-subst(kern_classes, 1, NA)
+plot(kern_south)
+
 # mask for north facing slopes
 max_kern_north_v1 <-mask(max_kern, kern_classes, maskvalue = 3) # mask 3 aka south out
 max_kern_north <-mask(max_kern_north_v1, kern_classes, maskvalue = NA)
 plot(max_kern_north[[1]])
 
-
 ### test this solution of applying rkt function to raster statck
 ### https://gis.stackexchange.com/questions/429168/rkt-package-function-on-time-series-analysis-is-returning-error?rq=1
 
-# define years vector
+# define funciton
 
-rktFun <-function(x){
+rkt_rast <-function(x,block){
   
   if(all(is.na(x))){
     
@@ -51,19 +53,18 @@ rktFun <-function(x){
   } else {
     
     years <-1:32
-    analysis <-rkt::rkt(years, x)
+    analysis <-rkt::rkt(years, x, max_kern_north)
     a <-analysis$B # theil sen slope
     b <-analysis$sl # pvalue
     c <-analysis$tau # tau
-    
     return(cbind(a, b, c))
   } 
 }
 
 # run mk test
-mk_results <-app(max_kern_north, fun = rktFun, cores = 14)
+mk_results <-app(max_kern, fun = rkt_rast)
 mk_results
-
+plot(mk_results)
 
 
 
