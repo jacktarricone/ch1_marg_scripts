@@ -97,10 +97,10 @@ trend_scale
 
 # plot
 trend_plot <-ggplot(trend_df) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) +
+       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) +
        geom_tile(mapping = aes(x,y, fill = max_slope_full)) +
-       geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = trend_scale, limits = c(-15,15), na.value=trend_scale[1]) + # max of color bar so it saturates
+       geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + 
+       scale_fill_gradientn(colors = trend_scale, limits = c(-15,15), na.value=trend_scale[1]) + 
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
        labs(fill =(expression(Delta~"Max SWE (mm/yr)")))+
@@ -136,15 +136,17 @@ system("open ./plots/max_trend_test_v8.png")
 ######## sig #########
 ######################
 ######################
+
 sig_colors <-c("#B2182B", "#2166AC")
 
 # plot
 sig_plot <-ggplot(sig_df) +
+  geom_sf(data = snsr_sf, fill = "grey95", color = "black", linewidth = .05, inherit.aes = FALSE) +
   geom_tile(mapping = aes(x,y, fill = cat)) +
   scale_fill_manual(name = "Significant Trends",
                     values = sig_colors, 
                     breaks = c("Decrease","Increase")) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work+
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + 
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -159,12 +161,12 @@ sig_plot <-ggplot(sig_df) +
 
 # save
 ggsave(sig_plot,
-       file = "./plots/sig_max_test_v4.png",
+       file = "./plots/sig_max_test_v7.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/sig_max_test_v4.png")
+system("open ./plots/sig_max_test_v7.png")
 
 
 # cowplot test
@@ -180,10 +182,10 @@ full <-plot_grid(trend_plot,sig_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/max_trend_test_v1.png",
+       file = "./plots/max_trend_test_v2.png",
        width = 9, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_trend_test_v1.png")
+system("open ./plots/max_trend_test_v2.png")
   

@@ -3,27 +3,75 @@
 # january 18 2023
 
 library(terra)
-library(tidyverse)
+library(dplyr)
 library(rkt)
 
 # set working dir
-setwd("/Users/jacktarricone/ch1_margulis/")
+setwd("~/ch1_margulis/")
 
 # read in stack american stack
-max_stack <-rast("./snow_metric_rasters/terra_rasters/max_swe/max_american.tif")
+max_stack <-rast("./rasters/snow_metrics/max_swe/max_stack.tif")
 max_stack
 
 # bring in american shape file
-american_v1 <-vect("./american_test/american.shp")
-american <-project(american_v1, crs(max_stack))
+kern <-vect("./vectors/ca_basins/kern.gpkg")
+kern
 
-# test plot
-plot(max_stack[[6]])
-plot(american, add = TRUE)
+# mask kern
+max_kern_v1 <-mask(max_stack, kern)
+max_kern <-crop(max_kern_v1, kern)
+plot(max_kern[[1]])
 
 # bring in classes 4
-classes <-rast("./static/american_dem_aspect_classified.tif")
+classes <-rast("./rasters/categorized/aspect_4deg_ns.tif")
 plot(classes, add = TRUE)
+
+# classes kern
+kern_classes_v1 <-crop(classes, kern)
+kern_classes <-mask(kern_classes_v1, kern)
+plot(kern_classes)
+
+# mask for north facing slopes
+max_kern_north_v1 <-mask(max_kern, kern_classes, maskvalue = 3) # mask 3 aka south out
+max_kern_north <-mask(max_kern_north_v1, kern_classes, maskvalue = NA)
+plot(max_kern_north[[1]])
+
+
+### test this solution of applying rkt function to raster statck
+### https://gis.stackexchange.com/questions/429168/rkt-package-function-on-time-series-analysis-is-returning-error?rq=1
+
+# define years vector
+
+rktFun <-function(x){
+  
+  if(all(is.na(x))){
+    
+    c(NA,NA,NA)
+    
+  } else {
+    
+    years <-1:32
+    analysis <-rkt::rkt(years, x)
+    a <-analysis$B # theil sen slope
+    b <-analysis$sl # pvalue
+    c <-analysis$tau # tau
+    
+    return(cbind(a, b, c))
+  } 
+}
+
+# run mk test
+mk_results <-app(max_kern_north, fun = rktFun, cores = 14)
+mk_results
+
+
+
+
+
+
+
+
+
 
 # convert to df
 max_df <-as.data.frame(max_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
@@ -58,6 +106,8 @@ max_mk_df <-max_mk_test_df[order(max_mk_test_df$year),] # sort by year
 max_mk_df$max_swe_m <-max_mk_df$max_swe_mm*(1/1000)
 max_mk_df$max_swe_cm <-max_mk_df$max_swe_mm*(1/10)
 head(max_mk_df) # looks good!
+
+
 
 # subet to each class
 b1_n <-filter(max_mk_df, SNSR_DEM == 1)

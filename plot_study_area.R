@@ -71,6 +71,7 @@ aspect_ns <-aspect_nsef
 values(aspect_ns)[values(aspect_ns) == 2] = NA
 values(aspect_ns)[values(aspect_ns) == 4] = NA
 aspect_ns
+# writeRaster(aspect_ns, "./rasters/categorized/aspect_4deg_ns.tif")
 plot(aspect_ns)
 
 # convert to df for geom_raster
