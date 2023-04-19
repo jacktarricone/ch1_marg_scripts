@@ -8,14 +8,12 @@ library(terra)
 setwd("~/ch1_margulis/")
 
 # bring in max mk raster
-max_trend_v1 <-rast("./rasters/mk_results/max_slope_full.tif")
-max_trend <-subst(max_trend_v1, 0, NA)
-plot(max_trend)
+max_trend <-rast("./rasters/mk_results/max_trend.tif")
+max_trend
+hist(max_trend, breaks = 100)
 
 # bring in sig trends
-max_sig_trend_v1 <-rast("./rasters/mk_results/max_sig_slope.tif")
-max_sig_trend  <-subst(max_sig_trend_v1, 0, NA)
-plot(max_sig_trend)
+max_sig_trend <-rast("./rasters/mk_results/max_sig_trend.tif")
 
 # list shape files
 snsr_basin_paths <-list.files("./vectors/ca_basins", pattern = "\\.gpkg$", full.names = TRUE)
@@ -26,23 +24,20 @@ names_raw <-print(basename(snsr_basin_paths))
 names <-gsub(".gpkg","",names_raw)
 names
 
-x <-13
-full_trend <-max_trend
-sig_trend <-max_sig_trend
-
 create_max_mk_table <-function(x, full_trend, sig_trend, names){
 
-    header <-c("Basin", "Mean Max SWE Trend (mm/yr)", "Max SWE Trend SD (mm/yr)", 
+    header <-c("Basin", "Mean Max SWE Trend (cm/decade)", "Max SWE Trend SD (cm/decade)", 
             "Negative Trends (%)", "Sig. Trends (% of area)")
-
+    
+    # load in shape file
     shp_file <-vect(x)
+    
     ### crop and mask full shape for basin
     basin_trend <-crop(mask(full_trend, shp_file),shp_file)
-    #plot(basin_trend)
-    # plot(snsr_shp_list[[x]], add = TRUE)
+    plot(basin_trend)
+
     basin_sig_trend <-crop(mask(sig_trend , shp_file),shp_file)
-    # plot(basin_sig_trend)
-    # plot(snsr_shp_list[[x]], add = TRUE)
+    plot(basin_sig_trend)
 
     ### calc trend mean
     basin_trend_mean <-round(as.numeric(global(basin_trend, 
@@ -66,16 +61,16 @@ create_max_mk_table <-function(x, full_trend, sig_trend, names){
     percent_sig_trend <-round((sig_pixels/total_pixels)*100,1) # calculate percentage
     
     # rough format names
-    name_raw <-print(basename(x))
+    name_raw <-basename(x)
     name <-gsub(".gpkg","",name_raw)
-
+    print(name)
+    
     # bind values together
     vals <-c(name,basin_trend_mean,basin_trend_sd, percent_neg_trend, percent_sig_trend)
    
      # vals
     vals_w_header_v1 <-as.data.frame(rbind(header,vals), row.names = FALSE)
     vals_w_header <-janitor::row_to_names(vals_w_header_v1, row_number = 1)
-    vals_w_header
     return(vals_w_header)
 }
 

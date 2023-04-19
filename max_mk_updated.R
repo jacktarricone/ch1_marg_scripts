@@ -68,6 +68,7 @@ sig_slope <-mask(slope, sig_p_val)
 plot(p_val)
 plot(sig_p_val)
 plot(slope)
+plot(sig_slope)
 
 # save
 writeRaster(p_val,"./rasters/mk_results/max_p_val.tif")
