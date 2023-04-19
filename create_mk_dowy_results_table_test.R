@@ -1,4 +1,4 @@
-####### start mk results analysis table
+####### start mk results analysis table:max_dowy
 # jack tarricone
 # april 19th, 2023
 
@@ -8,12 +8,11 @@ library(terra)
 setwd("~/ch1_margulis/")
 
 # bring in max mk raster
-max_trend_v1 <-rast("./rasters/mk_results/max_slope_full.tif")
-max_trend <-subst(max_trend_v1, 0, NA)
+max_trend <-rast("./rasters/mk_results/max_dowy_slope.tif")
 plot(max_trend)
 
 # bring in sig trends
-max_sig_trend_v1 <-rast("./rasters/mk_results/max_sig_slope.tif")
+max_sig_trend_v1 <-rast("./rasters/mk_results/max_dowy_sig_slope.tif")
 max_sig_trend  <-subst(max_sig_trend_v1, 0, NA)
 plot(max_sig_trend)
 
@@ -26,31 +25,32 @@ names_raw <-print(basename(snsr_basin_paths))
 names <-gsub(".gpkg","",names_raw)
 names
 
-x <-13
+x <-snsr_basin_paths[13]
 full_trend <-max_trend
 sig_trend <-max_sig_trend
 
-create_max_mk_table <-function(x, full_trend, sig_trend, names){
+create_max_dowy_mk_table <-function(x, full_trend, sig_trend, names){
 
-    header <-c("Basin", "Mean Max SWE Trend (mm/yr)", "Max SWE Trend SD (mm/yr)", 
+    header <-c("Basin", "Mean Max DOWY Trend (days/decade)", "Max SWE Trend SD (days/decade)", 
             "Negative Trends (%)", "Sig. Trends (% of area)")
-
+    
+    # bring in shp
     shp_file <-vect(x)
+    
     ### crop and mask full shape for basin
     basin_trend <-crop(mask(full_trend, shp_file),shp_file)
-    #plot(basin_trend)
-    # plot(snsr_shp_list[[x]], add = TRUE)
-    basin_sig_trend <-crop(mask(sig_trend , shp_file),shp_file)
-    # plot(basin_sig_trend)
-    # plot(snsr_shp_list[[x]], add = TRUE)
+    plot(basin_trend)
+    
+    basin_sig_trend <-crop(mask(sig_trend, shp_file),shp_file)
+    plot(basin_sig_trend)
 
     ### calc trend mean
     basin_trend_mean <-round(as.numeric(global(basin_trend, 
-                                               mean, na.rm = TRUE)),2)
+                                               mean, na.rm = TRUE)),2)*10
 
     ### calc trend sd
     basin_trend_sd <-round(as.numeric(global(basin_trend, 
-                                             sd, na.rm = TRUE)),2)
+                                             sd, na.rm = TRUE)),2)*10
 
     ### calc percent of negative trends
     total_pixels <-as.numeric(global(basin_trend, 
@@ -66,27 +66,26 @@ create_max_mk_table <-function(x, full_trend, sig_trend, names){
     percent_sig_trend <-round((sig_pixels/total_pixels)*100,1) # calculate percentage
     
     # rough format names
-    name_raw <-print(basename(x))
+    name_raw <-basename(x)
     name <-gsub(".gpkg","",name_raw)
-
+    print(name)
+    
     # bind values together
     vals <-c(name,basin_trend_mean,basin_trend_sd, percent_neg_trend, percent_sig_trend)
    
-     # vals
+    # vals
     vals_w_header_v1 <-as.data.frame(rbind(header,vals), row.names = FALSE)
     vals_w_header <-janitor::row_to_names(vals_w_header_v1, row_number = 1)
-    vals_w_header
     return(vals_w_header)
 }
 
 # test function
-mk_stats_list_basin <-lapply(snsr_basin_paths, function(x) create_max_mk_table(x,
+mk_stats_list_basin <-lapply(snsr_basin_paths, function(x) create_max_dowy_mk_table(x,
                                                                                full_trend = max_trend, 
                                                                                sig_trend = max_sig_trend, 
                                                                                names = names))
-mk_stats_list_basin[[6]]
-
+# create df
 mk_results_df <-dplyr::bind_rows(mk_stats_list_basin)
-print(mk_results_df)
-write.csv(mk_results_df, "./csvs/max_mk_results_table_v1.csv", row.names = FALSE)
+write.csv(mk_results_df, "./csvs/max_dowy_mk_results_table_v2.csv", row.names = FALSE)
+system("open ./csvs/max_dowy_mk_results_table_v2.csv")
 
