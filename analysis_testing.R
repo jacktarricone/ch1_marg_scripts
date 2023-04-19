@@ -72,8 +72,16 @@ plot(max_trend_n)
 writeRaster(max_trend_n, "./rasters/mk_results/max_trend_n.tif", overwrite = TRUE)
 
 # mean stats
-global(max_trend_n, mean, na.rm = TRUE)
-global(max_trend_s, mean, na.rm = TRUE)
+mean_n <-round(as.numeric(global(max_trend_n, mean, na.rm = TRUE)), digits = 2)
+mean_s <-round(as.numeric(global(max_trend_s, mean, na.rm = TRUE)), digits = 2)
+sd_n <-round(as.numeric(global(max_trend_n, sd, na.rm = TRUE)), digits = 2)
+sd_s <-round(as.numeric(global(max_trend_s, sd, na.rm = TRUE)), digits = 2)
+cv_n <-(sd_n/mean_n)*100
+cv_s <-(sd_n/mean_s)*100
+
+iqr_n <-round(as.numeric(global(max_trend_n, IQR, na.rm = TRUE)), digits = 2)
+?global
+
 
 hist(max_trend_n, breaks = 100)
 hist(max_trend_s, breaks = 100, col = "red", add = TRUE)

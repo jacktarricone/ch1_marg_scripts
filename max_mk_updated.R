@@ -11,7 +11,7 @@ stack <-rast(rast_list)
 stack
 
 # convert all values below 10 to NA
-stack_v2 <-subst(stack, c(0:25.4), NA)
+stack_v2 <-subst(stack, 0:25.4, NA)
 plot(stack_v2[[31]])
 
 # calculate number of non na obs per pixel
@@ -20,15 +20,13 @@ n_obs_v2 <-subst(n_obs, 0, NA)
 plot(n_obs_v2)
 writeRaster(n_obs_v2, "./rasters/mk_results/max_n_obs.tif")
 
-# # convert all values below 10 to NA
-# masking_value <-subst(n_obs_v2, c(0:25.4), NA)
-# plot(masking_value)
+# convert all values below 10 to NA
+masking_value <-subst(n_obs_v2, 0:10, NA)
+plot(masking_value)
 
 # if there are less than 10 observations per pixel, make NA
-stack_v2 <-mask(stack, masking_value, maskvalues = NA)
-stack_v2
-
-hist(stack_v2[[26]], breaks = 100)
+stack_v3 <-mask(stack_v2, masking_value, maskvalues = NA)
+stack_v3
 
 ###### mk test, trend.slope is full stats, 2 is just p-val and slope stats
 trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,  
@@ -52,7 +50,7 @@ trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,
 }
 
 # run mk test
-mk_results <-app(stack_v2, fun = trend.slope2, cores = 14)
+mk_results <-app(stack_v3, fun = trend.slope2, cores = 14)
 mk_results
 
 # pull out results
@@ -67,9 +65,9 @@ values(sig_p_val)[values(sig_p_val) > .05] <-NA
 sig_slope <-mask(slope, sig_p_val)
 
 # quick test plots
-plot(slope)
 plot(p_val)
 plot(sig_p_val)
+plot(slope)
 
 # save
 writeRaster(p_val,"./rasters/mk_results/max_p_val.tif")
