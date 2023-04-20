@@ -108,16 +108,9 @@ trend_scale <-c(rev(brewer.pal(9, "Reds")), "white" , brewer.pal(9, "Blues"))
 trend_plot <-ggplot(trend_df) +
        geom_tile(mapping = aes(x,y, fill = days_decade), alpha = 1) +
        geom_tile(data = trend_na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') +
-       geom_sf(data = snsr_sf, fill = 'grey95', color = "black", 
-               linewidth = .05, inherit.aes = FALSE, alpha = .2) +
-       geom_sf(data = snsr_basins_sf, 
-               fill = NA, 
-               color = "black", 
-               linewidth = .2, 
-               inherit.aes = FALSE) + 
-       scale_fill_gradientn(colors = trend_scale, 
-                            limits = c(-10,10), 
-                            oob = squish) + 
+       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) +
+       geom_sf(data = snsr_basins_sf, fill = NA, color = "black",  linewidth = .2, inherit.aes = FALSE) + 
+       scale_fill_gradientn(colors = trend_scale, limits = c(-10,10), oob = squish) + 
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
        labs(fill =(expression(Delta~"DOM (days/decade)"))) +
@@ -154,7 +147,7 @@ system("open ./plots/max_dowy_trend_test_v13.png")
 ######################
 ######################
 
-sig_colors <-c("#B2182B", "#2166AC")
+sig_colors <-c("#CB181D", "#08306B")
 
 # plot
 sig_plot <-ggplot(sig_df) +
@@ -178,12 +171,12 @@ sig_plot <-ggplot(sig_df) +
 
 # save
 ggsave(sig_plot,
-       file = "./plots/sig_max_test_v8.png",
+       file = "./plots/sig_max_dowy_sig_v2.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/sig_max_test_v8.png")
+system("open ./plots/sig_max_dowy_sig_v2.png")
 
 
 # cowplot test
@@ -199,10 +192,10 @@ full <-plot_grid(trend_plot,sig_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/max_trend_test_v3.png",
+       file = "./plots/both_max_dowy_v1.png",
        width = 9, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/both_max_trend_test_v3.png")
+system("open ./plots/both_max_dowy_v1.png")
   
