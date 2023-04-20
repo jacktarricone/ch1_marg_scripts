@@ -6,6 +6,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(sf)
 library(cowplot)
+library(scales)
 
 #set working directory
 setwd("~/ch1_margulis")
@@ -65,6 +66,11 @@ trend <-crop(trend_v1, ext(snsr))
 plot(trend)
 hist(trend, breaks = 200)
 
+# make NA rast for plotting
+trend_na_v1 <-subst(trend, NA, -999)
+values(trend_na_v1)[values(trend_na_v1) > -999] = NA
+trend_na <-mask(trend_na_v1, snsr)
+
 # sig trend
 sig_trend_v1 <-rast('./rasters/mk_results/old/max_dowy_sig_slope.tif')
 sig_trend <-crop(sig_trend_v1, ext(snsr))
@@ -78,8 +84,10 @@ hist(sig_trend_plot, breaks = 200)
 
 # convert to df for geom_raster
 trend_df <-as.data.frame(trend, xy = TRUE, cells = TRUE)
+trend_na_df <-as.data.frame(trend_na, xy = TRUE, cells = TRUE)
 trend_df$days_decade <-trend_df$lyr.1*10
 head(trend_df)
+head(trend_na_df$lyr.1)
 
 # sig
 sig_df <-as.data.frame(sig_trend, xy = TRUE, cells = TRUE)
@@ -95,15 +103,21 @@ head(sig_df)
 
 # set scale 
 trend_scale <-c(rev(brewer.pal(9, "Reds")), "white" , brewer.pal(9, "Blues"))
-trend_scale <-brewer.pal(9, 'RdBu')
-library(scales)
 
 # plot
 trend_plot <-ggplot(trend_df) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) +
        geom_tile(mapping = aes(x,y, fill = days_decade), alpha = 1) +
-       geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + 
-       scale_fill_gradientn(colors = trend_scale, limits = c(-10,10), oob = squish) + 
+       geom_tile(data = trend_na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') +
+       geom_sf(data = snsr_sf, fill = 'grey95', color = "black", 
+               linewidth = .05, inherit.aes = FALSE, alpha = .2) +
+       geom_sf(data = snsr_basins_sf, 
+               fill = NA, 
+               color = "black", 
+               linewidth = .2, 
+               inherit.aes = FALSE) + 
+       scale_fill_gradientn(colors = trend_scale, 
+                            limits = c(-10,10), 
+                            oob = squish) + 
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
        labs(fill =(expression(Delta~"DOM (days/decade)"))) +
@@ -126,12 +140,12 @@ trend_plot <-ggplot(trend_df) +
                                     ticks.colour = "black"))
 # save
 ggsave(trend_plot,
-       file = "./plots/max_dowy_trend_test_v11.png",
+       file = "./plots/max_dowy_trend_test_v13.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_dowy_trend_test_v11.png")
+system("open ./plots/max_dowy_trend_test_v13.png")
 
 
 ######################
