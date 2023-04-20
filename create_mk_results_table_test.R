@@ -79,9 +79,9 @@ mk_stats_list_basin <-lapply(snsr_basin_paths, function(x) create_max_mk_table(x
                                                                                full_trend = max_trend, 
                                                                                sig_trend = max_sig_trend, 
                                                                                names = names))
-mk_stats_list_basin[[6]]
 
+# make df
 mk_results_df <-dplyr::bind_rows(mk_stats_list_basin)
 print(mk_results_df)
-write.csv(mk_results_df, "./csvs/max_mk_results_table_v1.csv", row.names = FALSE)
+write.csv(mk_results_df, "./csvs/max_mk_results_table_v2.csv", row.names = FALSE)
 

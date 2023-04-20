@@ -1,8 +1,7 @@
-# maxmk trend analysis
+# max mk trend analysis
 # april 4, 2023
 
 library(terra)
-library(spatialEco)
 
 # read in mwa rasters to stack
 setwd("~/ch1_margulis/")

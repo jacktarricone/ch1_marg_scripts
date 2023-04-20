@@ -60,27 +60,31 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 
 #### read in metrics
 # trend
-trend_v1 <-rast('./rasters/mk_results/max_slope_full.tif')
+trend_v1 <-rast('./rasters/mk_results/max_trend.tif')
 trend <-crop(trend_v1, ext(snsr))
 plot(trend)
 hist(trend, breaks = 200)
 
 # sig trend
-sig_trend_v1 <-rast('./rasters/mk_results/max_sig_slope.tif')
-sig_trend_v2 <-crop(sig_trend_v1, ext(snsr))
-sig_trend <-subst(sig_trend_v2, 0, NA)
-values(sig_trend)[values(sig_trend) < 0] = -1 # covert all sig negative values to -1 for plotting
-values(sig_trend)[values(sig_trend) > 0] = 1 # convert all sig posative values to 1 for plotting
-plot(sig_trend)
-hist(sig_trend, breaks = 200)
+sig_trend_v1 <-rast('./rasters/mk_results/max_sig_trend.tif')
+sig_trend <-crop(sig_trend_v1, ext(snsr))
+sig_trend_plot <-sig_trend
+
+# convert for plotting
+values(sig_trend_plot)[values(sig_trend_plot) < 0] = -1 # covert all sig negative values to -1 for plotting
+values(sig_trend_plot)[values(sig_trend_plot) > 0] = 1 # convert all sig posative values to 1 for plotting
+plot(sig_trend_plot)
+hist(sig_trend_plot, breaks = 200)
 
 # convert to df for geom_raster
 trend_df <-as.data.frame(trend, xy = TRUE, cells = TRUE)
+head(trend_df)
 
 # sig
 sig_df <-as.data.frame(sig_trend, xy = TRUE, cells = TRUE)
-sig_df$cat <-ifelse(sig_df$max_sig_slope == -1, "Decrease", -1)
-sig_df$cat <-ifelse(sig_df$max_sig_slope == 1, "Increase", "Decrease")
+sig_df$cat <-ifelse(sig_df$lyr.1 == -1, "Decrease", -1)
+sig_df$cat <-ifelse(sig_df$lyr.1 == 1, "Increase", "Decrease")
+head(sig_df)
 
 ######################
 ######################
@@ -89,21 +93,17 @@ sig_df$cat <-ifelse(sig_df$max_sig_slope == 1, "Increase", "Decrease")
 ######################
 
 # set scale 
-display.brewer.all()
 trend_scale <-brewer.pal(9, 'RdBu')
-trend_scale
-
-# "#B2182B" "#D6604D" "#F4A582" "#FDDBC7" "#F7F7F7" "#D1E5F0" "#92C5DE" "#4393C3" "#2166AC"
 
 # plot
 trend_plot <-ggplot(trend_df) +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) +
-       geom_tile(mapping = aes(x,y, fill = max_slope_full)) +
+       geom_tile(mapping = aes(x,y, fill = lyr.1)) +
        geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + 
        scale_fill_gradientn(colors = trend_scale, limits = c(-15,15), na.value=trend_scale[1]) + 
        scale_x_continuous(expand = c(0, 0)) +
        scale_y_continuous(expand = c(0, 0)) +
-       labs(fill =(expression(Delta~"Max SWE (mm/yr)")))+
+       labs(fill =(expression(Delta~"Max SWE (cm/decade)")))+
        theme(panel.border = element_rect(color = NA, fill=NA),
              axis.title.y = element_blank(),
              axis.title.x = element_blank(),
@@ -123,12 +123,12 @@ trend_plot <-ggplot(trend_df) +
                                     ticks.colour = "black"))
 # save
 ggsave(trend_plot,
-       file = "./plots/max_trend_test_v8.png",
+       file = "./plots/max_trend_test_v9.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_trend_test_v8.png")
+system("open ./plots/max_trend_test_v9.png")
 
 
 ######################
@@ -161,12 +161,12 @@ sig_plot <-ggplot(sig_df) +
 
 # save
 ggsave(sig_plot,
-       file = "./plots/sig_max_test_v7.png",
+       file = "./plots/sig_max_test_v8.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/sig_max_test_v7.png")
+system("open ./plots/sig_max_test_v8.png")
 
 
 # cowplot test
@@ -182,10 +182,10 @@ full <-plot_grid(trend_plot,sig_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/max_trend_test_v2.png",
+       file = "./plots/max_trend_test_v3.png",
        width = 9, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_trend_test_v2.png")
+system("open ./plots/both_max_trend_test_v3.png")
   
