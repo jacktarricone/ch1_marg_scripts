@@ -43,7 +43,7 @@ max_mean <-app(max_stack, fun = metric_mean, cores=14)
 plot(max_mean)
 
 # save
-writeRaster(max_mean, "./averages/max_mean_f_25mm_27obs.tif")
+writeRaster(max_mean, "./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
 
 
 ####################
@@ -75,7 +75,7 @@ dom_mean <-app(dom_stack, fun = metric_mean, cores=14)
 plot(dom_mean)
 
 # save
-writeRaster(dom_mean, "./averages/dom_mean_f_25mm_27obs.tif")
+writeRaster(dom_mean, "./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
 
 ##############
 ##### mwa ####
