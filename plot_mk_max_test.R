@@ -105,7 +105,7 @@ trend_scale <-c(rev(brewer.pal(9, "Reds")), "white" , brewer.pal(9, "Blues"))
 
 # plot
 trend_plot <-ggplot(trend_df) +
-       geom_tile(mapping = aes(x,y, fill = lyr.1), alpha = 1) +
+       geom_tile(mapping = aes(x,y, fill = lyr.1)) +
        geom_tile(data = trend_na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') +
        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) +
        geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + 

@@ -6,6 +6,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(sf)
 library(cowplot)
+library(scales)
 
 #set working directory
 setwd("~/ch1_margulis")
@@ -68,25 +69,38 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 # max
 max_mm <-rast('./rasters/snow_metric_averages/max_mean.tif')
 max_m_v1 <-max_mm/1000
-max_m <-crop(max_m_v1, ext(snsr))
-hist(max_m, breaks = 200)
+max_m_v2 <-crop(max_m_v1, ext(snsr))
 
-# # sdd
-# sdd_v1 <-rast('./rasters/snow_metric_averages/sdd_mean.tif')
-# sdd <-crop(sdd_v1, ext(snsr))
-# hist(sdd, breaks = 200)
+# convert all values below 10 to NA
+max_n_obs <-rast("./rasters/mk_results/old/max_n_obs.tif")
+max_n_obs_v1 <-crop(max_n_obs, ext(snsr))
+masking_value <-subst(max_n_obs_v1, 0:10, NA)
+
+# mask for obs (same as mk)
+max_m <-mask(max_m_v2, masking_value)
+plot(max_m)
+plot(snsr, add = TRUE)
 
 # max_dowy
-max_dowy_v1 <-rast('./rasters/snow_metric_averages/max_dowy_mean.tif')
-max_dowy <-crop(max_dowy_v1, ext(snsr))
-hist(max_dowy, breaks = 200)
+max_dowy_v1 <-rast('./rasters/snow_metric_averages/max_dowy_mean_v2.tif')
+max_dowy_v2 <-crop(max_dowy_v1, ext(snsr))
+max_dowy <-mask(max_dowy_v2, masking_value)
+plot(max_dowy)
+plot(snsr, add = TRUE)
 
+# create na df
+# make NA rast for plotting
+na_v1 <-subst(max_m, NA, -999)
+values(na_v1)[values(na_v1) > -999] = NA
+na <-mask(na_v1, snsr)
+plot(na)
 
 # convert to df for geom_raster
-mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
+# mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
 max_df <-as.data.frame(max_m, xy = TRUE, cells = TRUE)
-sdd_df <-as.data.frame(sdd, xy = TRUE, cells = TRUE)
+# sdd_df <-as.data.frame(sdd, xy = TRUE, cells = TRUE)
 max_dowy_df <-as.data.frame(max_dowy, xy = TRUE, cells = TRUE)
+na_df <-as.data.frame(na, xy = TRUE, cells = TRUE)
 
 
 ######################
@@ -95,43 +109,43 @@ max_dowy_df <-as.data.frame(max_dowy, xy = TRUE, cells = TRUE)
 ######################
 ######################
 
-# set scale 
-mwa_scale <-brewer.pal(9, 'YlOrRd')
-
-# plot
-mwa_plot <-ggplot(mwa_df) +
-       geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       geom_tile(mapping = aes(x,y, fill = mean)) +
-       geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-       scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value=min(mwa_scale)) + # max of color bar so it saturates
-       scale_x_continuous(expand = c(0, 0)) +
-       scale_y_continuous(expand = c(0, 0)) +
-       labs(fill = "MWA (cm)") +
-       theme(panel.border = element_rect(color = NA, fill=NA),
-             axis.title.y = element_blank(),
-             axis.title.x = element_blank(),
-             axis.text.x = element_blank(),
-             axis.text.y = element_blank(),
-             axis.ticks = element_blank(),
-             legend.position = "bottom",
-             plot.margin = unit(c(0,0,0,0), "cm"),
-             legend.box.spacing = unit(0, "pt")) +
-       guides(fill = guide_colorbar(direction = "horizontal",
-                                    label.position = 'top',
-                                    title.position ='bottom',
-                                    title.hjust = .5,
-                                    barwidth = 15,
-                                    barheight = 1,
-                                    frame.colour = "black", 
-                                    ticks.colour = "black"))
-# save
-ggsave(mwa_plot,
-       file = "./plots/mwa_test_v15.png",
-       width = 4.5, 
-       height = 8,
-       dpi = 600)
-
-system("open ./plots/mwa_test_v15.png")
+# # set scale 
+# mwa_scale <-brewer.pal(9, 'YlOrRd')
+# 
+# # plot
+# mwa_plot <-ggplot(mwa_df) +
+#        geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+#        geom_tile(mapping = aes(x,y, fill = mean)) +
+#        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+#        scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value=min(mwa_scale)) + # max of color bar so it saturates
+#        scale_x_continuous(expand = c(0, 0)) +
+#        scale_y_continuous(expand = c(0, 0)) +
+#        labs(fill = "MWA (cm)") +
+#        theme(panel.border = element_rect(color = NA, fill=NA),
+#              axis.title.y = element_blank(),
+#              axis.title.x = element_blank(),
+#              axis.text.x = element_blank(),
+#              axis.text.y = element_blank(),
+#              axis.ticks = element_blank(),
+#              legend.position = "bottom",
+#              plot.margin = unit(c(0,0,0,0), "cm"),
+#              legend.box.spacing = unit(0, "pt")) +
+#        guides(fill = guide_colorbar(direction = "horizontal",
+#                                     label.position = 'top',
+#                                     title.position ='bottom',
+#                                     title.hjust = .5,
+#                                     barwidth = 15,
+#                                     barheight = 1,
+#                                     frame.colour = "black", 
+#                                     ticks.colour = "black"))
+# # save
+# ggsave(mwa_plot,
+#        file = "./plots/mwa_test_v15.png",
+#        width = 4.5, 
+#        height = 8,
+#        dpi = 600)
+# 
+# system("open ./plots/mwa_test_v15.png")
 
 
 ######################
@@ -145,10 +159,11 @@ max_scale <-brewer.pal(9, 'YlGnBu')
 
 # plot
 max_plot <-ggplot(max_df) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
   geom_tile(mapping = aes(x,y, fill = mean)) +
-  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), na.value="#08306B") + # max of color bar so it saturates
+  geom_tile(data = na_df, mapping = aes(x,y, fill = mean), color = 'grey50') +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # for gray
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), oob = squish) + # max of color bar so it saturates
   labs(fill = "Max SWE (m)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -171,12 +186,12 @@ max_plot <-ggplot(max_df) +
                                ticks.colour = "black"))
 # save
 ggsave(max_plot,
-       file = "./plots/max_test_v16.png",
+       file = "./plots/max_test_v17.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_test_v16.png")
+system("open ./plots/max_test_v17.png")
 
 ######################
 ######################
@@ -184,46 +199,46 @@ system("open ./plots/max_test_v16.png")
 ######################
 ######################
 
-# set scale 
-display.brewer.all()
-sdd_scale <-brewer.pal(9, 'Spectral')
-min(sdd_scale)
-
-# plot
-sdd_plot <-ggplot(sdd_df) +
-  geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  geom_tile(mapping = aes(x,y, fill = mean)) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = sdd_scale, limits = c(130,365), na.value="gray80") +
-  labs(fill = "SDD (DOWY)") +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  theme(panel.border = element_rect(color = NA, fill=NA),
-        axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "bottom",
-        plot.margin = unit(c(0,0,0,0), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "horizontal",
-                               label.position = 'top',
-                               title.position ='bottom',
-                               title.hjust = .5,
-                               barwidth = 15,
-                               barheight = 1,
-                               frame.colour = "black", 
-                               ticks.colour = "black"))
-
-# save
-ggsave(sdd_plot,
-       file = "./plots/sdd_test_v5.png",
-       width = 4.5, 
-       height = 8,
-       dpi = 600)
-
-system("open ./plots/sdd_test_v5.png")
+# # set scale 
+# display.brewer.all()
+# sdd_scale <-brewer.pal(9, 'Spectral')
+# min(sdd_scale)
+# 
+# # plot
+# sdd_plot <-ggplot(sdd_df) +
+#   geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+#   geom_tile(mapping = aes(x,y, fill = mean)) +
+#   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
+#   scale_fill_gradientn(colors = sdd_scale, limits = c(130,365), na.value="gray80") +
+#   labs(fill = "SDD (DOWY)") +
+#   scale_x_continuous(expand = c(0, 0)) +
+#   scale_y_continuous(expand = c(0, 0)) +
+#   theme(panel.border = element_rect(color = NA, fill=NA),
+#         axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         axis.text.x = element_blank(),
+#         axis.text.y = element_blank(),
+#         axis.ticks = element_blank(),
+#         legend.position = "bottom",
+#         plot.margin = unit(c(0,0,0,0), "cm"),
+#         legend.box.spacing = unit(0, "pt")) +
+#   guides(fill = guide_colorbar(direction = "horizontal",
+#                                label.position = 'top',
+#                                title.position ='bottom',
+#                                title.hjust = .5,
+#                                barwidth = 15,
+#                                barheight = 1,
+#                                frame.colour = "black", 
+#                                ticks.colour = "black"))
+# 
+# # save
+# ggsave(sdd_plot,
+#        file = "./plots/sdd_test_v5.png",
+#        width = 4.5, 
+#        height = 8,
+#        dpi = 600)
+# 
+# system("open ./plots/sdd_test_v5.png")
 
 
 ######################
@@ -234,15 +249,16 @@ system("open ./plots/sdd_test_v5.png")
 
 # set scale 
 display.brewer.all()
-max_dowy_scale <-brewer.pal(9, 'RdYlGn')
+max_dowy_scale <-brewer.pal(9, 'Spectral')
 
 # plot
 max_dowy_plot <-ggplot(max_dowy_df) +
-  geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  geom_tile(mapping = aes(x,y, fill = mean)) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,225), na.value=min(max_dowy_scale)) +
-  labs(fill = "Max SWE DOWY (DOWY)") +
+  geom_tile(mapping = aes(x,y, fill = lyr.1)) +
+  geom_tile(data = na_df, mapping = aes(x,y, fill = mean), color = 'grey50') +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # for gray
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = max_dowy_scale, limits = c(100,225), oob = squish) + # max of color bar so it saturates
+  labs(fill = "DOP (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -265,20 +281,20 @@ max_dowy_plot <-ggplot(max_dowy_df) +
 
 # save
 ggsave(max_dowy_plot,
-       file = "./plots/max_dowy_test_v3.png",
+       file = "./plots/max_dowy_test_v6.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_dowy_test_v3.png")
+system("open ./plots/max_dowy_test_v6.png")
 
 
 
 # cowplot test
-full <-plot_grid(mwa_plot, max_plot, sdd_plot, max_dowy_plot, max_dowy_plot, max_dowy_plot,                 
-                 labels = c("(a)", "(b)", "(c)", "(d)","(e)","(f)"),
-                 ncol = 3,
-                 nrow = 2,
+full <-plot_grid(max_plot, max_dowy_plot, max_dowy_plot, max_plot,                 
+                 labels = c("(a)", "(b)", "(c)", "(d)"),
+                 ncol = 4,
+                 nrow = 1,
                  align = "hv",
                  label_size = 22,
                  vjust =  2,
@@ -288,10 +304,10 @@ full <-plot_grid(mwa_plot, max_plot, sdd_plot, max_dowy_plot, max_dowy_plot, max
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/full_test_v15.png",
-       width = 13.5, 
-       height = 16,
+       file = "./plots/full_test_v16.png",
+       width = 18, 
+       height = 8,
        dpi = 600)
 
-system("open ./plots/full_test_v15.png")
+system("open ./plots/full_test_v16.png")
   

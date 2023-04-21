@@ -16,18 +16,16 @@ metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
 
 dowy_list <-list.files('./rasters/snow_metrics/max_swe_dowy/', pattern = '.tif', full.names = TRUE)
 dowy_stack <-rast(dowy_list)
-
-
-dowy_mean <-app(dowy_stack, fun = metric_mean, cores = 4)
+dowy_mean <-app(dowy_stack, fun = metric_mean, cores = 14)
 plot(dowy_mean)
-hist(dowy_mean, breaks = 200)
-# writeRaster(dowy_mean, "./rasters/snow_metric_averages/max_dowy_mean_v2.tif")
+plot(snsr, add = TRUE)
+# writeRaster(dowy_mean, "./rasters/snow_metric_averages/max_dowy_mean_v2.tif", overwrite = T)
 
 # calculate number of non na obs per pixel
 dowy_n_obs <-app(dowy_stack, function(x) sum(!is.na(x)))
-dowy_n_obs_v2 <-subst(dowy_n_obs, 0, NA)
+dowy_n_obs_v2 <-subst(dowy_n_obs, 0:10, NA)
 plot(dowy_n_obs_v2)
-writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs.tif")
+writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs_10.tif")
 
 ##############
 ##### mwa ####
