@@ -54,7 +54,9 @@ max_stack_v2 <-subst(max_stack_v1, 0:25.4, NA)
 max_stack_n_obs <-app(max_stack_v2, function(x) sum(!is.na(x)))
 
 # max all time series pixels that don't have 90% of obs (29 yeasrs)
-max_stack_n_obs_29 <-subst(dowy_n_obs, 0:29, NA)
+max_stack_n_obs_29 <-subst(max_stack_n_obs, 0:29, NA)
+max_stack_n_obs_25 <-subst(max_stack_n_obs, 0:25, NA)
+plot(max_stack_n_obs_29)
 
 # mask max stack for pixels that only have 29 obs
 max_stack <-mask(max_stack_v2, max_stack_n_obs_29)

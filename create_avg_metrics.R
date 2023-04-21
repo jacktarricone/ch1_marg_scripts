@@ -10,7 +10,9 @@ setwd("~/ch1_margulis")
 # define mean function with na.rm
 metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
 
-
+# bring in shape files
+snsr <-vect("./vectors/snsr_shp.gpkg")
+snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
 
 ##############
 ##### max ####
@@ -27,37 +29,53 @@ max_stack_v2 <-subst(max_stack_v1, 0:25.4, NA)
 max_stack_n_obs <-app(max_stack_v2, function(x) sum(!is.na(x)))
 
 # max all time series pixels that don't have 90% of obs (29 years)
-max_stack_n_obs_29 <-subst(dowy_n_obs, 0:29, NA)
+max_stack_n_obs_27 <-subst(max_stack_n_obs, 0:27, NA)
+
+# plot(max_stack_n_obs_27)
+# plot(snsr, add = TRUE)
+# plot(snsr_basins, add = TRUE)
 
 # mask max stack for pixels that only have 29 obs
-max_stack <-mask(max_stack_v2, max_stack_n_obs_29)
+max_stack <-mask(max_stack_v2, max_stack_n_obs_27)
 
 # calculate average
-max_mean <-app(max, fun = metric_mean, cores=5)
+max_mean <-app(max_stack, fun = metric_mean, cores=14)
 plot(max_mean)
 
 # save
-writeRaster(max_mean, "./averages/max_mean_formatted.tif")
-
-
+writeRaster(max_mean, "./averages/max_mean_f_25mm_27obs.tif")
 
 
 ####################
-#####  max dowy ####
+#####   dom    ####
 ####################
 
-dowy_list <-list.files('./rasters/snow_metrics/max_swe_dowy/', pattern = '.tif', full.names = TRUE)
-dowy_stack <-rast(dowy_list)
-dowy_mean <-app(dowy_stack, fun = metric_mean, cores = 14)
-plot(dowy_mean)
-plot(snsr, add = TRUE)
-# writeRaster(dowy_mean, "./rasters/snow_metric_averages/max_dowy_mean_v2.tif", overwrite = T)
+# load in stack
+dom_paths <-list.files("./rasters/snow_metrics/max_swe_dowy/", pattern = ".tif", full.names = TRUE)
+dom_stack_v1 <-rast(dom_paths)
+
+# make values less than 1 inch (25.4 mm) = NA
+dom_stack_v2 <-mask(dom_stack_v1, max_stack_v2)
 
 # calculate number of non na obs per pixel
-dowy_n_obs <-app(dowy_stack, function(x) sum(!is.na(x)))
-dowy_n_obs_v2 <-subst(dowy_n_obs, 0:10, NA)
-plot(dowy_n_obs_v2)
-writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs_25.tif")
+dom_stack_n_obs <-app(dom_stack_v2, function(x) sum(!is.na(x)))
+
+# dom all time series pixels that don't have 90% of obs (29 years)
+dom_stack_n_obs_27 <-subst(dom_stack_n_obs, 0:27, NA)
+
+# plot(dom_stack_n_obs_27)
+# plot(snsr, add = TRUE)
+# plot(snsr_basins, add = TRUE)
+
+# mask dom stack for pixels that only have 29 obs
+dom_stack <-mask(dom_stack_v2, dom_stack_n_obs_27)
+
+# calculate average
+dom_mean <-app(dom_stack, fun = metric_mean, cores=14)
+plot(dom_mean)
+
+# save
+writeRaster(dom_mean, "./averages/dom_mean_f_25mm_27obs.tif")
 
 ##############
 ##### mwa ####
