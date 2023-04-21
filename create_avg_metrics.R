@@ -10,6 +10,38 @@ setwd("~/ch1_margulis")
 # define mean function with na.rm
 metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
 
+
+
+##############
+##### max ####
+##############
+
+# load in stack
+max_paths <-list.files("./rasters/snow_metrics/max_swe/years/", pattern = ".tif", full.names = TRUE)
+max_stack_v1 <-rast(max_paths)
+
+# make values less than 1 inch (25.4 mm) = NA
+max_stack_v2 <-subst(max_stack_v1, 0:25.4, NA)
+
+# calculate number of non na obs per pixel
+max_stack_n_obs <-app(max_stack_v2, function(x) sum(!is.na(x)))
+
+# max all time series pixels that don't have 90% of obs (29 years)
+max_stack_n_obs_29 <-subst(dowy_n_obs, 0:29, NA)
+
+# mask max stack for pixels that only have 29 obs
+max_stack <-mask(max_stack_v2, max_stack_n_obs_29)
+
+# calculate average
+max_mean <-app(max, fun = metric_mean, cores=5)
+plot(max_mean)
+
+# save
+writeRaster(max_mean, "./averages/max_mean_formatted.tif")
+
+
+
+
 ####################
 #####  max dowy ####
 ####################
@@ -25,7 +57,7 @@ plot(snsr, add = TRUE)
 dowy_n_obs <-app(dowy_stack, function(x) sum(!is.na(x)))
 dowy_n_obs_v2 <-subst(dowy_n_obs, 0:10, NA)
 plot(dowy_n_obs_v2)
-writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs_10.tif")
+writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs_25.tif")
 
 ##############
 ##### mwa ####
