@@ -4,6 +4,11 @@
 library(terra)
 library(tidyr)
 library(ggplot2)
+library(RColorBrewer)
+library(scales)
+library(cowplot)
+library(viridis)
+library(ggpointdensity)
 
 setwd("~/ch1_margulis")
 
@@ -39,47 +44,72 @@ theme_classic <-function(base_size = 11, base_family = "",
 
 theme_set(theme_classic(14))
 
-# bring in elevation
-dem <-rast("./rasters/static/SNSR_DEM.tif")
-dem
-
 # max
-max_paths <-list.files("./rasters/snow_metrics/max_swe/years/", pattern = ".tif", full.names = TRUE)
-max_stack_v1 <-rast(max_paths)
-
-# make values less than 1 inch (25.4 mm) = NA
-max_stack_v2 <-subst(max_stack_v1, 0:25.4, NA)
-
-# calculate number of non na obs per pixel
-max_stack_n_obs <-app(max_stack_v2, function(x) sum(!is.na(x)))
-
-# max all time series pixels that don't have 90% of obs (29 yeasrs)
-max_stack_n_obs_29 <-subst(max_stack_n_obs, 0:29, NA)
-max_stack_n_obs_25 <-subst(max_stack_n_obs, 0:25, NA)
-plot(max_stack_n_obs_29)
-
-# mask max stack for pixels that only have 29 obs
-max_stack <-mask(max_stack_v2, max_stack_n_obs_29)
-
-
-plot(dowy_n_obs_v2)
-writeRaster(dowy_n_obs_v2, "./rasters/snow_metrics/n_obs/max_dowy_n_obs_25.tif")
-max_cm <-max/10
-
+max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
+max_mean
 
 # bring in max dowy mean
-max_dowy_mean <-rast("./rasters/snow_metric_averages/max_dowy_mean_v2.tif")
-max_dowy_mean
+dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
+dom_mean
+
+# bring in elevation
+dem_v1 <-rast("./rasters/static/SNSR_DEM.tif")
+dem <-mask(dem_v1, dom_mean)
+
+#### convert to df
+dem_df <-as.data.frame(dem, xy = TRUE, cells = TRUE)
+colnames(dem_df)[4] <-'ele'
+
+dom_df <-as.data.frame(dom_mean, xy = TRUE, cells = TRUE)
+colnames(dom_df)[4] <-'dom'
+
+max_df <-as.data.frame(max_mean, xy = TRUE, cells = TRUE)
+colnames(max_df)[4] <-'max_swe_mm'
+max_df$max_swe_m <-max_df$max_swe_mm/1000 # create meter col
+head(max_df)
+hist(max_df$max_swe_m)
+
+# create plotting df
+plotting_df_v1 <-dplyr::full_join(dem_df, dom_df)
+plotting_df <-dplyr::full_join(plotting_df_v1, max_df)
+head(plotting_df)
+
+scale <-brewer.pal(9, 'YlGnBu')
+
+# max swe vs elevation
+ggplot(plotting_df, aes(y = ele, x = max_swe_m)) +
+  geom_hex(bins = 30) +
+  scale_fill_gradientn(colors = scale, oob = squish) + 
+  scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "Elevation (m)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        legend.position = c(.75,.75))
+
+test <-ggplot(plotting_df, aes(y = ele, x = max_swe_m)) +
+  geom_pointdensity(adjust = 5, size = 1) +
+  scale_color_viridis(option = "H") +
+  scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "Elevation (m)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        legend.position = c(.75,.75))
+
+# save
+ggsave(test,
+       file = "./plots/test.png",
+       width = 4.5, 
+       height = 4.5,
+       dpi = 600)
+
+system("open ./plots/test.png")
 
 
-# # mwa 
-# mwa <-rast("./rasters/snow_metric_averages/mwa_mean_v2.tif")
-# plot(mwa)
+
 
 # aspect north vs south
 aspect <-rast("./rasters/categorized/aspect_4deg_ns.tif")
-max_trend <-rast("./rasters/mk_results/max_slope_full.tif")
-plot(max_trend)
+
 
 # filter trend data by slope
 max_trend_s_v1 <-mask(max_trend, aspect, maskvalue = 1)

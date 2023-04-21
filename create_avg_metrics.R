@@ -31,12 +31,9 @@ max_stack_n_obs <-app(max_stack_v2, function(x) sum(!is.na(x)))
 # max all time series pixels that don't have 90% of obs (29 years)
 max_stack_n_obs_27 <-subst(max_stack_n_obs, 0:27, NA)
 
-# plot(max_stack_n_obs_27)
-# plot(snsr, add = TRUE)
-# plot(snsr_basins, add = TRUE)
-
 # mask max stack for pixels that only have 29 obs
 max_stack <-mask(max_stack_v2, max_stack_n_obs_27)
+writeRaster(max_stack, "./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
 
 # calculate average
 max_mean <-app(max_stack, fun = metric_mean, cores=14)
