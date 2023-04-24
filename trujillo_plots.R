@@ -54,9 +54,9 @@ dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
 dom_mean
 
 
-# full
-max_full <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
-dom_full <-rast("./rasters/snow_metrics/max_swe_dowy/")
+# # full formatting
+# max_full <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
+# dom_full <-rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
 
 
 #### convert to df
@@ -67,35 +67,99 @@ dom_full <-rast("./rasters/snow_metrics/max_swe_dowy/")
 # max_full_long <-as.data.frame(pivot_longer(max_full_df, cols = 4:35, names_to = "year", values_to = "max_swe_mm"))
 # head(max_full_long)
 # fwrite(max_full_long, "./csvs/max_full_ts_df.csv")
-max_df <-fread("./csvs/max_full_ts_df.csv")
 
-## dom
-dom_full_df <-as.data.frame(dom_full, xy = TRUE, cells = TRUE)
-colnames(dom_full_df)[4:35] <-years
-dom_full_long <-as.data.frame(pivot_longer(dom_full_df, cols = 4:35, names_to = "year", values_to = "dom_dowy"))
-head(dom_full_long)
-fwrite(dom_full_long, "./csvs/dom_full_ts_df.csv")
+# ## dom
+# dom_full_df <-as.data.frame(dom_full, xy = TRUE, cells = TRUE)
+# colnames(dom_full_df)[4:35] <-years
+# dom_full_long <-as.data.frame(pivot_longer(dom_full_df, cols = 4:35, names_to = "year", values_to = "dom_dowy"))
+# head(dom_full_long)
+# fwrite(dom_full_long, "./csvs/dom_full_ts_df.csv")
+
+
+# read back in
+max_df <-fread("./csvs/max_full_ts_df.csv")
+dom_df <-fread("./csvs/dom_full_ts_df.csv")
+
+# make df
+plotting_df <-dplyr::full_join(max_df, dom_df)
+plotting_df$max_swe_m <-plotting_df$max_swe_mm/1000
+head(plotting_df)
+
+# sample 1,000,000 points
+p_sample <-plotting_df[sample(.N, 10000000)]
+hist(p_sample$max_swe_m, breaks = 100)
+hist(plotting_df$max_swe_m, breaks = 100)
 
 # set scale
-scale <-c(brewer.pal(9, 'Spectracl'))
+scale <-c("white",brewer.pal(9, 'Spectral'))
 
+# # max swe vs elevation
+# contour_plot <-ggplot(p_sample, aes(y = dom_dowy, x = max_swe_m)) +
+#   stat_density_2d(geom = "polygon", contour = TRUE,
+#                   aes(fill = after_stat(level)), colour = "black",
+#                   bins = 10, linewidth = .1) +
+#   scale_fill_gradientn(colors = scale) + 
+#   scale_y_continuous(limits = c(120,220), expand = (c(0,.2))) +
+#   scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
+#   labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+#   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+#         legend.position = c(.75,.75))
+# # save
+# ggsave(contour_plot,
+#        file = "./plots/dom_vs_max_contour_v1.png",
+#        width = 4.5, 
+#        height = 4.5,
+#        dpi = 600)
+# 
+# system("open ./plots/dom_vs_max_contour_v1.png")
+
+#### heat map
 # max swe vs elevation
-test <-ggplot(plotting_df, aes(y = ele, x = max_swe_m)) +
-  stat_density_2d(geom = "polygon", contour = TRUE,
-                  aes(fill = after_stat(level)), colour = "black",
-                  bins = 10, linewidth = .1) +
+heat_plot <-ggplot(p_sample, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..ndensity..)) +
   scale_fill_gradientn(colors = scale) + 
-  scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +
-  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
-  labs(x = "Max SWE (m)", y = "Elevation (m)")+
+  scale_y_continuous(limits = c(50,220), expand = (c(0,.2))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,.5)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
-        legend.position = c(.75,.75))
+        legend.position = c(.87,.24))
 # save
-ggsave(test,
-       file = "./plots/test_v9.png",
+ggsave(heat_plot,
+       file = "./plots/dom_vs_max_heat_v7.png",
        width = 4.5, 
        height = 4.5,
        dpi = 600)
+
+system("open ./plots/dom_vs_max_heat_v7.png")
+
+
+# test
+p_2015 <-dplyr::filter(plotting_df, year == "2015")
+scale2 <-c("white",viridis(256, option = "D"))
+
+#### heat map
+# max swe vs elevation
+heat_plot <-ggplot(p_2015, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..ndensity..)) +
+  scale_fill_gradientn(colors = scale2) + 
+  scale_y_continuous(limits = c(50,230), expand = (c(0,.2))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,.5)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        legend.position = c(.87,.24))
+# save
+ggsave(heat_plot,
+       file = "./plots/dom_vs_max_heat_2015_v2.png",
+       width = 4.5, 
+       height = 4.5,
+       dpi = 600)
+
+system("open ./plots/dom_vs_max_heat_2015_v2.png")
+
+
+
+
+
 
 
 
@@ -146,7 +210,7 @@ system("open ./plots/test_v9.png")
 scale2 <-c(brewer.pal(9, 'Spectral'))
 
 # max swe vs elevation
-test <-ggplot(plotting_df, aes(y = dom, x = max_swe_m)) +
+test <-ggplot(plotting_df, aes(y = dom_dowy, x = max_swe_m)) +
   stat_density_2d(geom = "polygon", contour = TRUE,
                   aes(fill = after_stat(level)), colour = "black",
                   bins = 10, linewidth = .05) +
@@ -158,7 +222,7 @@ test <-ggplot(plotting_df, aes(y = dom, x = max_swe_m)) +
         legend.position = c(.85,.75))
 # save
 ggsave(test,
-       file = "./plots/max_dom_v2.png",
+       file = "./plots/max_dom_v1.png",
        width = 4.5, 
        height = 4.5,
        dpi = 600)
