@@ -56,7 +56,7 @@ dom_mean
 
 # full
 max_full <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
-dom_full <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
+dom_full <-rast("./rasters/snow_metrics/max_swe_dowy/")
 
 
 #### convert to df
@@ -67,7 +67,6 @@ dom_full <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
 # max_full_long <-as.data.frame(pivot_longer(max_full_df, cols = 4:35, names_to = "year", values_to = "max_swe_mm"))
 # head(max_full_long)
 # fwrite(max_full_long, "./csvs/max_full_ts_df.csv")
-
 max_df <-fread("./csvs/max_full_ts_df.csv")
 
 ## dom
@@ -75,7 +74,7 @@ dom_full_df <-as.data.frame(dom_full, xy = TRUE, cells = TRUE)
 colnames(dom_full_df)[4:35] <-years
 dom_full_long <-as.data.frame(pivot_longer(dom_full_df, cols = 4:35, names_to = "year", values_to = "dom_dowy"))
 head(dom_full_long)
-fwrite(dom_full_long, "./csvs/max_full_ts_df.csv")
+fwrite(dom_full_long, "./csvs/dom_full_ts_df.csv")
 
 # set scale
 scale <-c(brewer.pal(9, 'Spectracl'))
