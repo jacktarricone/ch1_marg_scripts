@@ -76,9 +76,14 @@ dom_mean
 # fwrite(dom_full_long, "./csvs/dom_full_ts_df.csv")
 
 
-# read back in
-max_df <-fread("./csvs/max_full_ts_df.csv")
-dom_df <-fread("./csvs/dom_full_ts_df.csv")
+### read back in
+# max
+max_df_v1 <-fread("./csvs/max_full_ts_df.csv")
+max_df <-dplyr::filter(max_df_v1, max_swe_mm != "NA")
+
+# dom
+dom_df_v1 <-fread("./csvs/dom_full_ts_df.csv")
+dom_df <-dplyr::filter(dom_df_v1, dom_dowy != "NA")
 
 # make df
 plotting_df <-dplyr::full_join(max_df, dom_df)
@@ -89,6 +94,22 @@ head(plotting_df)
 p_sample <-plotting_df[sample(.N, 10000000)]
 hist(p_sample$max_swe_m, breaks = 100)
 hist(plotting_df$max_swe_m, breaks = 100)
+
+# distrubution stats
+mean(p_sample$max_swe_m)
+mean(plotting_df$max_swe_m)
+
+max(p_sample$max_swe_m)
+max(plotting_df$max_swe_m)
+
+min(p_sample$max_swe_m)
+min(plotting_df$max_swe_m)
+
+sd(p_sample$max_swe_m)
+sd(plotting_df$max_swe_m)
+
+IQR(p_sample$max_swe_m)
+IQR(plotting_df$max_swe_m)
 
 # set scale
 scale <-c("white",brewer.pal(9, 'Spectral'))
@@ -113,29 +134,44 @@ scale <-c("white",brewer.pal(9, 'Spectral'))
 # 
 # system("open ./plots/dom_vs_max_contour_v1.png")
 
+scale2 <-c("white",viridis(30, option = "H"))
+
 #### heat map
 # max swe vs elevation
 heat_plot <-ggplot(p_sample, aes(y = dom_dowy, x = max_swe_m)) +
-  geom_bin2d(bins = 85, aes(fill = ..ndensity..)) +
-  scale_fill_gradientn(colors = scale) + 
-  scale_y_continuous(limits = c(50,220), expand = (c(0,.2))) +
-  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,.5)), expand = (c(0,0))) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale2) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
   labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
-        legend.position = c(.87,.24))
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 17,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
 # save
 ggsave(heat_plot,
-       file = "./plots/dom_vs_max_heat_v7.png",
-       width = 4.5, 
-       height = 4.5,
+       file = "./plots/dom_vs_max_heat_v12.png",
+       width = 6, 
+       height = 5,
        dpi = 600)
 
-system("open ./plots/dom_vs_max_heat_v7.png")
+system("open ./plots/dom_vs_max_heat_v12.png")
+
+
 
 
 # test
 p_2015 <-dplyr::filter(plotting_df, year == "2015")
-scale2 <-c("white",viridis(256, option = "D"))
+scale2 <-c("white",viridis(256, option = "G"))
 
 #### heat map
 # max swe vs elevation

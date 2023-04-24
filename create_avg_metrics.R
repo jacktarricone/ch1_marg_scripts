@@ -68,7 +68,7 @@ dom_stack_n_obs_27 <-subst(dom_stack_n_obs, 0:27, NA)
 
 # mask dom stack for pixels that only have 29 obs
 dom_stack <-mask(dom_stack_v1, max_stack)
-writeRaster(dom_stack, "./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
+# writeRaster(dom_stack, "./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
 
 # calculate average
 dom_mean <-app(dom_stack, fun = metric_mean, cores=14)
