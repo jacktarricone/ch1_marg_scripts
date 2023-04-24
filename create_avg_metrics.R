@@ -33,14 +33,14 @@ max_stack_n_obs_27 <-subst(max_stack_n_obs, 0:27, NA)
 
 # mask max stack for pixels that only have 29 obs
 max_stack <-mask(max_stack_v2, max_stack_n_obs_27)
-writeRaster(max_stack, "./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
+# writeRaster(max_stack, "./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
 
 # calculate average
 max_mean <-app(max_stack, fun = metric_mean, cores=14)
 plot(max_mean)
 
 # save
-writeRaster(max_mean, "./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
+#writeRaster(max_mean, "./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
 
 
 ####################
@@ -66,6 +66,7 @@ dom_stack_n_obs_27 <-subst(dom_stack_n_obs, 0:27, NA)
 
 # mask dom stack for pixels that only have 29 obs
 dom_stack <-mask(dom_stack_v2, dom_stack_n_obs_27)
+
 
 # calculate average
 dom_mean <-app(dom_stack, fun = metric_mean, cores=14)

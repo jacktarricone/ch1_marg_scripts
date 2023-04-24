@@ -9,6 +9,7 @@ library(scales)
 library(cowplot)
 library(viridis)
 library(ggpointdensity)
+library(data.table)
 
 setwd("~/ch1_margulis")
 
@@ -52,6 +53,53 @@ max_mean
 dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
 dom_mean
 
+
+# full
+max_full <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
+dom_full <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
+
+
+#### convert to df
+# ## max swe
+# max_full_df <-as.data.frame(max_full, xy = TRUE, cells = TRUE)
+# years <-1985:2016
+# colnames(max_full_df)[4:35] <-years
+# max_full_long <-as.data.frame(pivot_longer(max_full_df, cols = 4:35, names_to = "year", values_to = "max_swe_mm"))
+# head(max_full_long)
+# fwrite(max_full_long, "./csvs/max_full_ts_df.csv")
+
+max_df <-fread("./csvs/max_full_ts_df.csv")
+
+## dom
+dom_full_df <-as.data.frame(dom_full, xy = TRUE, cells = TRUE)
+colnames(dom_full_df)[4:35] <-years
+dom_full_long <-as.data.frame(pivot_longer(dom_full_df, cols = 4:35, names_to = "year", values_to = "dom_dowy"))
+head(dom_full_long)
+fwrite(dom_full_long, "./csvs/max_full_ts_df.csv")
+
+# set scale
+scale <-c(brewer.pal(9, 'Spectracl'))
+
+# max swe vs elevation
+test <-ggplot(plotting_df, aes(y = ele, x = max_swe_m)) +
+  stat_density_2d(geom = "polygon", contour = TRUE,
+                  aes(fill = after_stat(level)), colour = "black",
+                  bins = 10, linewidth = .1) +
+  scale_fill_gradientn(colors = scale) + 
+  scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "Elevation (m)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        legend.position = c(.75,.75))
+# save
+ggsave(test,
+       file = "./plots/test_v9.png",
+       width = 4.5, 
+       height = 4.5,
+       dpi = 600)
+
+
+
 # bring in elevation
 dem_v1 <-rast("./rasters/static/SNSR_DEM.tif")
 dem <-mask(dem_v1, dom_mean)
@@ -66,43 +114,64 @@ colnames(dom_df)[4] <-'dom'
 max_df <-as.data.frame(max_mean, xy = TRUE, cells = TRUE)
 colnames(max_df)[4] <-'max_swe_mm'
 max_df$max_swe_m <-max_df$max_swe_mm/1000 # create meter col
-head(max_df)
-hist(max_df$max_swe_m)
 
 # create plotting df
 plotting_df_v1 <-dplyr::full_join(dem_df, dom_df)
 plotting_df <-dplyr::full_join(plotting_df_v1, max_df)
 head(plotting_df)
 
-scale <-brewer.pal(9, 'YlGnBu')
+
+scale <-c(brewer.pal(9, 'YlGnBu'))
 
 # max swe vs elevation
-ggplot(plotting_df, aes(y = ele, x = max_swe_m)) +
-  geom_hex(bins = 30) +
-  scale_fill_gradientn(colors = scale, oob = squish) + 
-  scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +
-  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
-  labs(x = "Max SWE (m)", y = "Elevation (m)")+
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
-        legend.position = c(.75,.75))
-
 test <-ggplot(plotting_df, aes(y = ele, x = max_swe_m)) +
-  geom_pointdensity(adjust = 5, size = 1) +
-  scale_color_viridis(option = "H") +
+  stat_density_2d(geom = "polygon", contour = TRUE,
+                  aes(fill = after_stat(level)), colour = "black",
+                  bins = 10, linewidth = .1) +
+  scale_fill_gradientn(colors = scale) + 
   scale_y_continuous(limits = c(1500,4200), breaks = c(seq(1500,4000,500)), expand = (c(0,.2))) +
   scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
   labs(x = "Max SWE (m)", y = "Elevation (m)")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
         legend.position = c(.75,.75))
-
 # save
 ggsave(test,
-       file = "./plots/test.png",
+       file = "./plots/test_v9.png",
        width = 4.5, 
        height = 4.5,
        dpi = 600)
 
-system("open ./plots/test.png")
+system("open ./plots/test_v9.png")
+
+
+scale2 <-c(brewer.pal(9, 'Spectral'))
+
+# max swe vs elevation
+test <-ggplot(plotting_df, aes(y = dom, x = max_swe_m)) +
+  stat_density_2d(geom = "polygon", contour = TRUE,
+                  aes(fill = after_stat(level)), colour = "black",
+                  bins = 10, linewidth = .05) +
+  scale_fill_gradientn(colors = scale2) + 
+  scale_y_continuous(limits = c(120,220), expand = (c(0,.2))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,.5)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        legend.position = c(.85,.75))
+# save
+ggsave(test,
+       file = "./plots/max_dom_v2.png",
+       width = 4.5, 
+       height = 4.5,
+       dpi = 600)
+
+system("open ./plots/max_dom_v2.png")
+
+
+
+
+
+
+
 
 
 
