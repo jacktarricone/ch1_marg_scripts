@@ -4,14 +4,28 @@
 
 library(terra)
 
-setwd("/Users/jacktarricone/ch1_margulis/")
+setwd("~/ch1_margulis")
 
 # bring in dem raster
 dem <-rast("./rasters/static/SNSR_DEM.tif")
 plot(dem)
 hist(dem, breaks = 100)
+dem_max <-as.numeric(global(dem,max,na.rm=T))
 
-# compute metrics
+# bin into 11 elevation categories by 250m
+dem_classes <-matrix(c(1500,2250,1, # 1 = north
+                       2250,3000,2,
+                       3000,dem_max,3), # 2 = south), # 3 = east 
+                       ncol=3, byrow=TRUE)
+
+# classify using matrix
+dem_3z <-classify(dem, rcl = dem_classes)
+plot(dem_3z)
+hist(dem_3z)
+writeRaster(dem_3z, "./rasters/categorized/dem_3z.tif")
+
+
+# compute metricsf
 aspect <-terrain(dem, v = "aspect", neighbors = 8, unit = "degrees")
 slope <-terrain(dem, v = "slope", neighbors = 8, unit = "degrees")
 

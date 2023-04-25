@@ -46,11 +46,47 @@ ncores <-2
 # check list, looks good
 swe_list
 
+mwa_djfm_total_v1 <-function(x, swe_thres = 25.4){
+  
+  # set threshold
+  if (max(x) < swe_thres){
+    return(NA)
+  } else {x}
+  if (length(x) == 365){ # non leap year
+    
+    # trim vector to dec 1 - march 31
+    djfm <-x[61:181]
+    
+    # find difference between values
+    val_diff <-diff(djfm)
+    val_diff
+    
+    # sum all negative values
+    mwa_mm <-abs(sum(val_diff[val_diff<0]))
+    mwa_mm
+    return(mwa_mm)
+  }
+  else{ # leap year
+    # trim vector to dec 1 - march 31
+    djfm <-x[61:182]
+    
+    # find difference between values
+    val_diff <-diff(djfm)
+    val_diff
+    
+    # sum all negative values
+    mwa_mm <-abs(sum(val_diff[val_diff<0]))
+    mwa_mm
+    return(mwa_mm)
+  }
+}
+
+
 # run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list[9], 
+system.time(raster_list <-pbmclapply(swe_list[3:32], 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = mwa, 
+                                                                  snow_metric_function = mwa_djfm_total_v1, 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
