@@ -47,12 +47,137 @@ theme_set(theme_classic(14))
 
 # max
 max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
-max_mean
+max_mean_df <-as.data.frame(max_mean, xy = TRUE, cells = TRUE)
+colnames(max_mean_df)[4] <-"max_swe_mm"
+head(max_mean_df)
 
 # bring in max dowy mean
 dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
-dom_mean
+dom_mean_df <-as.data.frame(dom_mean, xy = TRUE, cells = TRUE)
+colnames(dom_mean_df)[4] <-"dom_dowy"
+head(dom_mean_df)
 
+# aspect
+aspect <-rast("./rasters/categorized/aspect_4deg_ns.tif")
+aspect_df <-as.data.frame(aspect, xy = TRUE, cells = TRUE)
+colnames(aspect_df)[4] <-"dom_dowy"
+
+# join
+mean_df <-dplyr::full_join(max_mean_df, dom_mean_df)
+mean_df$max_swe_m <-mean_df$max_swe_mm/1000
+head(mean_df)
+
+
+# fitlering for same cells
+mean_aspect_df <-subset(mean_df, cell %in% aspect_df$cell)
+aspect_filt <-subset(aspect_df, cell %in% mean_aspect_df$cell)
+
+# bind
+mean_aspect_df_v2 <-dplyr::full_join(mean_aspect_df, aspect_filt)
+mean_aspect_df_v3 <-mean_aspect_df_v2  %>% drop_na()
+head(mean_aspect_df_v3)
+
+# pull out north
+south_df <-subset(mean_aspect_df_v3, aspect == 3)
+north_df <-subset(mean_aspect_df_v3, aspect == 1)
+
+
+scale <-c("white",viridis(30, option = "A", direction = 1))
+
+
+#### heat map
+# dom_max north
+north_plot <-ggplot(north_df, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 20,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+# save
+ggsave(north_plot,
+       file = "./plots/north_dom_vs_max_v1.png",
+       width = 6, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/north_dom_vs_max_v1.png")
+
+
+scale2 <-c("white",viridis(30, option = "D", direction = 1))
+
+# dom_max south
+south_plot <-ggplot(south_df, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale2) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 20,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+# save
+ggsave(south_plot,
+       file = "./plots/south_dom_vs_max_v1.png",
+       width = 6, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/south_dom_vs_max_v1.png")
+
+
+
+#### heat map
+# max swe vs elevation
+heat_plot <-ggplot(mean_df, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 20,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+# save
+ggsave(heat_plot,
+       file = "./plots/dom_vs_max_mean_v8.png",
+       width = 6, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/dom_vs_max_mean_v8.png")
 
 # # full formatting
 # max_full <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
@@ -74,7 +199,6 @@ dom_mean
 # dom_full_long <-as.data.frame(pivot_longer(dom_full_df, cols = 4:35, names_to = "year", values_to = "dom_dowy"))
 # head(dom_full_long)
 # fwrite(dom_full_long, "./csvs/dom_full_ts_df.csv")
-
 
 ### read back in
 # max
@@ -154,46 +278,118 @@ heat_plot <-ggplot(p_sample, aes(y = dom_dowy, x = max_swe_m)) +
                                label.position = 'right',
                                title.hjust = .5,
                                barwidth = 1,
-                               barheight = 17,
+                               barheight = 20,
                                frame.colour = "black", 
                                ticks.colour = "black"))
 # save
 ggsave(heat_plot,
-       file = "./plots/dom_vs_max_heat_v12.png",
+       file = "./plots/dom_vs_max_heat_v13.png",
        width = 6, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/dom_vs_max_heat_v12.png")
-
-
+system("open ./plots/dom_vs_max_heat_v13.png")
 
 
 # test
 p_2015 <-dplyr::filter(plotting_df, year == "2015")
-scale2 <-c("white",viridis(256, option = "G"))
+scale3 <-c("white",viridis(400, option = "H"))
 
 #### heat map
 # max swe vs elevation
-heat_plot <-ggplot(p_2015, aes(y = dom_dowy, x = max_swe_m)) +
-  geom_bin2d(bins = 85, aes(fill = ..ndensity..)) +
-  scale_fill_gradientn(colors = scale2) + 
-  scale_y_continuous(limits = c(50,230), expand = (c(0,.2))) +
-  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,.5)), expand = (c(0,0))) +
+heat_plot_year <-ggplot(p_2015, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale3) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
   labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
-        legend.position = c(.87,.24))
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 20,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
 # save
-ggsave(heat_plot,
-       file = "./plots/dom_vs_max_heat_2015_v2.png",
-       width = 4.5, 
-       height = 4.5,
+ggsave(heat_plot_year,
+       file = "./plots/dom_vs_max_heat_2015_v3.png",
+       width = 6, 
+       height = 5,
        dpi = 600)
 
-system("open ./plots/dom_vs_max_heat_2015_v2.png")
+system("open ./plots/dom_vs_max_heat_2015_v3.png")
 
 
+####### 1993
+p_1993 <-dplyr::filter(plotting_df, year == "1993")
 
+# max swe vs elevation
+heat_plot_year_v2 <-ggplot(p_1993, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale3) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 20,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+# save
+ggsave(heat_plot_year_v2,
+       file = "./plots/dom_vs_max_heat_1993_v3.png",
+       width = 6, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/dom_vs_max_heat_1993_v3.png")
+
+
+####### 1993
+p_1993 <-dplyr::filter(plotting_df, year == "1993")
+
+# max swe vs elevation
+heat_plot_year_v2 <-ggplot(p_1993, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale3) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 20,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+# save
+ggsave(heat_plot_year_v2,
+       file = "./plots/dom_vs_max_heat_1993_v3.png",
+       width = 6, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/dom_vs_max_heat_1993_v3.png")
 
 
 
