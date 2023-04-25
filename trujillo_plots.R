@@ -91,7 +91,7 @@ north_plot <-ggplot(north_df, aes(y = dom_dowy, x = max_swe_m)) +
   geom_bin2d(bins = 85, aes(fill = ..density..)) +
   scale_fill_gradientn(colors = scale) + 
   scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
   labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
         aspect.ratio = 1,
@@ -116,14 +116,14 @@ ggsave(north_plot,
 system("open ./plots/north_dom_vs_max_v1.png")
 
 
-scale2 <-c("white",viridis(30, option = "D", direction = 1))
+scale2 <-c("white",viridis(30, option = "G", direction = 1))
 
 # dom_max south
 south_plot <-ggplot(south_df, aes(y = dom_dowy, x = max_swe_m)) +
   geom_bin2d(bins = 85, aes(fill = ..density..)) +
   scale_fill_gradientn(colors = scale2) + 
   scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
   labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
         aspect.ratio = 1,
@@ -138,24 +138,28 @@ south_plot <-ggplot(south_df, aes(y = dom_dowy, x = max_swe_m)) +
                                barheight = 20,
                                frame.colour = "black", 
                                ticks.colour = "black"))
+
+
 # save
 ggsave(south_plot,
-       file = "./plots/south_dom_vs_max_v1.png",
+       file = "./plots/south_dom_vs_max_v2.png",
        width = 6, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/south_dom_vs_max_v1.png")
+system("open ./plots/south_dom_vs_max_v2.png")
 
 
+##### mean
+scale3 <-c("white",viridis(30, option = "D", direction = 1))
 
 #### heat map
 # max swe vs elevation
 heat_plot <-ggplot(mean_df, aes(y = dom_dowy, x = max_swe_m)) +
   geom_bin2d(bins = 85, aes(fill = ..density..)) +
-  scale_fill_gradientn(colors = scale) + 
+  scale_fill_gradientn(colors = scale3) + 
   scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0, 3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
   labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
         aspect.ratio = 1,
@@ -178,6 +182,27 @@ ggsave(heat_plot,
        dpi = 600)
 
 system("open ./plots/dom_vs_max_mean_v8.png")
+
+
+# cowplot test
+north_south <-plot_grid(heat_plot,north_plot, south_plot,               
+                        labels = c("(a)", "(b)","(c)"),
+                        ncol = 3,
+                        nrow = 1,
+                        align = "h",
+                        label_size = 22,
+                        vjust =  2,
+                        hjust = -.2,
+                        rel_widths = c(1/2, 1/2))
+# test save
+# make tighter together
+ggsave(north_south,
+       file = "./plots/m_n_s_max_dom_v3.png",
+       width = 18, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/m_n_s_max_dom_v3.png")
 
 # # full formatting
 # max_full <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
