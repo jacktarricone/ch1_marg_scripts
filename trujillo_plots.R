@@ -174,6 +174,32 @@ heat_plot <-ggplot(mean_df, aes(y = dom_dowy, x = max_swe_m)) +
                                barheight = 20,
                                frame.colour = "black", 
                                ticks.colour = "black"))
+
+
+scale4 <-c("white",rep("black",30))
+scale5 <-c("white",viridis(30, option = "A", direction = -1))
+
+
+double_plot <-ggplot(mean_df, aes(y = dom_dowy, x = max_swe_m)) +
+  geom_bin2d(bins = 85, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale4) + 
+  scale_y_continuous(limits = c(50,250), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
+  labs(x = "Max SWE (m)", y = "DOM (DOWY)")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 20,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+
 # save
 ggsave(heat_plot,
        file = "./plots/dom_vs_max_mean_v8.png",
