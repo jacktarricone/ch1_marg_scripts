@@ -110,7 +110,7 @@ grey_scale <-rep("grey",30)
 plot_max_dom <-function(df, bins, scale, title){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df_v5, aes(y = dom_dowy, x = max_swe_m), color = 'grey', fill = 'grey', width = .01, height = 1) +
+    geom_tile(data = mean_ez_df_v5, aes(y = dom_dowy, x = max_swe_m), color = 'grey', fill = 'grey', width = .02, height = 1.5) +
     # geom_tile(data = df,  aes(y = dom_dowy, x = max_swe_m), color = 'darkred', alpha = .4) +
     geom_bin2d(data = df, bins = bins, aes(y = dom_dowy, x = max_swe_m, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
@@ -145,39 +145,39 @@ ez1_n_plot <-plot_max_dom(df = ez1_n_df,
                           title = "EZ1_N") 
 # save
 ggsave(ez1_n_plot,
-       file = "./plots/ez1_n_plot_v11.png",
+       file = "./plots/ez1_n_plot_v13.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/ez1_n_plot_v11.png")
+system("open ./plots/ez1_n_plot_v13.png")
 
 # plot
 ez1_s_plot <-plot_max_dom(df = ez1_s_df,
-                          bins = 85,
+                          bins = 100,
                           scale = scale1,
                           title = "EZ1_S") 
 
 # plot
 ez2_n_plot <-plot_max_dom(df = ez2_n_df,
-                          bins = 85,
+                          bins = 100,
                           scale = scale1,
                           title = "EZ2_N") 
 
 ez2_s_plot <-plot_max_dom(df = ez2_s_df,
-                          bins = 85,
+                          bins = 100,
                           scale = scale1,
                           title = "EZ2_S") 
 
 # plot
 ez3_n_plot <-plot_max_dom(df = ez3_n_df,
-                          bins = 85,
+                          bins = 100,
                           scale = scale1,
                           title = "EZ3_N")
 
 
 ez3_s_plot <-plot_max_dom(df = ez3_s_df,
-                          bins = 85,
+                          bins = 100,
                           scale = scale1,
                           title = "EZ3_S") 
 
@@ -194,12 +194,12 @@ dom_max_ez <-plot_grid(ez1_n_plot, ez2_n_plot, ez3_n_plot,
                         rel_widths = c(1/3, 1/3, 1/3))
 # save
 ggsave(dom_max_ez,
-       file = "./plots/dom_max_ez6_v4.png",
+       file = "./plots/dom_max_ez6_v5.png",
        width = 18, 
        height = 10,
        dpi = 600)
 
-system("open ./plots/dom_max_ez6_v4.png")
+system("open ./plots/dom_max_ez6_v5.png")
 
 
 
