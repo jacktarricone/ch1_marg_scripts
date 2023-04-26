@@ -109,3 +109,98 @@ ez2_n_df <-subset(mean_ez_df_v5, ez == 3)
 ez2_s_df <-subset(mean_ez_df_v5, ez == 4)
 ez3_n_df <-subset(mean_ez_df_v5, ez == 5)
 ez3_s_df <-subset(mean_ez_df_v5, ez == 6)
+
+# create plotting function
+plot_max_mwa <-function(df, bins, scale, title){
+  
+  plot <-ggplot() +
+    geom_tile(data = mean_ez_df_v5, aes(y = mwa_djfm_mm, x = max_swe_m), color = 'grey', fill = 'grey', width = .02, height = 5) +
+    geom_bin2d(data = df, bins = bins, aes(y = mwa_djfm_mm, x = max_swe_m, fill = ..density..)) +
+    scale_fill_gradientn(colors = scale) +
+    scale_y_continuous(limits = c(0,500), expand = (c(0,0))) +
+    scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
+    labs(x = "Max SWE (m)", y = "MWA (mm)")+
+    annotate(geom="text", x=1.7, y=460, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+          aspect.ratio = 1,
+          legend.position  = 'right',
+          legend.title = element_blank(),
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(fill = guide_colorbar(direction = "vertical",
+                                 label.position = 'right',
+                                 title.hjust = .5,
+                                 barwidth = 1,
+                                 barheight = 20,
+                                 frame.colour = "black", 
+                                 ticks.colour = "black"))
+  
+  return(plot)
+}
+
+## set color
+scale1 <-c("grey",viridis(30, option = "H", direction = 1))
+
+# plot
+ez1_n_plot <-plot_max_mwa(df = ez1_n_df,
+                          bins = 100,
+                          scale = scale1,
+                          title = "EZ1_N") 
+# save
+ggsave(ez1_n_plot,
+       file = "./plots/mwa_max_ez1_n_plot_v2.png",
+       width = 6,
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/mwa_max_ez1_n_plot_v2.png")
+
+# plot
+ez1_s_plot <-plot_max_mwa(df = ez1_s_df,
+                          bins = 100,
+                          scale = scale1,
+                          title = "EZ1_S") 
+
+# plot
+ez2_n_plot <-plot_max_mwa(df = ez2_n_df,
+                          bins = 100,
+                          scale = scale1,
+                          title = "EZ2_N") 
+
+ez2_s_plot <-plot_max_mwa(df = ez2_s_df,
+                          bins = 100,
+                          scale = scale1,
+                          title = "EZ2_S") 
+
+# plot
+ez3_n_plot <-plot_max_mwa(df = ez3_n_df,
+                          bins = 100,
+                          scale = scale1,
+                          title = "EZ3_N")
+
+
+ez3_s_plot <-plot_max_mwa(df = ez3_s_df,
+                          bins = 100,
+                          scale = scale1,
+                          title = "EZ3_S") 
+
+# cowplot test
+all_six_ez <-plot_grid(ez1_n_plot, ez2_n_plot, ez3_n_plot,
+                       ez1_s_plot, ez2_s_plot, ez3_s_plot, 
+                       labels = c("(a)", "(b)","(c)","(d)","(e)","(f)"),
+                       ncol = 3,
+                       nrow = 2,
+                       align = "hv",
+                       label_size = 22,
+                       vjust =  2,
+                       hjust = -.2,
+                       rel_widths = c(1/3, 1/3, 1/3))
+# save
+ggsave(all_six_ez,
+       file = "./plots/mwa_max_ez6_v1.png",
+       width = 18, 
+       height = 10,
+       dpi = 600)
+
+system("open ./plots/dom_max_ez6_v1.png")
+
