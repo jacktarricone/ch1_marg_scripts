@@ -231,12 +231,12 @@ plot_full <-ggplot() +
 
 # save
 ggsave(plot_full,
-       file = "./plots/mwa_max_mean_v2.png",
+       file = "./plots/mwa_dom_mean_v1.png",
        width = 6, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/mwa_max_mean_v2.png")
+system("open ./plots/mwa_dom_mean_v1.png")
 
 
 

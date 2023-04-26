@@ -7,6 +7,7 @@ library(RColorBrewer)
 library(sf)
 library(cowplot)
 library(scales)
+library(viridis)
 
 #set working directory
 setwd("~/ch1_margulis")
@@ -59,32 +60,21 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 ##### mwa ####
 ##############
 
-# #### read in metrics
-# # mwa
-# mwa_mm <-rast('./rasters/snow_metric_averages/mwa_mean.tif')
-# mwa_cm_v1 <-mwa_mm/10
-# mwa_cm <-crop(mwa_cm_v1, ext(snsr))
-# hist(mwa_cm, breaks = 200)
+#### read in metrics
+# mwa
+mwa_mm <-rast('./rasters/snow_metric_averages/mwa_djfm_v1.tif')
+mwa_cm_v1 <-mwa_mm/10
+mwa_cm <-crop(mwa_cm_v1, ext(snsr))
+hist(mwa_cm, breaks = 200)
 
 # max
-max_mm <-rast('./rasters/snow_metric_averages/max_mean.tif')
+max_mm <-rast('./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif')
 max_m_v1 <-max_mm/1000
-max_m_v2 <-crop(max_m_v1, ext(snsr))
+max_m <-crop(max_m_v1, ext(snsr))
 
-# convert all values below 10 to NA
-max_n_obs <-rast("./rasters/mk_results/old/max_n_obs.tif")
-max_n_obs_v1 <-crop(max_n_obs, ext(snsr))
-masking_value <-subst(max_n_obs_v1, 0:10, NA)
-
-# mask for obs (same as mk)
-max_m <-mask(max_m_v2, masking_value)
-plot(max_m)
-plot(snsr, add = TRUE)
-
-# max_dowy
-max_dowy_v1 <-rast('./rasters/snow_metric_averages/max_dowy_mean_v2.tif')
-max_dowy_v2 <-crop(max_dowy_v1, ext(snsr))
-max_dowy <-mask(max_dowy_v2, masking_value)
+# dom
+max_dowy_v1 <-rast('./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif')
+max_dowy <-crop(max_dowy_v1, ext(snsr))
 plot(max_dowy)
 plot(snsr, add = TRUE)
 
@@ -98,7 +88,7 @@ plot(na)
 # convert to df for geom_raster
 # mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
 max_df <-as.data.frame(max_m, xy = TRUE, cells = TRUE)
-# sdd_df <-as.data.frame(sdd, xy = TRUE, cells = TRUE)
+mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
 max_dowy_df <-as.data.frame(max_dowy, xy = TRUE, cells = TRUE)
 na_df <-as.data.frame(na, xy = TRUE, cells = TRUE)
 
@@ -109,44 +99,44 @@ na_df <-as.data.frame(na, xy = TRUE, cells = TRUE)
 ######################
 ######################
 
-# # set scale 
-# mwa_scale <-brewer.pal(9, 'YlOrRd')
-# 
-# # plot
-# mwa_plot <-ggplot(mwa_df) +
-#        geom_sf(data = snsr_sf, fill = "gray80", color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-#        geom_tile(mapping = aes(x,y, fill = mean)) +
-#        geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # inherit.aes makes this work
-#        scale_fill_gradientn(colors = mwa_scale, limits = c(0,20), na.value=min(mwa_scale)) + # max of color bar so it saturates
-#        scale_x_continuous(expand = c(0, 0)) +
-#        scale_y_continuous(expand = c(0, 0)) +
-#        labs(fill = "MWA (cm)") +
-#        theme(panel.border = element_rect(color = NA, fill=NA),
-#              axis.title.y = element_blank(),
-#              axis.title.x = element_blank(),
-#              axis.text.x = element_blank(),
-#              axis.text.y = element_blank(),
-#              axis.ticks = element_blank(),
-#              legend.position = "bottom",
-#              plot.margin = unit(c(0,0,0,0), "cm"),
-#              legend.box.spacing = unit(0, "pt")) +
-#        guides(fill = guide_colorbar(direction = "horizontal",
-#                                     label.position = 'top',
-#                                     title.position ='bottom',
-#                                     title.hjust = .5,
-#                                     barwidth = 15,
-#                                     barheight = 1,
-#                                     frame.colour = "black", 
-#                                     ticks.colour = "black"))
-# # save
-# ggsave(mwa_plot,
-#        file = "./plots/mwa_test_v15.png",
-#        width = 4.5, 
-#        height = 8,
-#        dpi = 600)
-# 
-# system("open ./plots/mwa_test_v15.png")
+# set scale 
+mwa_scale <-c(viridis(30, option = "E", direction = 1))
 
+# plot
+mwa_plot <-ggplot(mwa_df) +
+  geom_tile(mapping = aes(x,y, fill = lyr.1)) +
+  geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') + # plot nan points as gray
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # 
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = mwa_scale, limits = c(0,50), oob = squish) + # mwa of color bar so it saturates
+  labs(fill = "MWA (cm)") +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme(panel.border = element_rect(color = NA, fill=NA),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 15,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+# save
+ggsave(mwa_plot,
+       file = "./plots/mwa_test_v3.png",
+       width = 4.5, 
+       height = 8,
+       dpi = 600)
+
+system("open ./plots/mwa_test_v3.png")
 
 ######################
 ######################
