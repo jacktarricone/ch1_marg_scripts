@@ -202,5 +202,5 @@ ggsave(all_six_ez,
        height = 10,
        dpi = 600)
 
-system("open ./plots/dom_max_ez6_v1.png")
+system("open ./plots/mwa_max_ez6_v1.png")
 
