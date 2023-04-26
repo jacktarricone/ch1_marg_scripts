@@ -1,4 +1,4 @@
-# mwa vs max
+# mwa vs dom
 # april 6, 2023
 
 library(terra)
@@ -111,16 +111,16 @@ ez3_n_df <-subset(mean_ez_df_v5, ez == 5)
 ez3_s_df <-subset(mean_ez_df_v5, ez == 6)
 
 # create plotting function
-plot_max_mwa <-function(df, bins, scale, title){
+plot_dom_mwa <-function(df, bins, scale, title){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df_v6, aes(y = mwa_djfm_mm, x = max_swe_m), color = 'grey', fill = 'grey', width = .02, height = 5) +
-    geom_bin2d(data = df, bins = bins, aes(y = mwa_djfm_mm, x = max_swe_m, fill = ..density..)) +
+    geom_tile(data = mean_ez_df_v5, aes(y = mwa_djfm_mm, x = dom_dowy), color = 'grey', fill = 'grey', width = 1.5, height = 5) +
+    geom_bin2d(data = df, bins = bins, aes(y = mwa_djfm_mm, x = dom_dowy, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
     scale_y_continuous(limits = c(0,500), expand = (c(0,0))) +
-    scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
-    labs(x = "Max SWE (m)", y = "MWA (mm)")+
-    annotate(geom="text", x=1.7, y=460, label= title, size = 8, fontface = "bold")+
+    scale_x_continuous(limits = c(100,250),expand = (c(0,0))) +
+    labs(x = "DOM (DOWY)", y = "MWA (mm)")+
+    annotate(geom="text", x=220, y=460, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -139,47 +139,47 @@ plot_max_mwa <-function(df, bins, scale, title){
 }
 
 ## set color
-scale1 <-c("grey",viridis(30, option = "H", direction = 1))
+scale1 <-c("grey",viridis(30, option = "D", direction = 1))
 
 # plot
-ez1_n_plot <-plot_max_mwa(df = ez1_n_df,
+ez1_n_plot <-plot_dom_mwa(df = ez1_n_df,
                           bins = 100,
                           scale = scale1,
                           title = "EZ1_N") 
 # save
 ggsave(ez1_n_plot,
-       file = "./plots/mwa_max_ez1_n_plot_v2.png",
+       file = "./plots/mwa_dom_ez1_n_plot_v1.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/mwa_max_ez1_n_plot_v2.png")
+system("open ./plots/mwa_dom_ez1_n_plot_v1.png")
 
 # plot
-ez1_s_plot <-plot_max_mwa(df = ez1_s_df,
+ez1_s_plot <-plot_dom_mwa(df = ez1_s_df,
                           bins = 100,
                           scale = scale1,
                           title = "EZ1_S") 
 
 # plot
-ez2_n_plot <-plot_max_mwa(df = ez2_n_df,
+ez2_n_plot <-plot_dom_mwa(df = ez2_n_df,
                           bins = 100,
                           scale = scale1,
                           title = "EZ2_N") 
 
-ez2_s_plot <-plot_max_mwa(df = ez2_s_df,
+ez2_s_plot <-plot_dom_mwa(df = ez2_s_df,
                           bins = 100,
                           scale = scale1,
                           title = "EZ2_S") 
 
 # plot
-ez3_n_plot <-plot_max_mwa(df = ez3_n_df,
+ez3_n_plot <-plot_dom_mwa(df = ez3_n_df,
                           bins = 100,
                           scale = scale1,
                           title = "EZ3_N")
 
 
-ez3_s_plot <-plot_max_mwa(df = ez3_s_df,
+ez3_s_plot <-plot_dom_mwa(df = ez3_s_df,
                           bins = 100,
                           scale = scale1,
                           title = "EZ3_S") 
@@ -197,23 +197,24 @@ all_six_ez <-plot_grid(ez1_n_plot, ez2_n_plot, ez3_n_plot,
                        rel_widths = c(1/3, 1/3, 1/3))
 # save
 ggsave(all_six_ez,
-       file = "./plots/mwa_max_ez6_v1.png",
+       file = "./plots/mwa_dom_ez6_v2.png",
        width = 18, 
        height = 10,
        dpi = 600)
 
-system("open ./plots/mwa_max_ez6_v1.png")
+system("open ./plots/mwa_dom_ez6_v2.png")
 
+###################### plot mean
 # set scale
-scale2 <-c("white",viridis(30, option = "H", direction = 1))
+scale2 <-c("white",viridis(30, option = "D", direction = 1))
 
 plot_full <-ggplot() +
-  geom_bin2d(data = mean_ez_df_v6, bins = 100, aes(y = mwa_djfm_mm, x = max_swe_m, fill = ..density..)) +
-  scale_fill_gradientn(colors = scale2) +
+  geom_bin2d(data = df, bins = bins, aes(y = mwa_djfm_mm, x = dom_dowy, fill = ..density..)) +
+  scale_fill_gradientn(colors = scale) +
   scale_y_continuous(limits = c(0,500), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
-  labs(x = "Max SWE (m)", y = "MWA (mm)")+
-  annotate(geom="text", x=1.5, y=460, label= "Full SNSR", size = 8, fontface = "bold")+
+  scale_x_continuous(limits = c(100,250),expand = (c(0,0))) +
+  labs(x = "DOM (DOWY)", y = "MWA (mm)")+
+  annotate(geom="text", x=220, y=460, label= "Full SNSR", size = 8, fontface = "bold")+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
         aspect.ratio = 1,
         legend.position  = 'right',
@@ -237,3 +238,6 @@ ggsave(plot_full,
 
 system("open ./plots/mwa_max_mean_v2.png")
 
+
+
+system("open ./plots/mwa_max_ez6_v1.png")
