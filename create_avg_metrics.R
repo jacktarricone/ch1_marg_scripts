@@ -62,10 +62,6 @@ dom_stack_n_obs <-app(dom_stack_v2, function(x) sum(!is.na(x)))
 # dom all time series pixels that don't have 90% of obs (29 years)
 dom_stack_n_obs_27 <-subst(dom_stack_n_obs, 0:27, NA)
 
-# plot(dom_stack_n_obs_27)
-# plot(snsr, add = TRUE)
-# plot(snsr_basins, add = TRUE)
-
 # mask dom stack for pixels that only have 29 obs
 dom_stack <-mask(dom_stack_v1, max_stack)
 # writeRaster(dom_stack, "./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
@@ -81,51 +77,23 @@ writeRaster(dom_mean, "./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif"
 ##### mwa ####
 ##############
 
-mwa_list <-list.files('./rasters/snow_metrics/mwa', pattern = '.tif', full.names = TRUE)
-mwa <-rast(mwa_list)
-mwa
+dom_stack <-rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
 
-# mean
-mwa_mean <-app(mwa, fun = metric_mean, cores=5)
+mwa_list <-list.files('./rasters/snow_metrics/mwa_djfm_total/', pattern = '.tif', full.names = TRUE)
+mwa_stack <-rast(mwa_list)
+mwa_stack
+
+# make values less than 1 inch (25.4 mm) = NA
+mwa_stack_v2 <-mask(mwa_stack, dom_stack)
+plot(mwa_stack_v2[[8]])
+
+# calculate number of non na obs per pixel
+mwa_stack_n_obs <-app(mwa_stack_v2, function(x) sum(!is.na(x)), cores = 14)
+
+# dom all time series pixels that don't have 90% of obs (29 years)
+mwa_stack_n_obs_27 <-subst(mwa_stack_n_obs, 0:27, NA)
+
+# calculate average
+mwa_mean <-app(mwa_stack_v2, fun = metric_mean, cores = 14)
 plot(mwa_mean)
-writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_mean_v2.tif")
-
-##############
-##### max ####
-##############
-
-max_list <-list.files('./rasters/snow_metrics/max', pattern = '.tif', full.names = TRUE)
-max <-rast(max_list)
-
-# mean
-max_mean <-app(max, fun = metric_mean, cores=5)
-plot(max_mean)
-writeRaster(max_mean, "./averages/max_mean_v2.tif")
-
-##############
-##### sdd ####
-##############
-
-sdd_list <-list.files('./sdd/years', pattern = '.tif', full.names = TRUE)
-sdd <-rast(sdd_list)
-
-# mean
-sdd_mean <-app(sdd, fun = "mean", cores=5)
-values(sdd_mean)[values(sdd_mean) == 0] <- NA # change no data to NA
-plot(sdd_mean)
-writeRaster(sdd_mean, "./averages/sdd_mean.tif")
-
-# median
-sdd_med <-app(sdd, fun = 'median', cores=5)
-values(sdd_med)[values(sdd_med) == 0] <- NA # change no data to NA
-plot(sdd_med)
-writeRaster(sdd_med, "./averages/sdd_med.tif")
-
-# compare
-global(sdd_mean, 'mean', na.rm = TRUE)
-global(sdd_med, 'mean', na.rm = TRUE)
-hist(sdd_mean, breaks = 100)
-hist(sdd_med, breaks = 100)
-
-
-
+writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_djfm_v1.tif")

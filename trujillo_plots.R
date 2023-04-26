@@ -1,4 +1,4 @@
-# starting making mean table
+# dom vs max
 # april 6, 2023
 
 library(terra)
@@ -103,15 +103,11 @@ ez2_s_df <-subset(mean_ez_df_v5, ez == 4)
 ez3_n_df <-subset(mean_ez_df_v5, ez == 5)
 ez3_s_df <-subset(mean_ez_df_v5, ez == 6)
 
-# black scale
-grey_scale <-rep("grey",30)
-
 # create plotting function
 plot_max_dom <-function(df, bins, scale, title){
   
   plot <-ggplot() +
     geom_tile(data = mean_ez_df_v5, aes(y = dom_dowy, x = max_swe_m), color = 'grey', fill = 'grey', width = .02, height = 1.5) +
-    # geom_tile(data = df,  aes(y = dom_dowy, x = max_swe_m), color = 'darkred', alpha = .4) +
     geom_bin2d(data = df, bins = bins, aes(y = dom_dowy, x = max_swe_m, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
     scale_y_continuous(limits = c(100,250), expand = (c(0,0))) +
@@ -200,9 +196,6 @@ ggsave(dom_max_ez,
        dpi = 600)
 
 system("open ./plots/dom_max_ez6_v5.png")
-
-
-
 
 
 
