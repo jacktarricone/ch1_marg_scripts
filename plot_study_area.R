@@ -40,7 +40,7 @@ theme_classic <- function(base_size = 11, base_family = "",
 
 theme_set(theme_classic(17))
 
-setwd("~/ch1_margulis/")
+setwd("~/ch1_margulis")
 
 ## bring in SNSR shape file
 # with terra
@@ -63,26 +63,25 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 
 #### read in metrics
 dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
-cc_v1 <-rast("./rasters/nlcd_cc/cc_wNA.tif")
-aspect_nsef <-rast("./rasters/categorized/aspect_thres_4_classes.tif")
-
-# make just north and south
-aspect_ns <-aspect_nsef
-values(aspect_ns)[values(aspect_ns) == 2] = NA
-values(aspect_ns)[values(aspect_ns) == 4] = NA
-aspect_ns
-# writeRaster(aspect_ns, "./rasters/categorized/aspect_4deg_ns.tif")
-plot(aspect_ns)
+cc_v1 <-rast("./rasters/nlcd_cc/cc_w0.tif")
+ez_bins <-rast("./rasters/categorized/dem_ez3_ns.tif")
+plot(ez_bins)
 
 # convert to df for geom_raster
 dem_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
 cc_df <-as.data.frame(cc_v1, xy = TRUE, cells = TRUE)
-aspect_df <-as.data.frame(aspect_ns, xy = TRUE, cells = TRUE)
+ez_df <-as.data.frame(ez_bins, xy = TRUE, cells = TRUE)
+head(ez_df)
 
-# ## aspect north
-aspect_df$cat <-ifelse(aspect_df$aspect == 1, "North", aspect_df$aspect)
-aspect_df$cat <-ifelse(aspect_df$aspect == 3, "South", aspect_df$cat)
-aspect_df
+# make cat variables
+ez_df$cat <-ifelse(ez_df$SNSR_DEM == 1, "EZ1_N", ez_df$SNSR_DEM)
+ez_df$cat <-ifelse(ez_df$SNSR_DEM == 2, "EZ1_S", ez_df$cat)
+ez_df$cat <-ifelse(ez_df$SNSR_DEM == 3, "EZ2_N", ez_df$ca)
+ez_df$cat <-ifelse(ez_df$SNSR_DEM == 4, "EZ2_S", ez_df$cat)
+ez_df$cat <-ifelse(ez_df$SNSR_DEM == 5, "EZ3_N", ez_df$ca)
+ez_df$cat <-ifelse(ez_df$SNSR_DEM == 6, "EZ3_S", ez_df$cat)
+head(ez_df)
+unique(ez_df$cat)
 
 ######################
 ######################
@@ -133,17 +132,16 @@ system("open ./plots/dem_test_v12.png")
 #######################
 
 # set scale 
-display.brewer.all()
-cc_scale <-brewer.pal(9, 'YlGn')
+cc_scale <-c(brewer.pal(9, 'YlGn'))
 
 # plot
 cc_plot <-ggplot(cc_df) +
-  geom_sf(data = snsr_sf, fill = "grey95", color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray 
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray 
   geom_tile(mapping = aes(x,y, fill = nlcd_full)) +
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
   coord_sf(label_graticule = "N") +
   scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
-  scale_fill_gradientn(colors = cc_scale, limits = c(0,80), na.value="#004529") + # max of color bar so it saturates
+  scale_fill_gradientn(colors = cc_scale, limits = c(0,80), oob = squish) + # max of color bar so it saturates
   labs(fill = "Canopy Cover (%)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
         axis.text.x =element_text(color="black"),
@@ -164,52 +162,52 @@ cc_plot <-ggplot(cc_df) +
 
 # save
 ggsave(cc_plot,
-       file = "./plots/cc_test_v8.png",
+       file = "./plots/cc_test_v9.png",
        width = 4.8, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/cc_test_v8.png")
+system("open ./plots/cc_test_v9.png")
 
 #######################
 ######  aspect ########
 #######################
 
-aspect_colors <-c("darkviolet", "darkgreen")
+aspect_colors <-c("palegreen", "palegreen4", "sienna1", "sienna4", "grey70", "grey30")
 
 # plot
-aspect_plot <-ggplot(aspect_df) +
-  geom_sf(data = snsr_sf, fill = 'gray95', color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
-  geom_tile(data = aspect_df, mapping = aes(x,y, fill = cat)) +
-  scale_fill_manual(name = "Binned Aspect",
+ez_plot <-ggplot(ez_df) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
+  geom_tile(data = ez_df, mapping = aes(x,y, fill = cat)) +
+  scale_fill_manual(# name = expression(paste("Zones")),
                     values = aspect_colors, 
-                    breaks = c("North","South")) +
+                    breaks = c("EZ1_N","EZ1_S", "EZ2_N", "EZ2_S","EZ3_N", "EZ3_S")) +
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
   coord_sf(label_graticule = "N") +
   scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
-  labs(fill = "Binned Aspect") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
         axis.title.y = element_blank(),
         axis.title.x = element_blank(),
         axis.text.x = element_text(color="black"),
         axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
         legend.position = "bottom",
+        legend.title = element_blank(),
+        legend.text = element_text(size=14),
         plot.margin = unit(c(0,0,0,0), "cm"),
         legend.box.spacing = unit(0, "pt")) 
 
 # save
-ggsave(aspect_plot,
-       file = "./plots/aspect_plot_v8.png",
+ggsave(ez_plot,
+       file = "./plots/ez_bins_plot_v5.png",
        width = 4.8, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/aspect_plot_v8.png")
+system("open ./plots/ez_bins_plot_v5.png")
 
 
 # cowplot test
-full <-plot_grid(dem_plot, cc_plot, aspect_plot,
+full <-plot_grid(dem_plot, cc_plot, ez_plot,
                  labels = c("(a)", "(b)", "(c)"),
                  ncol = 3, 
                  align = "hv",
@@ -220,10 +218,10 @@ full <-plot_grid(dem_plot, cc_plot, aspect_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/study_area_v6.png",
+       file = "./plots/study_area_v8.png",
        width = 15.5, 
        height = 8.5,
        dpi = 600)
 
-system("open ./plots/study_area_v6.png")
+system("open ./plots/study_area_v8.png")
   
