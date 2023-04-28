@@ -75,15 +75,12 @@ max_m <-crop(max_m_v1, ext(snsr))
 # dom
 max_dowy_v1 <-rast('./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif')
 max_dowy <-crop(max_dowy_v1, ext(snsr))
-plot(max_dowy)
-plot(snsr, add = TRUE)
 
 # create na df
 # make NA rast for plotting
 na_v1 <-subst(max_m, NA, -999)
 values(na_v1)[values(na_v1) > -999] = NA
 na <-mask(na_v1, snsr)
-plot(na)
 
 # convert to df for geom_raster
 # mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
@@ -190,7 +187,6 @@ system("open ./plots/max_test_v17.png")
 ######################
 
 # set scale 
-display.brewer.all()
 max_dowy_scale <-brewer.pal(9, 'Spectral')
 
 # plot
@@ -200,7 +196,7 @@ max_dowy_plot <-ggplot(max_dowy_df) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # for gray
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
   scale_fill_gradientn(colors = max_dowy_scale, limits = c(120,220), oob = squish) + # max of color bar so it saturates
-  labs(fill = "DOP (DOWY)") +
+  labs(fill = "DOM (DOWY)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -245,10 +241,10 @@ full <-plot_grid(max_plot, max_dowy_plot, mwa_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/max_dom_mwa_v2.png",
+       file = "./plots/max_dom_mwa_v3.png",
        width = 13.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_dom_mwa_v2.png")
+system("open ./plots/max_dom_mwa_v3.png")
   

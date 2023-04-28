@@ -110,13 +110,13 @@ ez_s_df <-subset(mean_ez_df_v6, ez %in% c(2,4,6))
 plot_dem_vs_mwa <-function(df, bins, scale, title){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df_v6, aes(y = elevation, x = mwa_djfm_mm), color = 'grey', fill = 'grey', width = 1.5, height = 5) +
-    geom_bin2d(data = df, bins = bins, aes(y = elevation, x = mwa_djfm_mm, fill = ..density..)) +
+    geom_tile(data = mean_ez_df_v6, aes(x = elevation, y = mwa_djfm_mm), color = 'grey', fill = 'grey', width = 14, height = 3) +
+    geom_bin2d(data = df, bins = bins, aes(x = elevation, y= mwa_djfm_mm, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
-    scale_y_continuous(limits = c(1500,4300), expand = (c(0,0))) +
-    scale_x_continuous(limits = c(0,400),expand = (c(0,0))) +
-    labs(x = "MWA (mm)", y = "Elevation (m)")+
-    annotate(geom="text", x=280, y=4100, label= title, size = 8, fontface = "bold")+
+    scale_x_continuous(limits = c(1500,4300), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,400),expand = (c(0,0))) +
+    labs(y = "MWA (mm)", x = "Elevation (m)")+
+    annotate(geom="text", y=470, x=3600, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -134,7 +134,7 @@ plot_dem_vs_mwa <-function(df, bins, scale, title){
 }
 
 ## set color
-scale1 <-c("grey",viridis(30, option = "D", direction = 1))
+scale1 <-c("grey",viridis(30, option = "H", direction = 1))
 
 # plot
 ez_n_plot <-plot_dem_vs_mwa(df = ez_n_df,
@@ -143,96 +143,42 @@ ez_n_plot <-plot_dem_vs_mwa(df = ez_n_df,
                              title = "North Facing") 
 # save
 ggsave(ez_n_plot,
-       file = "./plots/mwa_vs_dem_plot_v2.png",
+       file = "./plots/mwa_vs_dem_north_plot_v3.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/mwa_vs_dem_plot_v2.png")
+system("open ./plots/mwa_vs_dem_north_plot_v3.png")
 
 # plot
-ez_s_plot <-plot_dom_mwa(df = ez_s_df,
-                          bins = 80,
-                          scale = scale1,
-                          title = "EZ1_S") 
-
-# plot
-ez2_n_plot <-plot_dom_mwa(df = ez2_n_df,
-                          bins = 100,
-                          scale = scale1,
-                          title = "EZ2_N") 
-
-ez2_s_plot <-plot_dom_mwa(df = ez2_s_df,
-                          bins = 100,
-                          scale = scale1,
-                          title = "EZ2_S") 
-
-# plot
-ez3_n_plot <-plot_dom_mwa(df = ez3_n_df,
-                          bins = 100,
-                          scale = scale1,
-                          title = "EZ3_N")
-
-
-ez3_s_plot <-plot_dom_mwa(df = ez3_s_df,
-                          bins = 100,
-                          scale = scale1,
-                          title = "EZ3_S") 
-
-# cowplot test
-all_six_ez <-plot_grid(ez1_n_plot, ez2_n_plot, ez3_n_plot,
-                       ez1_s_plot, ez2_s_plot, ez3_s_plot, 
-                       labels = c("(a)", "(b)","(c)","(d)","(e)","(f)"),
-                       ncol = 3,
-                       nrow = 2,
-                       align = "hv",
-                       label_size = 22,
-                       vjust =  2,
-                       hjust = -.2,
-                       rel_widths = c(1/3, 1/3, 1/3))
-# save
-ggsave(all_six_ez,
-       file = "./plots/mwa_dom_ez6_v2.png",
-       width = 18, 
-       height = 10,
-       dpi = 600)
-
-system("open ./plots/mwa_dom_ez6_v2.png")
-
-###################### plot mean
-# set scale
-scale2 <-c("white",viridis(30, option = "D", direction = 1))
-
-plot_full <-ggplot() +
-  geom_bin2d(data = df, bins = bins, aes(y = mwa_djfm_mm, x = dom_dowy, fill = ..density..)) +
-  scale_fill_gradientn(colors = scale) +
-  scale_y_continuous(limits = c(0,500), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(100,250),expand = (c(0,0))) +
-  labs(x = "DOM (DOWY)", y = "MWA (mm)")+
-  annotate(geom="text", x=220, y=460, label= "Full SNSR", size = 8, fontface = "bold")+
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
-        aspect.ratio = 1,
-        legend.position  = 'right',
-        legend.title = element_blank(),
-        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "vertical",
-                               label.position = 'right',
-                               title.hjust = .5,
-                               barwidth = 1,
-                               barheight = 20,
-                               frame.colour = "black", 
-                               ticks.colour = "black"))
+ez_s_plot <-plot_dem_vs_mwa(df = ez_s_df,
+                            bins = 80,
+                            scale = scale1,
+                            title = "South Facing") 
 
 # save
-ggsave(plot_full,
-       file = "./plots/mwa_dom_mean_v1.png",
-       width = 6, 
+ggsave(ez_s_plot,
+       file = "./plots/mwa_vs_dem_south_plot_v2.png",
+       width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/mwa_dom_mean_v1.png")
+system("open ./plots/mwa_vs_dem_south_plot_v2.png")
 
+# cowplot test
+n_v_s <-plot_grid(ez_n_plot, ez_s_plot,
+                  labels = c("(a)", "(b)"),
+                  ncol = 2,
+                  align = "hv",
+                  label_size = 22,
+                  vjust =  2,
+                  hjust = -.2,
+                  rel_widths = c(1/2, 1/2))
+# save
+ggsave(n_v_s,
+       file = "./plots/mwa_dem_ns_v2.png",
+       width = 12, 
+       height = 5,
+       dpi = 600)
 
-
-system("open ./plots/mwa_max_ez6_v1.png")
+system("open ./plots/mwa_dem_ns_v2.png")
