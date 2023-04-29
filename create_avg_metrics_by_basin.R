@@ -31,27 +31,20 @@ names_raw <-print(basename(snsr_basin_paths))
 names <-gsub(".gpkg","",names_raw)
 names
 
-
-# make list
-ez_list <-list(ez1_n_df, ez1_s_df, 
-               ez2_n_df, ez2_s_df, 
-               ez3_n_df, ez3_s_df)
 # names
 ez_names <-c("EZ1_N", "EZ1_S", 
              "EZ2_N", "EZ2_S", 
              "EZ3_N", "EZ3_S")
 
-# name list
-names(ez_list) <-ez_names
-names(ez_list[1])
-
-x <-snsr_basin_paths[[9]]
+snsr_paths_test <-snsr_basin_paths[3:4]
+storage_list <-list()
 
 # make fun
-create_avg_table <-function(x, max, dom, mwa, ez){
+for (i in 1:length(snsr_basin_paths)){
     
     # pull out name
-    name_raw <-basename(x)
+    file <-snsr_basin_paths[[i]]
+    name_raw <-basename(file)
     basin_name <-gsub(".gpkg","",name_raw)
     print(basin_name)
 
@@ -60,33 +53,27 @@ create_avg_table <-function(x, max, dom, mwa, ez){
                "Mean MWA (cm)", "SD MWA (cm)")
     
     # load in shape file
-    shp_file <-vect(x)
+    shp_file <-vect(file)
     
     ### crop and mask full shape for basin
     max_full <-crop(mask(max_mean, shp_file),shp_file)
-    plot(max_full)
-    
     dom_full <-crop(mask(dom_mean, shp_file),shp_file)
-    plot(dom_full)
-    
     mwa_full <-crop(mask(mwa_mean, shp_file),shp_file)
-    plot(mwa_full)
-    
     ez_basin <-crop(mask(ez, shp_file),shp_file)
-    plot(ez_basin)
     
-    storage_list <- list() #create an empty list
+    # storage mat
+    output <-matrix(ncol = length(vals), nrow = length(ez_names))
     
-    for (j in 1:6){
+    for (j in 1:length(ez_names)){
       
       # pull out name 
       pz_name <-ez_names[j]
       print(pz_name)
       
       # mask for ex
-      max_mask <-terra::mask(max_full, ez_basin, maskvalue = i, inverse = TRUE)
-      dom_mask <-terra::mask(dom_full, ez_basin, maskvalue = i, inverse = TRUE)
-      mwa_mask <-terra::mask(mwa_full, ez_basin, maskvalue = i, inverse = TRUE)
+      max_mask <-terra::mask(max_full, ez_basin, maskvalue = j, inverse = TRUE)
+      dom_mask <-terra::mask(dom_full, ez_basin, maskvalue = j, inverse = TRUE)
+      mwa_mask <-terra::mask(mwa_full, ez_basin, maskvalue = j, inverse = TRUE)
       
       ### calc metrics
       # max
@@ -104,23 +91,18 @@ create_avg_table <-function(x, max, dom, mwa, ez){
       # bind values together
       vals <-c(basin_name, pz_name,mean_max,sd_max,mean_dom,sd_dom,mean_mwa,sd_mwa)
    
-      # vals
-      output <-matrix(ncol=8, nrow=6) 
-      vals_w_header <-as.data.frame(t(vals))
-      names(vals_w_header)[1:8] <-header
-      output[j,] <-val_w_header
+      # fill mat by row
+      output[j,] <-vals
+      colnames(output)[1:8] <-header
+      output_df <-as.data.frame(output)
     }
+    
+    storage_list[[i]] <-output_df
 }
 
-# test function
-stats_list <-lapply(snsr_basin_paths, function(x) create_avg_table(x,
-                                                                   max = max_mean,
-                                                                   dom = dom_mean,
-                                                                   mwa = mwa_mean,
-                                                                   ez = ez))
 
 # make df
-results_df <-dplyr::bind_rows(stats_list)
+results_df <-dplyr::bind_rows(storage_list)
 print(results_df)
 write.csv(results_df, "./csvs/avg_metric_results_table.csv", row.names = FALSE)
 system("open ./csvs/avg_metric_results_table.csv")
