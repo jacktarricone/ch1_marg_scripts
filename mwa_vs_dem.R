@@ -114,7 +114,7 @@ plot_dem_vs_mwa <-function(df, bins, scale, title){
     geom_bin2d(data = df, bins = bins, aes(x = elevation, y= mwa_djfm_mm, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
     scale_x_continuous(limits = c(1500,4300), expand = (c(0,0))) +
-    scale_y_continuous(limits = c(0,400),expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,500),expand = (c(0,0))) +
     labs(y = "MWA (mm)", x = "Elevation (m)")+
     annotate(geom="text", y=470, x=3600, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
@@ -176,9 +176,9 @@ n_v_s <-plot_grid(ez_n_plot, ez_s_plot,
                   rel_widths = c(1/2, 1/2))
 # save
 ggsave(n_v_s,
-       file = "./plots/mwa_dem_ns_v2.png",
+       file = "./plots/mwa_dem_ns_v3.png",
        width = 12, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/mwa_dem_ns_v2.png")
+system("open ./plots/mwa_dem_ns_v3.png")
