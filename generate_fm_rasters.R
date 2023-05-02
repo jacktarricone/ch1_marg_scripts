@@ -41,7 +41,7 @@ snow_metric_name
 
 # mcapply function 
 # set number of cores to use
-ncores <-2
+ncores <-3
 
 # check list, looks good
 swe_list
@@ -87,7 +87,7 @@ fm_apr1_v1 <-function(x, swe_thres = 25.4){
 }
 
 # run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list[1:2], 
+system.time(raster_list <-pbmclapply(swe_list[3:32], 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
                                                                   snow_metric_function = fm_apr1_v1, 
