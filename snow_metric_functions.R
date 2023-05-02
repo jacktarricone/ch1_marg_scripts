@@ -597,6 +597,46 @@ msl <-function(x, swe_thres){
   return(msl_days)
 }
 
+#######################################
+############      fm_apr1   ###########
+#######################################
+
+fm_apr1 <-function(x, swe_thres){
+  
+  # set threshold
+  if (max(x) < swe_thres){
+    return(NA)
+  } else {x}
+  if (length(x) == 365){ # non leap year
+    
+    # trim vector to dec 1 - march 31
+    ondjfm <-x[1:181]
+    
+    # find difference between values
+    val_diff <-diff(ondjfm)
+    
+    # sum all negative values
+    mwa_mm <-abs(sum(val_diff[val_diff<0]))
+    total_melt_mm <-abs(sum(x[x<0]))
+    fm_percent <-round((mwa_mm/total_melt_mm)*100,1)
+    return(fm_percent)
+  }
+  else{ # leap year
+    # trim vector to dec 1 - march 31
+    ondjfm <-x[1:182]
+    
+    # find difference between values
+    val_diff <-diff(ondjfm)
+    val_diff
+    
+    # sum all negative values
+    mwa_mm <-abs(sum(val_diff[val_diff<0]))
+    total_melt_mm <-abs(sum(x[x<0]))
+    fm_percent <-round((mwa_mm/total_melt_mm)*100,1)
+    return(fm_percent)
+  }
+}
+
 #########################################
 ### function for creating rasters ####
 #########################################

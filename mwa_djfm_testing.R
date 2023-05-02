@@ -1,5 +1,7 @@
 library(ggplot2)
-setwd("~/ch1_margulis/")
+library(dplyr)
+
+setwd("~/ch1_margulis")
 
 #########################
 #########################
@@ -7,8 +9,8 @@ setwd("~/ch1_margulis/")
 #########################
 #########################
 
-snotel_df <-read.csv("./csvs/snotel_df_v2.csv")
-snotel_df <-subset(snotel_df, select=-c(X, network)) # move bad one
+snotel_df <-read.csv("./csvs/snotel_df_v3.csv")
+snotel_df <-subset(snotel_df, select=-c(X)) # move bad one
 head(snotel_df)
 
 #########################
@@ -21,7 +23,7 @@ head(snotel_df)
 snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
 snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
 
-swe_dat <-read.csv("./csvs/snsr_snotel_data/FALLEN_LEAF_swe_2015.csv")
+swe_dat <-read.csv("./csvs/snsr_snotel_data/FALLEN_LEAF_swe_1993.csv")
 # snotel_df <-read.csv("./csvs/snotel_df_v2.csv")
 # ep_03 <-filter(snotel_df, site_name == "echo peak " & waterYear == 2003)
 x <-swe_dat$snsr_swe_mm
@@ -34,265 +36,8 @@ plot(x)
 
 swe_thres <-25.4
 
-melt_rate_50 <-function(x, swe_thres){
-  
-  # define and calc max
-  max_swe <-function(x){
-    
-    # 10 mm (1 cm threshold)  
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      max_swe_mm <-as.numeric(max(x))
-      return(max_swe_mm) }
-  }
-  
-  # calc max
-  max <-max_swe(x)
-  
-  # calc half
-  half_max <-max/2
-  
-  # define and calc max_dowy
-  max_swe_dowy <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe <-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-  
-  max_dowy <-max_swe_dowy(x)
-  
-  # define and calc when half of max swe is gone
-  max_swe_50 <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max <-as.numeric(max(x))
-      
-      # half of max
-      half_max <-max/2
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      half_dowy <-as.numeric(max(which(x > half_max)))
-      return(half_dowy)
-    }
-  }
-  
-  half_max_date <-max_swe_50(x)
-  
-  # subtract for melt date
-  half_msl <-half_max_date-max_dowy
-  
-  # calc melt rate
-  melt_rate_mm <-half_max/half_msl
-  return(melt_rate_mm)
-}
-
-melt_rate_33 <-function(x, swe_thres){
-  
-  # define and calc max
-  max_swe <-function(x){
-    
-    # 10 mm (1 cm threshold)  
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      max_swe_mm <-as.numeric(max(x))
-      return(max_swe_mm) }
-  }
-  
-  # calc max
-  max <-max_swe(x)
-  
-  # calc half
-  two_thirds_max <-max-max*(1/3)
-  one_third_max <-max*(1/3)
-  
-  # define and calc max_dowy
-  max_swe_dowy <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe <-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-  
-  max_dowy <-max_swe_dowy(x)
-  
-  # define and calc when half of max swe is gone
-  max_swe_33 <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max <-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      third_dowy <-as.numeric(max(which(x > two_thirds_max)))
-      return(third_dowy)
-    }
-  }
-  
-  third_max_date <-max_swe_33(x)
-  
-  # subtract for melt date
-  third_msl <-third_max_date-max_dowy
-  
-  # calc melt rate
-  melt_rate_mm <-one_third_max/third_msl
-  return(melt_rate_mm)
-}
-
-melt_rate_25 <-function(x, swe_thres){
-  
-  # define and calc max
-  max_swe <-function(x){
-    
-    # 10 mm (1 cm threshold)  
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      max_swe_mm <-as.numeric(max(x))
-      return(max_swe_mm) }
-  }
-  
-  # calc max
-  max <-max_swe(x)
-  
-  # calc half
-  three_quarter_max <-max-max*(1/4)
-  one_quarter_max <-max*(1/4)
-  
-  # define and calc max_dowy
-  max_swe_dowy <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe <-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-  
-  max_dowy <-max_swe_dowy(x)
-  
-  # define and calc when half of max swe is gone
-  max_swe_25 <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max <-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      third_dowy <-as.numeric(max(which(x > three_quarter_max)))
-      return(third_dowy)
-    }
-  }
-  
-  one_quarter_max_date <-max_swe_25(x)
-  
-  # subtract for melt date
-  quarter_msl <-one_quarter_max_date-max_dowy
-  
-  # calc melt rate
-  melt_rate_mm <-one_quarter_max/quarter_msl
-  return(melt_rate_mm)
-}
-
-
-melt_rate_50(swe_dat$snsr_swe_mm, 25.4)
-melt_rate_33(swe_dat$snsr_swe_mm, 25.4)
-melt_rate_25(swe_dat$snsr_swe_mm, 25.4)
-
-#melt_rate(x, 25.4)
-
-melt_rate_50(swe_dat$snsr_swe_mm, 25.4)
-#melt_rate(css_03$snotel_swe_mm, 25.4)
-
-
-
 ###### mid winter ablation (mm)
-
-mwa_djfm_total <-function(x, swe_thres){
-    
-    # set threshold
-    if (max(x) < swe_thres){
-      return(NA)
-    } else {x}
-    if (length(x) == 365){ # non leap year
-    
-    # trim vector to dec 1 - march 31
-    djfm <-x[61:181]
-        
-    # find difference between values
-    val_diff <-diff(djfm)
-    val_diff
-    
-    # sum all negative values
-    mwa_mm <-abs(sum(val_diff[val_diff<0]))
-    mwa_mm
-    return(mwa_mm)
-    }
-    else{ # leap year
-      # trim vector to dec 1 - march 31
-      djfm <-x[61:182]
-      
-      # find difference between values
-      val_diff <-diff(djfm)
-      val_diff
-      
-      # sum all negative values
-      mwa_mm <-abs(sum(val_diff[val_diff<0]))
-      mwa_mm
-      return(mwa_mm)
-      }
-}
-
-mwa_djfm_days <-function(x, swe_thres){
+fm_apr1 <-function(x, swe_thres){
   
   # set threshold
   if (max(x) < swe_thres){
@@ -300,224 +45,45 @@ mwa_djfm_days <-function(x, swe_thres){
   } else {x}
   if (length(x) == 365){ # non leap year
     
+    # calc cumulative annual melt
+    full_year_val_diff <-diff(x)
+    total_melt_mm <-abs(sum(full_year_val_diff[full_year_val_diff<0]))
+    
     # trim vector to dec 1 - march 31
-    djfm <-x[61:181]
+    ondjfm <-x[1:181]
     
     # find difference between values
-    val_diff <-diff(djfm)
-    val_diff
+    apr1_val_diff <-diff(ondjfm)
+    mwa_mm <-abs(sum(apr1_val_diff[apr1_val_diff<0]))
     
-    # sum all negative values
-    mwa_mm <-abs(sum(val_diff[val_diff<0]))
-    mwa_days <-sum(val_diff <0)
-    return(mwa_days)
+    # caculate fraction of melt in percent and round
+    fm_percent <-round((mwa_mm/total_melt_mm),2)
+    return(fm_percent)
   }
   else{ # leap year
-    # trim vector to dec 1 - march 31
-    djfm <-x[61:182]
-    
-    # find difference between values
-    val_diff <-diff(djfm)
-    val_diff
-    
-    # sum all negative values
-    mwa_mm <-abs(sum(val_diff[val_diff<0]))
-    mwa_days <-as.integer(sum(val_diff <0))
-    return(mwa_days)
-  }
-}
-
-mwa_djfm_rate <-function(x, swe_thres){
-    
-    # set threshold
-    if (max(x) < swe_thres){
-      return(NA)
-    } else {x}
-    if (length(x) == 365){ # non leap year
+    # calc cumulative annual melt
+    full_year_val_diff <-diff(x)
+    total_melt_mm <-abs(sum(full_year_val_diff[full_year_val_diff<0]))
     
     # trim vector to dec 1 - march 31
-    djfm <-x[61:181]
-        
+    ondjfm <-x[1:182]
+    
     # find difference between values
-    val_diff <-diff(djfm)
-    val_diff
+    apr1_val_diff <-diff(ondjfm)
+    mwa_mm <-abs(sum(apr1_val_diff[apr1_val_diff<0]))
     
-    # sum all negative values
-    mwa_mm <-abs(sum(val_diff[val_diff<0]))
-    mwa_days <-sum(val_diff <0)
-    mwa_mm_day <-mwa_mm/mwa_days
-    return(mwa_mm_day)
-    }
-    else{ # leap year
-      # trim vector to dec 1 - march 31
-      djfm <-x[61:182]
-      
-      # find difference between values
-      val_diff <-diff(djfm)
-      val_diff
-      
-      # sum all negative values
-      mwa_mm <-abs(sum(val_diff[val_diff<0]))
-      mwa_days <-sum(val_diff <0)
-      mwa_mm_day <-mwa_mm/mwa_days
-      return(mwa_mm_day)
-      }
+    # caculate fraction of melt in percent and round
+    fm_percent <-round((mwa_mm/total_melt_mm),2)
+    return(fm_percent)
+  }
 }
 
-swe_thres <-25.4
-
-melt_rate_50 <-function(x, swe_thres){
-  
-  # define and calc max
-  max_swe <-function(x){
-    
-    # 10 mm (1 cm threshold)  
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      max_swe_mm <-as.numeric(max(x))
-      return(max_swe_mm) }
-  }
-  
-  # calc max
-  max <-max_swe(x)
-  
-  # calc half
-  half_max <-max/2
-  
-  # define and calc max_dowy
-  max_swe_dowy <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe <-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-  
-  max_dowy <-max_swe_dowy(x)
-  
-  # define and calc when half of max swe is gone
-  max_swe_50 <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max <-as.numeric(max(x))
-      
-      # half of max
-      half_max <-max/2
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      half_dowy <-as.numeric(max(which(x > half_max)))
-      return(half_dowy)
-    }
-  }
-  
-  half_max_date <-max_swe_50(x)
-  
-  # subtract for melt date
-  half_msl <-half_max_date-max_dowy
-  
-  # calc melt rate
-  melt_rate_mm <-half_max/half_msl
-  return(melt_rate_mm)
-}
-
-melt_rate <-function(x, swe_thres){
-  
-  # define and calc max
-  max_swe <-function(x){
-    
-    # 10 mm (1 cm threshold)  
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      max_swe_mm <-as.numeric(max(x))
-      return(max_swe_mm) }
-  }
-  max <-max_swe(x)
-  
-  # sub tract the threhold
-  max_w_thres <-max-swe_thres
-  
-  # define and calc max_dowy
-  max_swe_dowy <-function(x){
-    
-    # set threshold 10 mm
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      # pull out max value
-      max_swe <-as.numeric(max(x))
-      
-      # use which() funciton for position tracking
-      # nested with max() to have last day of max swe
-      dowy <-as.numeric(max(which(x == max_swe)))
-      return(dowy)
-    }
-  }
-  dowy <-max_swe_dowy(x)
-  
-  # define and calc sdd
-  sdd <-function(x){
-    
-    # 10 mm (1 cm)
-    if (max(x) < swe_thres){
-      return(NA)
-    } 
-    else{
-      dowy <-as.numeric(max(which(x > swe_thres)))
-      return(dowy)
-    }
-  }
-  melt_date <-sdd(x)
-  
-  # subtract for melt date
-  msl <-melt_date-dowy
-  
-  # calc melt rate
-  melt_rate_mm <-max_w_thres/msl
-  return(melt_rate_mm)
-}
-
-head(snotel_df)
-
-library(dplyr)
 # calc metric 
-melt_rate_df <-as.data.frame(snotel_df %>%
-                               group_by(site_name, waterYear) %>%
-                               summarise(melt_rate_snotel_0 = melt_rate_50(snotel_swe_mm, swe_thres = 0),
-                                         melt_rate_snsr_0   = melt_rate_50(snsr_swe_mm, swe_thres = 0),
-                                         melt_rate_snotel_25.4 = melt_rate_50(snotel_swe_mm, swe_thres = 25.4),
-                                         melt_rate_snsr_25.4   = melt_rate_50(snsr_swe_mm, swe_thres = 25.4),
-                                         melt_rate_snotel_50.8 = melt_rate_50(snotel_swe_mm, swe_thres = 50.8),
-                                         melt_rate_snsr_50.8   = melt_rate_50(snsr_swe_mm, swe_thres = 50.8)))
+fm_df_v2 <-as.data.frame(snotel_df %>%
+                      group_by(site_name, waterYear) %>%
+                               summarise(fm_apr1_snotel = fm_apr1(snotel_swe_mm, swe_thres = 25.4)))
 
-melt_rate_df[sapply(melt_rate_df, is.infinite)] <- NA
+hist(fm_df_v2$fm_apr1_snotel, breaks = 50)
 
-
-melt_rate_50(x, 25.4)
-melt_rate(x, 25.4)
-
-plot(x)
-
-mwa_djfm_total(x, 25.4)
-mwa_djfm_days(x, 25.4)
-mwa_djfm_rate(x, 25.4)
-
+fallen_2013 <-filter(snotel_df, site_name == "fallen leaf " & waterYear == 2013)
+plot(fallen_2013$snotel_swe_mm)
