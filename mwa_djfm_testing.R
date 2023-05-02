@@ -57,8 +57,8 @@ fm_apr1 <-function(x, swe_thres){
     mwa_mm <-abs(sum(apr1_val_diff[apr1_val_diff<0]))
     
     # caculate fraction of melt in percent and round
-    fm_percent <-round((mwa_mm/total_melt_mm),2)
-    return(fm_percent)
+    fm_frac <-round((mwa_mm/total_melt_mm),2)
+    return(fm_frac)
   }
   else{ # leap year
     # calc cumulative annual melt
@@ -73,8 +73,8 @@ fm_apr1 <-function(x, swe_thres){
     mwa_mm <-abs(sum(apr1_val_diff[apr1_val_diff<0]))
     
     # caculate fraction of melt in percent and round
-    fm_percent <-round((mwa_mm/total_melt_mm),2)
-    return(fm_percent)
+    fm_frac <-round((mwa_mm/total_melt_mm),2)
+    return(fm_frac)
   }
 }
 

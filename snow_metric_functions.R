@@ -609,31 +609,36 @@ fm_apr1 <-function(x, swe_thres){
   } else {x}
   if (length(x) == 365){ # non leap year
     
+    # calc cumulative annual melt
+    full_year_val_diff <-diff(x)
+    total_melt_mm <-abs(sum(full_year_val_diff[full_year_val_diff<0]))
+    
     # trim vector to dec 1 - march 31
     ondjfm <-x[1:181]
     
     # find difference between values
-    val_diff <-diff(ondjfm)
+    apr1_val_diff <-diff(ondjfm)
+    mwa_mm <-abs(sum(apr1_val_diff[apr1_val_diff<0]))
     
-    # sum all negative values
-    mwa_mm <-abs(sum(val_diff[val_diff<0]))
-    total_melt_mm <-abs(sum(x[x<0]))
-    fm_percent <-round((mwa_mm/total_melt_mm)*100,1)
-    return(fm_percent)
+    # caculate fraction of melt in percent and round
+    fm_frac <-round((mwa_mm/total_melt_mm),2)
+    return(fm_frac)
   }
   else{ # leap year
+    # calc cumulative annual melt
+    full_year_val_diff <-diff(x)
+    total_melt_mm <-abs(sum(full_year_val_diff[full_year_val_diff<0]))
+    
     # trim vector to dec 1 - march 31
     ondjfm <-x[1:182]
     
     # find difference between values
-    val_diff <-diff(ondjfm)
-    val_diff
+    apr1_val_diff <-diff(ondjfm)
+    mwa_mm <-abs(sum(apr1_val_diff[apr1_val_diff<0]))
     
-    # sum all negative values
-    mwa_mm <-abs(sum(val_diff[val_diff<0]))
-    total_melt_mm <-abs(sum(x[x<0]))
-    fm_percent <-round((mwa_mm/total_melt_mm)*100,1)
-    return(fm_percent)
+    # caculate fraction of melt in percent and round
+    fm_frac <-round((mwa_mm/total_melt_mm),2)
+    return(fm_frac)
   }
 }
 
