@@ -104,5 +104,5 @@ for (i in 1:length(snsr_basin_paths)){
 # make df
 results_df <-dplyr::bind_rows(storage_list)
 print(results_df)
-write.csv(results_df, "./csvs/avg_metric_results_table.csv", row.names = FALSE)
-system("open ./csvs/avg_metric_results_table.csv")
+write.csv(results_df, "./csvs/avg_metric_results_table_by_basin.csv", row.names = FALSE)
+system("open ./csvs/avg_metric_results_table_by_basin.csv")
