@@ -42,6 +42,25 @@ plot(max_mean)
 # save
 #writeRaster(max_mean, "./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
 
+max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
+
+####################
+####### fm #########
+####################
+
+# load in stack
+fm_paths <-list.files("./rasters/snow_metrics/fm_apr1/", pattern = ".tif", full.names = TRUE)
+fm_stack_v1 <-rast(fm_paths)
+
+# mask with max
+fm_stack_v2 <-mask(fm_stack_v1, max_mean)
+# writeRaster(fm_stack_v2, "./rasters/snow_metrics/fm_apr1/fm_stack_f_25mm_27obs.tif")
+
+# calculate average
+fm_mean <-app(fm_stack_v2, fun = metric_mean, cores = 14)
+plot(fm_mean)
+
+# writeRaster(fm_mean, "./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
 
 ####################
 #####   dom    ####
