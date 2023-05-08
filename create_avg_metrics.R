@@ -116,3 +116,30 @@ mwa_stack_n_obs_27 <-subst(mwa_stack_n_obs, 0:27, NA)
 mwa_mean <-app(mwa_stack_v2, fun = metric_mean, cores = 14)
 plot(mwa_mean)
 writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_djfm_v1.tif")
+
+##############
+##### fm ####
+##############
+
+dom_stack <-rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
+
+fm_list <-list.files('./rasters/snow_metrics/fm_apr1/', pattern = '.tif', full.names = TRUE)
+fm_stack <-rast(fm_list)
+fm_stack
+
+# make values less than 1 inch (25.4 mm) = NA
+fm_stack_v2 <-mask(fm_stack, dom_stack)
+plot(fm_stack_v2[[8]])
+
+# calculate number of non na obs per pixel
+# fm_stack_n_obs <-app(fm_stack_v2, function(x) sum(!is.na(x)), cores = 14)
+
+# dom all time series pixels that don't have 90% of obs (29 years)
+# fm_stack_n_obs_27 <-subst(fm_stack_n_obs, 0:27, NA)
+
+# calculate average
+fm_mean_v1 <-app(fm_stack, fun = metric_mean, cores = 14)
+fm_stack <-mask(fm_stack_v1, dom_stack)
+plot(fm_mean)
+
+writeRaster(fm_mean, "./rasters/snow_metric_averages/fm_djfm_v1.tif")

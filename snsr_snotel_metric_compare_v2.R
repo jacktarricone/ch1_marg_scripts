@@ -162,47 +162,47 @@ system("open ./plots/max_dowy_metric_compare_v6.pdf")
 
 ##########################
 ##########################
-##     mwa_djfm_total   ##
+##     fm   ##
 ##########################
 ##########################
 
 # calc metric 
-mwa_djfm_df <-as.data.frame(swe_df %>%
+fm_df <-as.data.frame(swe_df %>%
                        group_by(site_name, waterYear) %>%
-                       summarise(mwa_djfm_snotel_0 = mwa_djfm_total(snotel_swe_mm, swe_thres = 0),
-                                 mwa_djfm_snsr_0   = mwa_djfm_total(snsr_swe_mm, swe_thres = 0),
-                                 mwa_djfm_snotel_25.4 = mwa_djfm_total(snotel_swe_mm, swe_thres = 25.4),
-                                 mwa_djfm_snsr_25.4   = mwa_djfm_total(snsr_swe_mm, swe_thres = 25.4),
-                                 mwa_djfm_snotel_50.8 = mwa_djfm_total(snotel_swe_mm, swe_thres = 50.8),
-                                 mwa_djfm_snsr_50.8   = mwa_djfm_total(snsr_swe_mm, swe_thres = 50.8)))
+                       summarise(fm_snotel_0 = fm_apr1(snotel_swe_mm, swe_thres = 0),
+                                 fm_snsr_0   = fm_apr1(snsr_swe_mm, swe_thres = 0),
+                                 fm_snotel_25.4 = fm_apr1(snotel_swe_mm, swe_thres = 25.4),
+                                 fm_snsr_25.4   = fm_apr1(snsr_swe_mm, swe_thres = 25.4),
+                                 fm_snotel_50.8 = fm_apr1(snotel_swe_mm, swe_thres = 50.8),
+                                 fm_snsr_50.8   = fm_apr1(snsr_swe_mm, swe_thres = 50.8)))
 
 # plot
-mwa_djfm_25 <-ggplot(mwa_djfm_df, aes(x = mwa_djfm_snotel_25.4, y = mwa_djfm_snsr_25.4)) +
-  geom_pointdensity(adjust = 40, size = 1) +
+fm_25 <-ggplot(fm_df, aes(x = fm_snotel_25.4, y = fm_snsr_25.4)) +
+  geom_pointdensity(adjust = 1, size = 1) +
   scale_color_viridis(option = "H") +
   geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
-  scale_y_continuous(limits = c(0,500),expand = (c(0,5))) +
-  scale_x_continuous(limits = c(0,500),expand = (c(0,5))) +
-  xlab("SNOTEL MWA (mm)") + ylab("SNSR MWA (mm)") +
+  scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,1),expand = (c(0,.02))) +
+  xlab("SNOTEL FM") + ylab("SNSR FM") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
         aspect.ratio = 1,
         legend.position = "none")
 
-plot(mwa_djfm_25)
+plot(fm_25)
 
 # save
-ggsave( "./plots/mwa_djfm_metric_compare_v6.pdf",
-        mwa_djfm_25,
+ggsave( "./plots/fm_metric_compare_v1.pdf",
+        fm_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/mwa_djfm_metric_compare_v6.pdf")
+system("open ./plots/fm_metric_compare_v1.pdf")
 
 
 
 # stack with cow plot
-plot_grid(max_25,max_dowy_25, mwa_djfm_25,
+plot_grid(max_25,max_dowy_25, fm_25,
           labels = c("(a)","(b)","(c)"),
           align = "hv",
           vjust =  2,
@@ -210,13 +210,13 @@ plot_grid(max_25,max_dowy_25, mwa_djfm_25,
           ncol = 3, 
           rel_widths = c(1/3, 1/3, 1/3))
 
-ggsave("./plots/snsr_snotel_metric_compare_v8.pdf",
+ggsave("./plots/snsr_snotel_metric_compare_v10.pdf",
        width = 13.5, 
        height = 4.5,
        units = "in",
        dpi = 500)
 
-system("open ./plots/snsr_snotel_metric_compare_v8.pdf")
+system("open ./plots/snsr_snotel_metric_compare_v10.pdf")
 
 
 #########################################
@@ -245,10 +245,10 @@ gof_func <-function(snsr, snotel, metric_name){
 metric_names <-c("Snow Metric", "R", "R^2", "RMSE", "MAE", "ME", "PB (%)")
 max_stats <-gof_func(max_df$max_snsr_25.4, max_df$max_snotel_25.4, "Max SWE (m)")
 max_dowy_stats <-gof_func(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, "Max SWE (DOWY)")
-mwa_stats <-gof_func(mwa_djfm_df$mwa_djfm_snsr_25.4, mwa_djfm_df$mwa_djfm_snotel_25.4, "MWA (mm)")
+fm_stats <-gof_func(fm_df$fm_snsr_25.4, fm_df$fm_snotel_25.4, "FM")
 
 # make df 
-table <-as.data.frame(rbind(metric_names, max_stats, max_dowy_stats, mwa_stats))
+table <-as.data.frame(rbind(metric_names, max_stats, max_dowy_stats, fm_stats))
 
 # rename cols
 colnames(table)[1:7] <-table[1,]
@@ -256,4 +256,4 @@ table <-table[-1,]
 table
 
 # save
-write.csv(table, "./csvs/snow_metric_error_metric_v3.csv", row.names = FALSE)
+write.csv(table, "./csvs/snow_metric_error_metric_v4.csv", row.names = FALSE)
