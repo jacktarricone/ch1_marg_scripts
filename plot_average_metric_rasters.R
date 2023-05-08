@@ -57,15 +57,13 @@ snsr_basins_v1 <-st_read("./vectors/ca_basins/snsr_all_basins.shp")
 snsr_basins_sf <-st_geometry(snsr_basins_v1)
 
 ##############
-##### mwa ####
+##### fm ####
 ##############
 
 #### read in metrics
-# mwa
-mwa_mm <-rast('./rasters/snow_metric_averages/mwa_djfm_v1.tif')
-mwa_cm_v1 <-mwa_mm/10
-mwa_cm <-crop(mwa_cm_v1, ext(snsr))
-hist(mwa_cm, breaks = 200)
+# fm
+fm_v1 <-rast('./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif')
+fm <-crop(fm_v1, ext(snsr))
 
 # max
 max_mm <-rast('./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif')
@@ -73,8 +71,8 @@ max_m_v1 <-max_mm/1000
 max_m <-crop(max_m_v1, ext(snsr))
 
 # dom
-max_dowy_v1 <-rast('./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif')
-max_dowy <-crop(max_dowy_v1, ext(snsr))
+dom_v1 <-rast('./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif')
+dom <-crop(dom_v1, ext(snsr))
 
 # create na df
 # make NA rast for plotting
@@ -83,30 +81,30 @@ values(na_v1)[values(na_v1) > -999] = NA
 na <-mask(na_v1, snsr)
 
 # convert to df for geom_raster
-# mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
+# fm_df <-as.data.frame(fm_cm, xy = TRUE, cells = TRUE)
 max_df <-as.data.frame(max_m, xy = TRUE, cells = TRUE)
-mwa_df <-as.data.frame(mwa_cm, xy = TRUE, cells = TRUE)
-max_dowy_df <-as.data.frame(max_dowy, xy = TRUE, cells = TRUE)
+fm_df <-as.data.frame(fm, xy = TRUE, cells = TRUE)
+dom_df <-as.data.frame(dom, xy = TRUE, cells = TRUE)
 na_df <-as.data.frame(na, xy = TRUE, cells = TRUE)
 
 
 ######################
 ######################
-######## mwa #########
+######## fm #########
 ######################
 ######################
 
 # set scale 
-mwa_scale <-c(viridis(30, option = "C", direction = 1))
+fm_scale <-c(viridis(30, option = "C", direction = 1))
 
 # plot
-mwa_plot <-ggplot(mwa_df) +
+fm_plot <-ggplot(fm_df) +
   geom_tile(mapping = aes(x,y, fill = lyr.1)) +
   geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') + # plot nan points as gray
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # 
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = mwa_scale, limits = c(0,40), oob = squish) + # mwa of color bar so it saturates
-  labs(fill = "MWA (cm)") +
+  scale_fill_gradientn(colors = fm_scale, limits = c(0,1), oob = squish) + # fm of color bar so it saturates
+  labs(fill = "FM") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -127,19 +125,21 @@ mwa_plot <-ggplot(mwa_df) +
                                frame.colour = "black", 
                                ticks.colour = "black"))
 # save
-ggsave(mwa_plot,
-       file = "./plots/mwa_test_v4.png",
+ggsave(fm_plot,
+       file = "./plots/fm_snsr_v1.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/mwa_test_v4.png")
+system("open ./plots/fm_snsr_v1.png")
+hist(fm, breaks = 100)
 
 ######################
 ######################
 ######## max #########
 ######################
 ######################
+
 
 # set scale 
 max_scale <-brewer.pal(9, 'YlGnBu')
@@ -182,21 +182,26 @@ system("open ./plots/max_test_v17.png")
 
 ######################
 ######################
-##### max_dowy #######
+#####    dom.  #######
 ######################
 ######################
+
+head(dom_df)
+dom_df$apr1_anom <-dom_df$lyr.1-181
+hist(dom_df$apr1_anom, breaks = 100)
 
 # set scale 
-max_dowy_scale <-brewer.pal(9, 'Spectral')
+trend_scale <-c(rev(brewer.pal(9, "Reds")), "white" , brewer.pal(9, "Blues"))
+trend_scale
 
 # plot
-max_dowy_plot <-ggplot(max_dowy_df) +
-  geom_tile(mapping = aes(x,y, fill = lyr.1)) +
+dom_plot <-ggplot(dom_df) +
+  geom_tile(mapping = aes(x,y, fill = apr1_anom)) +
   geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # for gray
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_dowy_scale, limits = c(120,220), oob = squish) + # max of color bar so it saturates
-  labs(fill = "DOM (DOWY)") +
+  scale_fill_gradientn(colors = trend_scale, limits = c(-50,50), oob = squish) + # max of color bar so it saturates
+  labs(fill = "DOM relative to April 1 (days)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -218,18 +223,18 @@ max_dowy_plot <-ggplot(max_dowy_df) +
                                ticks.colour = "black"))
 
 # save
-ggsave(max_dowy_plot,
-       file = "./plots/max_dowy_test_v6.png",
+ggsave(dom_plot,
+       file = "./plots/dom_test_v9.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_dowy_test_v6.png")
+system("open ./plots/dom_test_v9.png")
 
 
 
 # cowplot test
-full <-plot_grid(max_plot, max_dowy_plot, mwa_plot,                 
+full <-plot_grid(max_plot, dom_plot, fm_plot,                 
                  labels = c("(a)", "(b)", "(c)"),
                  ncol = 3,
                  nrow = 1,
@@ -241,10 +246,10 @@ full <-plot_grid(max_plot, max_dowy_plot, mwa_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/max_dom_mwa_v3.png",
+       file = "./plots/max_dom_fm_v1.png",
        width = 13.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_dom_mwa_v3.png")
+system("open ./plots/max_dom_fm_v1.png")
   

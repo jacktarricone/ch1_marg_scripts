@@ -101,9 +101,9 @@ max_25 <-ggplot(data = max_df, mapping = aes(x = max_snotel_25.4, y = max_snsr_2
   geom_pointdensity(adjust = .1, size = 1) +
   geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
   scale_color_viridis(option = "H") +
-  scale_y_continuous(limits = c(0,3),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,3),expand = (c(0,0))) +
-  xlab("SNOTEL Max SWE (m)") + ylab("SNSR Max SWE (m)") +
+  scale_y_continuous(limits = c(0,3),expand = (c(0,.0))) +
+  scale_x_continuous(limits = c(0,3),expand = (c(0,.0))) +
+  xlab("SNOTEL MSWE (m)") + ylab("SNSR MSWE (m)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
         aspect.ratio = 1,
         legend.position = "none")
@@ -111,13 +111,13 @@ max_25 <-ggplot(data = max_df, mapping = aes(x = max_snotel_25.4, y = max_snsr_2
 plot(max_25)
 
 # save
-ggsave( "./plots/max_metric_compare_v7.pdf",
+ggsave( "./plots/max_metric_compare_v8.pdf",
        max_25,
        width = 4.5,
        height = 4.5,
        units = "in")
 
-system("open ./plots/max_metric_compare_v7.pdf")
+system("open ./plots/max_metric_compare_v8.pdf")
 
 
 #########################
@@ -178,7 +178,7 @@ fm_df <-as.data.frame(swe_df %>%
 
 # plot
 fm_25 <-ggplot(fm_df, aes(x = fm_snotel_25.4, y = fm_snsr_25.4)) +
-  geom_pointdensity(adjust = 1, size = 1) +
+  geom_pointdensity(adjust = .05, size = 1) +
   scale_color_viridis(option = "H") +
   geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
   scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
@@ -191,13 +191,13 @@ fm_25 <-ggplot(fm_df, aes(x = fm_snotel_25.4, y = fm_snsr_25.4)) +
 plot(fm_25)
 
 # save
-ggsave( "./plots/fm_metric_compare_v1.pdf",
+ggsave( "./plots/fm_metric_compare_v2.pdf",
         fm_25,
         width = 4.5,
         height = 4.5,
         units = "in")
 
-system("open ./plots/fm_metric_compare_v1.pdf")
+system("open ./plots/fm_metric_compare_v2.pdf")
 
 
 
@@ -210,13 +210,13 @@ plot_grid(max_25,max_dowy_25, fm_25,
           ncol = 3, 
           rel_widths = c(1/3, 1/3, 1/3))
 
-ggsave("./plots/snsr_snotel_metric_compare_v10.pdf",
+ggsave("./plots/snsr_snotel_metric_compare_v11.pdf",
        width = 13.5, 
        height = 4.5,
        units = "in",
        dpi = 500)
 
-system("open ./plots/snsr_snotel_metric_compare_v10.pdf")
+system("open ./plots/snsr_snotel_metric_compare_v11.pdf")
 
 
 #########################################
@@ -230,30 +230,31 @@ gof_func <-function(snsr, snotel, metric_name){
   corr <-round(hydroGOF::rPearson(snsr, snotel, na.rm = TRUE), digits = 2)
   r2 <-round(corr^2, digits = 2)
   rmse <-round(hydroGOF::rmse(snsr, snotel, na.rm = TRUE), digits = 2)
+  nrmse <-round(hydroGOF::nrmse(snsr, snotel, na.rm = TRUE, norm = "maxmin"), digits = 0)
   mae <-round(hydroGOF::mae(snsr, snotel, na.rm = TRUE), digits = 2)
+  nmae <-round(mae/(max(snsr, na.rm = TRUE)-min(snsr, na.rm = TRUE)), digits = 2)
   me <-round(hydroGOF::me(snsr, snotel,na.rm = TRUE), digits = 2)
   pb <-round(hydroGOF::pbias(snsr, snotel, na.rm = TRUE), digits = 2)
   
   # bind
-  row <-c(metric_name,corr,r2,rmse,mae,me,pb)
+  row <-c(metric_name,corr,r2,rmse,nrmse,mae,nmae,me,pb)
   return(row)
 }
 
-
-
 # create rows
-metric_names <-c("Snow Metric", "R", "R^2", "RMSE", "MAE", "ME", "PB (%)")
+metric_names <-c("Snow Metric", "R", "R^2", "RMSE","NRMSE","MAE","NMAE","ME", "PB (%)")
 max_stats <-gof_func(max_df$max_snsr_25.4, max_df$max_snotel_25.4, "Max SWE (m)")
 max_dowy_stats <-gof_func(max_dowy_df$max_dowy_snsr_25.4, max_dowy_df$max_dowy_snotel_25.4, "Max SWE (DOWY)")
 fm_stats <-gof_func(fm_df$fm_snsr_25.4, fm_df$fm_snotel_25.4, "FM")
+fm_stats
 
 # make df 
-table <-as.data.frame(rbind(metric_names, max_stats, max_dowy_stats, fm_stats))
+table <-as.data.frame(rbind(max_stats, max_dowy_stats, fm_stats))
 
 # rename cols
-colnames(table)[1:7] <-table[1,]
-table <-table[-1,]
+colnames(table)[1:9] <-metric_names
+# table <-table[-1,]
 table
 
 # save
-write.csv(table, "./csvs/snow_metric_error_metric_v4.csv", row.names = FALSE)
+write.csv(table, "./csvs/snow_metric_error_metric_v5.csv", row.names = FALSE)

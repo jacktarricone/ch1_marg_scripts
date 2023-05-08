@@ -108,13 +108,13 @@ ez_s_df <-subset(mean_ez_df, ez %in% c(2,4,6))
 plot_dem_vs_fm <-function(df, bins, scale, title){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df, aes(x = elevation, y = frac_melt), color = 'grey', fill = 'grey', width = 22, height = .02) +
+    geom_tile(data = mean_ez_df, aes(x = elevation, y = frac_melt), color = 'grey', fill = 'grey', width = 22, height = .01) +
     geom_bin2d(data = df, bins = bins, aes(x = elevation, y= frac_melt, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
     scale_x_continuous(limits = c(1500,4300), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(y = "DOM (DOWY)", x = "Elevation (m)")+
-    annotate(geom="text", y=.92, x=3600, label= title, size = 8, fontface = "bold")+
+    labs(y = "FM", x = "Elevation (m)")+
+    annotate(geom="text", y=.95, x=3600, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -141,27 +141,27 @@ ez_n_plot <-plot_dem_vs_fm(df = ez_n_df,
                              title = "North Facing") 
 # save
 ggsave(ez_n_plot,
-       file = "./plots/fm_vs_dem_north_plot_v1.png",
+       file = "./plots/fm_vs_dem_north_plot_v2.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/fm_vs_dem_north_plot_v1.png")
+system("open ./plots/fm_vs_dem_north_plot_v2.png")
 
 # plot
-ez_s_plot <-plot_dem_vs_dom(df = ez_s_df,
+ez_s_plot <-plot_dem_vs_fm(df = ez_s_df,
                             bins = 80,
                             scale = scale1,
                             title = "South Facing") 
 
 # save
 ggsave(ez_s_plot,
-       file = "./plots/dom_vs_dem_south_plot_v1.png",
+       file = "./plots/fm_vs_dem_south_plot_v1.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/dom_vs_dem_south_plot_v1.png")
+system("open ./plots/fm_vs_dem_south_plot_v1.png")
 
 # cowplot test
 n_v_s <-plot_grid(ez_n_plot, ez_s_plot,
@@ -174,9 +174,9 @@ n_v_s <-plot_grid(ez_n_plot, ez_s_plot,
                   rel_widths = c(1/2, 1/2))
 # save
 ggsave(n_v_s,
-       file = "./plots/dom_dem_ns_v2.png",
-       width = 11.5, 
+       file = "./plots/fm_dem_ns_v1.png",
+       width = 12, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/dom_dem_ns_v2.png")
+system("open ./plots/fm_dem_ns_v1.png")
