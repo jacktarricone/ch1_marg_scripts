@@ -139,7 +139,8 @@ plot(fm_stack_v2[[8]])
 
 # calculate average
 fm_mean_v1 <-app(fm_stack, fun = metric_mean, cores = 14)
-fm_stack <-mask(fm_stack_v1, dom_stack)
+fm_mean <-mask(fm_mean_v1, dom_stack[[1]])
 plot(fm_mean)
+plot(fm_mean_v1)
 
-writeRaster(fm_mean, "./rasters/snow_metric_averages/fm_djfm_v1.tif")
+writeRaster(fm_mean, "./rasters/snow_metric_averages/fm_mean_v1.tif")
