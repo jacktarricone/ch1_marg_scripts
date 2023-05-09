@@ -257,4 +257,4 @@ colnames(table)[1:9] <-metric_names
 table
 
 # save
-write.csv(table, "./csvs/snow_metric_error_metric_v5.csv", row.names = FALSE)
+write.csv(table, "./csvs/snow_metric_error_metric_v6.csv", row.names = FALSE)
