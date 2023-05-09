@@ -198,12 +198,12 @@ all_six_ez <-plot_grid(ez1_n_plot, ez2_n_plot, ez3_n_plot,
                        rel_widths = c(1/3, 1/3, 1/3))
 # save
 ggsave(all_six_ez,
-       file = "./plots/fm_max_ez6_v2.png",
+       file = "./plots/fm_max_ez6_v3.png",
        width = 18, 
        height = 10,
        dpi = 600)
 
-system("open ./plots/fm_max_ez6_v2.png")
+system("open ./plots/fm_max_ez6_v3.png")
 
 
 
