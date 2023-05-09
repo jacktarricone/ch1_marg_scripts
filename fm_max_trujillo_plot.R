@@ -210,44 +210,205 @@ system("open ./plots/fm_max_ez6_v2.png")
 
 
 
+#################
+### dom vs fm ###
+#################
 
 
+plot_dom_fm <-function(df, bins, scale, title){
+  
+  plot <-ggplot() +
+    geom_tile(data = mean_ez_df, aes(y = frac_melt, x = dom_dowy), color = 'grey', fill = 'grey', width = 150/100, height = 1/100) +
+    geom_bin2d(data = df, bins = bins, aes(y = frac_melt, x = dom_dowy, fill = ..density..)) +
+    scale_fill_gradientn(colors = scale) +
+    scale_y_continuous(limits = c(0,1), expand = (c(0,0))) +
+    scale_x_continuous(limits = c(100,250),breaks = c(seq(100,250,50)), expand = (c(0,0))) +
+    labs(x = "DOM (DOWY)", y = "FM")+
+    annotate(geom="text", y=.95, x=220, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+          aspect.ratio = 1,
+          legend.position  = 'right',
+          legend.title = element_blank(),
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(fill = guide_colorbar(direction = "vertical",
+                                 label.position = 'right',
+                                 title.hjust = .5,
+                                 barwidth = 1,
+                                 barheight = 20,
+                                 frame.colour = "black", 
+                                 ticks.colour = "black"))
+  return(plot)
+}
 
+## set color
+scale1 <-c("grey",viridis(30, option = "C", direction = 1))
 
-
-
-
-
-# set scale
-scale2 <-c("white",viridis(30, option = "H", direction = 1))
-
-plot_full <-ggplot() +
-  geom_bin2d(data = mean_ez_df_v6, bins = 100, aes(y = fm_djfm_mm, x = max_swe_m, fill = ..density..)) +
-  scale_fill_gradientn(colors = scale2) +
-  scale_y_continuous(limits = c(0,500), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0, 2),breaks = c(seq(0,2,1)), expand = (c(0,0))) +
-  labs(x = "Max SWE (m)", y = "fm (mm)")+
-  annotate(geom="text", x=1.5, y=460, label= "Full SNSR", size = 8, fontface = "bold")+
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
-        aspect.ratio = 1,
-        legend.position  = 'right',
-        legend.title = element_blank(),
-        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "vertical",
-                               label.position = 'right',
-                               title.hjust = .5,
-                               barwidth = 1,
-                               barheight = 20,
-                               frame.colour = "black", 
-                               ticks.colour = "black"))
-
+# plot
+dom_ez1_n_plot <-plot_dom_fm(df = ez1_n_df,
+                             bins = 100,
+                             scale = scale1,
+                             title = "EZ1_N") 
 # save
-ggsave(plot_full,
-       file = "./plots/fm_max_mean_v2.png",
-       width = 6, 
+ggsave(dom_ez1_n_plot,
+       file = "./plots/fm_dom_ez1_n_plot_v1.png",
+       width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/fm_max_mean_v2.png")
+system("open ./plots/fm_dom_ez1_n_plot_v1.png")
+
+# plot
+dom_ez1_s_plot <-plot_dom_fm(df = ez1_s_df,
+                         bins = 100,
+                         scale = scale1,
+                         title = "EZ1_S") 
+
+# plot
+dom_ez2_n_plot <-plot_dom_fm(df = ez2_n_df,
+                         bins = 100,
+                         scale = scale1,
+                         title = "EZ2_N") 
+
+dom_ez2_s_plot <-plot_dom_fm(df = ez2_s_df,
+                         bins = 100,
+                         scale = scale1,
+                         title = "EZ2_S") 
+
+# plot
+dom_ez3_n_plot <-plot_dom_fm(df = ez3_n_df,
+                         bins = 100,
+                         scale = scale1,
+                         title = "EZ3_N")
+
+
+dom_ez3_s_plot <-plot_dom_fm(df = ez3_s_df,
+                         bins = 100,
+                         scale = scale1,
+                         title = "EZ3_S") 
+
+# cowplot test
+dom_all_six_ez <-plot_grid(dom_ez1_n_plot, dom_ez2_n_plot, dom_ez3_n_plot,
+                       dom_ez1_s_plot, dom_ez2_s_plot, dom_ez3_s_plot, 
+                       labels = c("(a)", "(b)","(c)","(d)","(e)","(f)"),
+                       ncol = 3,
+                       nrow = 2,
+                       align = "hv",
+                       label_size = 22,
+                       vjust =  2,
+                       hjust = -.2,
+                       rel_widths = c(1/3, 1/3, 1/3))
+# save
+ggsave(dom_all_six_ez,
+       file = "./plots/fm_dom_ez6_v2.png",
+       width = 18, 
+       height = 10,
+       dpi = 600)
+
+system("open ./plots/fm_dom_ez6_v2.png")
+
+
+
+
+
+
+
+
+
+#################
+### dom vs max ###
+#################
+
+plot_dom_max <-function(df, bins, scale, title){
+  
+  plot <-ggplot() +
+    geom_tile(data = mean_ez_df, aes(y = frac_melt, x = dom_dowy), color = 'grey', fill = 'grey', width = 150/100, height = 1/100) +
+    geom_bin2d(data = df, bins = bins, aes(y = frac_melt, x = dom_dowy, fill = ..density..)) +
+    scale_fill_gradientn(colors = scale) +
+    scale_y_continuous(limits = c(0,1), expand = (c(0,0))) +
+    scale_x_continuous(limits = c(100,250),breaks = c(seq(100,250,50)), expand = (c(0,0))) +
+    labs(x = "DOM (DOWY)", y = "max")+
+    annotate(geom="text", y=.95, x=220, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+          aspect.ratio = 1,
+          legend.position  = 'right',
+          legend.title = element_blank(),
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(fill = guide_colorbar(direction = "vertical",
+                                 label.position = 'right',
+                                 title.hjust = .5,
+                                 barwidth = 1,
+                                 barheight = 20,
+                                 frame.colour = "black", 
+                                 ticks.colour = "black"))
+  return(plot)
+}
+
+## set color
+scale1 <-c("grey",viridis(30, option = "E", direction = 1))
+
+# plot
+dm_ez1_n_plot <-plot_dom_max(df = ez1_n_df,
+                             bins = 100,
+                             scale = scale1,
+                             title = "EZ1_N") 
+# save
+ggsave(dm_ez1_n_plot,
+       file = "./plots/max_dom_ez1_n_plot_v1.png",
+       width = 6,
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/max_dom_ez1_n_plot_v1.png")
+
+# plot
+dom_ez1_s_plot <-plot_dom_max(df = ez1_s_df,
+                             bins = 100,
+                             scale = scale1,
+                             title = "EZ1_S") 
+
+# plot
+dom_ez2_n_plot <-plot_dom_max(df = ez2_n_df,
+                             bins = 100,
+                             scale = scale1,
+                             title = "EZ2_N") 
+
+dom_ez2_s_plot <-plot_dom_max(df = ez2_s_df,
+                             bins = 100,
+                             scale = scale1,
+                             title = "EZ2_S") 
+
+# plot
+dom_ez3_n_plot <-plot_dom_max(df = ez3_n_df,
+                             bins = 100,
+                             scale = scale1,
+                             title = "EZ3_N")
+
+
+dom_ez3_s_plot <-plot_dom_max(df = ez3_s_df,
+                             bins = 100,
+                             scale = scale1,
+                             title = "EZ3_S") 
+
+# cowplot test
+dom_all_six_ez <-plot_grid(dom_ez1_n_plot, dom_ez2_n_plot, dom_ez3_n_plot,
+                           dom_ez1_s_plot, dom_ez2_s_plot, dom_ez3_s_plot, 
+                           labels = c("(a)", "(b)","(c)","(d)","(e)","(f)"),
+                           ncol = 3,
+                           nrow = 2,
+                           align = "hv",
+                           label_size = 22,
+                           vjust =  2,
+                           hjust = -.2,
+                           rel_widths = c(1/3, 1/3, 1/3))
+# save
+ggsave(dom_all_six_ez,
+       file = "./plots/max_dom_ez6_v1.png",
+       width = 18, 
+       height = 10,
+       dpi = 600)
+
+system("open ./plots/max_dom_ez6_v1.png")
+
 
