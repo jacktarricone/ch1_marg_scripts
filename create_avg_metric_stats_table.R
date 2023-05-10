@@ -116,6 +116,8 @@ ez_names <-c("EZ1_N", "EZ1_S",
 names(ez_list) <-ez_names
 names(ez_list[1])
 
+head(mean_ez_df)
+
 # make fun
 create_avg_table <-function(x){
     
@@ -127,11 +129,23 @@ create_avg_table <-function(x){
     df <-ez_list[[x]]
   
     # header for table
-    header <-c("PZ", "Mean MSWE (m)", "SD MSWE (m)", "Mean DOM (DOWY)", "SD DOM (DOWY)", 
+    header <-c("PZ", 
+               "Mean Elevation (m)", "SD Elevation (m)",
+               "Mean CC (%)", "SD CC (%)",
+               "Mean MSWE (m)", "SD MSWE (m)", 
+               "Mean DOM (DOWY)", "SD DOM (DOWY)", 
                "Mean FM", "SD FM")
     
     ### calc metrics
-    # max
+    # cc
+    mean_cc <-round(mean(df$cc_percent),0)
+    sd_cc <-round(sd(df$cc_percent),0)
+    
+    # elevation
+    mean_ele <-round(mean(df$elevation),0)
+    sd_ele <-round(sd(df$elevation),0)
+    
+    # mswe
     mean_max <-round(mean(df$max_swe_m),2)
     sd_max <-round(sd(df$max_swe_m),2)
     
@@ -144,11 +158,16 @@ create_avg_table <-function(x){
     sd_fm <-round(sd(df$frac_melt),2)
     
     # bind values together
-    vals <-c(pz_name,mean_max,sd_max,mean_dom,sd_dom,mean_fm,sd_fm)
+    vals <-c(pz_name,
+             mean_ele,sd_ele,
+             mean_cc,sd_cc,
+             mean_max,sd_max,
+             mean_dom,sd_dom,
+             mean_fm,sd_fm)
    
     # vals
     vals_w_header <-as.data.frame(t(vals))
-    names(vals_w_header)[1:7] <-header
+    names(vals_w_header)[1:11] <-header
     # vals_w_header
     return(vals_w_header)
 }
@@ -161,6 +180,6 @@ stats_list <-lapply(seq_list, create_avg_table)
 results_df <-dplyr::bind_rows(stats_list)
 print(results_df)
 
-
+# save
 write.csv(results_df, "./csvs/avg_metric_results_table_v2.csv", row.names = FALSE)
 system("open ./csvs/avg_metric_results_table_v2.csv")
