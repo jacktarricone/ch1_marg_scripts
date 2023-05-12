@@ -17,8 +17,9 @@ american <-mask(crop(dem, american_shp), american_shp)
 
 # insolation for usj
 # convert from SpatRast to raster for calc
-american_raster <-raster(american) 
-grad_mat <-cgrad(american_raster, cArea = FALSE) # compute normal vector for dem a 1m cell cize
+american_raster <-raster(american)
+dem_raster <-raster(dem)
+grad_mat <-cgrad(dem_raster, cArea = FALSE) # compute normal vector for dem a 1m cell cize
 
 total_daily_solar <-function(day,month,year,raster_in){
 
@@ -40,7 +41,7 @@ total_daily_solar <-function(day,month,year,raster_in){
   print(sun_timing)
   
   # time interval
-  deltat <- 24 # [hours]
+  deltat <- 1 # [hours]
   
   # create arrays for da loop
   nrow <-nrow(raster_in)
@@ -104,64 +105,65 @@ total_daily_solar <-function(day,month,year,raster_in){
 days_list <-as.list(seq(1,31,1))
 
 # apply function to list of days
-oct_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+oct_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                            month = 10,
                                                            year = 2016,
                                                            raster_in = american_raster))
 
 # apply function to list of days
-nov_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+nov_list <-lapply(as.list(seq(1,30,1)), function(x) total_daily_solar(day = x, 
                                                            month = 11,
                                                            year = 2016,
                                                            raster_in = american_raster))
 
 # apply function to list of days
-dec_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+dec_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                            month = 12,
                                                            year = 2016,
                                                            raster_in = american_raster))
 
 # apply function to list of days
-jan_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+jan_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                            month = 1,
                                                            year = 2016,
                                                            raster_in = american_raster))
 # apply function to list of days
-feb_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+feb_list <-lapply(as.list(seq(1,29,1)), function(x) total_daily_solar(day = x, 
                                                            month = 2,
                                                            year = 2016,
                                                            raster_in = american_raster))
 
 # run for mar
-march_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+march_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                              month = 3,
                                                              year = 2016,
                                                              raster_in = american_raster))
-
-
-
 
 
 #############################
 # test plot, changes daily! #
 #############################
 
-# create raster stack from list
-stack <-rast(oct_list,nov_list,dec_list,jan_list,feb_list,march_list)
+# create raster stack from lists
+list_list <-list(oct_list,nov_list,dec_list,jan_list,feb_list,march_list)
+stacks <-lapply(list_list, rast)
+stack <-rast(stacks)
+stack
 
 # take the mean of feb 12-26
 ondjfm_avg_solar <-app(stack, mean)
+plot(ondjfm_avg_solar)
 
 # mean test
 global(ondjfm_avg_solar, mean, na.rm = TRUE)
 
 # mask for avg metrics
-mask <-rast("./ch1_margulis/rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
+mask <-rast("~/ch1_margulis/rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
 solar_mask <-mask(avg_solar_kwh, mask)
 plot(solar_mask)
 
 # save
-writeRaster(solar_mask, "~/ch1_margulis/rasters/insolation/snsr_dem_insol_v2.tif")
+writeRaster(ondjfm_avg_solar, "~/ch1_margulis/rasters/insolation/american_dem_insol_v1.tif")
 
 
 
