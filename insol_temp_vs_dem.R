@@ -45,22 +45,23 @@ theme_set(theme_classic(14))
 
 # read in df
 mean_ez_df <-fread("./csvs/full_plotting_df_v1.csv")
+head(mean_ez_df)
 
 # pull out north
 ez_n_df <-subset(mean_ez_df, ez %in% c(1,3,5))
 ez_s_df <-subset(mean_ez_df, ez %in% c(2,4,6))
 
 # create plotting function
-plot_dem_vs_fm <-function(df, bins, scale, title){
+plot_insol_vs_fm <-function(df, bins, scale, title){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df, aes(x = elevation, y = frac_melt), color = 'grey', fill = 'grey', width = 22, height = .01) +
-    geom_bin2d(data = df, bins = bins, aes(x = elevation, y= frac_melt, fill = ..density..)) +
+    geom_tile(data = mean_ez_df, aes(x = elevation, y = insol_kwh), color = 'grey', fill = 'grey', width = 1800/100, height = 7/100) +
+    geom_bin2d(data = df, bins = bins, aes(x = elevation, y= insol_kwh, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
     scale_x_continuous(limits = c(1500,4300), expand = (c(0,0))) +
-    scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(y = "FM", x = "Elevation (m)")+
-    annotate(geom="text", y=.95, x=3600, label= title, size = 8, fontface = "bold")+
+    scale_y_continuous(limits = c(0,7),expand = (c(0,0))) +
+    labs(y = expression(Insolation~'(kWh/m'^{"2"},')'), x = "Elevation (m)")+
+    annotate(geom="text", y=6.8, x=3600, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -81,18 +82,18 @@ plot_dem_vs_fm <-function(df, bins, scale, title){
 scale1 <-c("grey",viridis(30, option = "H", direction = 1))
 
 # plot
-ez_n_plot <-plot_dem_vs_fm(df = ez_n_df,
-                             bins = 80,
+insol_ez_n_plot <-plot_insol_vs_fm(df = ez_n_df,
+                             bins = 100,
                              scale = scale1,
                              title = "North Facing") 
 # save
-ggsave(ez_n_plot,
-       file = "./plots/fm_vs_dem_north_plot_v2.png",
+ggsave(insol_ez_n_plot,
+       file = "./plots/isol_vs_dem_north_plot_v1.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/fm_vs_dem_north_plot_v2.png")
+system("open ./plots/isol_vs_dem_north_plot_v1.png")
 
 # plot
 ez_s_plot <-plot_dem_vs_fm(df = ez_s_df,
@@ -126,3 +127,4 @@ ggsave(n_v_s,
        dpi = 600)
 
 system("open ./plots/fm_dem_ns_v1.png")
+
