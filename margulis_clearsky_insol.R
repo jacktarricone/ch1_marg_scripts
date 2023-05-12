@@ -14,26 +14,24 @@ library(insol)
 dem <-rast("~/ch1_margulis/rasters/static/SNSR_DEM.tif")
 american_shp <-vect("~/ch1_margulis/vectors/ca_basins/american.gpkg")
 american <-mask(crop(dem, american_shp), american_shp)
-plot(american)
 
 # insolation for usj
 # convert from SpatRast to raster for calc
 american_raster <-raster(american) 
 grad_mat <-cgrad(american_raster, cArea = FALSE) # compute normal vector for dem a 1m cell cize
 
-total_daily_solar <-function(day_of_study,month,raster_in){
-  
+total_daily_solar <-function(day,month,year,raster_in){
+
   # make julian day for
-  tmz <- -7 # time zone
-  year <- 2016
-  month <- month
-  day <- day_of_study
-  timeh <- 0
-  jd <- JDymd(year,month,day,hour=timeh)
+  jd <- JDymd(year = year,
+              month = month,
+              day = day,
+              hour = 0)
   
   # lat lon of margulis
   lat <- 39
   lon <- -120.4
+  tmz <- -7
   
   # compute day length on day 1
   sun_timing <-daylength(lat,lon,jd,tmz)
@@ -42,7 +40,7 @@ total_daily_solar <-function(day_of_study,month,raster_in){
   print(sun_timing)
   
   # time interval
-  deltat <- 4 # [hours]
+  deltat <- 24 # [hours]
   
   # create arrays for da loop
   nrow <-nrow(raster_in)
@@ -58,13 +56,15 @@ total_daily_solar <-function(day_of_study,month,raster_in){
   visibility <-90 # [km], guess
   RH <-50 #2/12 @ 11am
   tempK <- 278 # [kelvin]
-  ozone_thickness <-.03 #[cm]
+  ozone_thickness <-.03 # [cm]
   landscape_alebdo <-.5 
   
   for (i in 1:nlay){
     hours <-seq(sun_timing[1],sun_timing[2],deltat) # sequence by half hour from sunrise to sunset
     layers <-seq(1,nlay,1) # vector to iterate through for layer creatation
-    jd = JDymd(year,month,day,hour=hours[i]) # jd value for precise half hour time step
+    jd = JDymd(year = year,
+               month = month,
+               day = day, hour=hours[i]) # jd value for precise half hour time step
     sv = sunvector(jd,lat,lon,tmz) # sun vector based of position, day, and timezone
     hsh = as.array(hillshading(grad_mat,sv),dim=dim(raster_in)) # create hillshade
     sh = doshade(raster_in,sv) # shade
@@ -87,8 +87,8 @@ total_daily_solar <-function(day_of_study,month,raster_in){
   
   # convert array to rast
   solar_rad_hourly_j <-rast(Iglobal_v2)
-  crs(solar_rad_hourly_j) <-crs(raster_in) # set crs from orginal dem
-  ext(solar_rad_hourly_j) <-ext(raster_in) # set ext 
+  crs(solar_rad_hourly_j) <-crs(rast(raster_in)) # set crs from orginal dem
+  ext(solar_rad_hourly_j) <-ext(rast(raster_in)) # set ext 
   
   # sum layers pixel-wise for total daily in Joules/m^2
   solar_rad_total_j <-app(solar_rad_hourly_j, sum)
@@ -104,34 +104,40 @@ total_daily_solar <-function(day_of_study,month,raster_in){
 days_list <-as.list(seq(1,31,1))
 
 # apply function to list of days
-oct_list <-lapply(days_list, function(x) total_daily_solar(days_list, 
-                                                           raster = american_raster,
-                                                           month = 10))
+oct_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+                                                           month = 10,
+                                                           year = 2016,
+                                                           raster_in = american_raster))
 
 # apply function to list of days
-nov_list <-lapply(days_list, function(x) total_daily_solar(x, 
-                                                           raster = american,
-                                                           month = 11))
+nov_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+                                                           month = 11,
+                                                           year = 2016,
+                                                           raster_in = american_raster))
 
 # apply function to list of days
-dec_list <-lapply(days_list, function(x) total_daily_solar(x, 
-                                                           raster = american,
-                                                           month = 12))
+dec_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+                                                           month = 12,
+                                                           year = 2016,
+                                                           raster_in = american_raster))
 
 # apply function to list of days
-jan_list <-lapply(days_list, function(x) total_daily_solar(x, 
-                                         raster = american,
-                                         month = 1))
-
+jan_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+                                                           month = 1,
+                                                           year = 2016,
+                                                           raster_in = american_raster))
 # apply function to list of days
-feb_list <-lapply(days_list, function(x) total_daily_solar(x, 
-                                                           raster = american,
-                                                           month = 2))
+feb_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+                                                           month = 2,
+                                                           year = 2016,
+                                                           raster_in = american_raster))
 
 # run for mar
-march_list <-lapply(days_list, function(x) total_daily_solar(x, 
-                                           raster = american,
-                                           month = 3))
+march_list <-lapply(days_list, function(x) total_daily_solar(day = x, 
+                                                             month = 3,
+                                                             year = 2016,
+                                                             raster_in = american_raster))
+
 
 
 
