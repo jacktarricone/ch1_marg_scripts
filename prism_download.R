@@ -65,5 +65,7 @@ rast_v4 <-mask(rast_v3, dem, maskvalue = NA)
 plot(rast_v4)
 hist(rast_v4, breaks = 100)
 
+3300*2700
+
 # save
 writeRaster(rast_v4, "./rasters/prism/prism_tmean_snsr_ondjfm.tif")
