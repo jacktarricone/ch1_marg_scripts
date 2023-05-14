@@ -191,7 +191,7 @@ plot(solar_mask)
 
 # save
 writeRaster(solar_mask, "~/ch1_margulis/rasters/insolation/snsr_dem_insol_masked_v1.tif")
-
-
-
+solar_watts <-(solar_mask/24)*1000
+plot(solar_watts)
+writeRaster(solar_watts, "~/ch1_margulis/rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
 
