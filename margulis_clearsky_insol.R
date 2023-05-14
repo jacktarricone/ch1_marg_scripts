@@ -101,69 +101,96 @@ total_daily_solar <-function(day,month,year,raster_in){
   return(solar_rad_total_kwh)
 }
 
-# create sequence of days to calculate
-days_list <-as.list(seq(1,31,1))
 
 # apply function to list of days
 oct_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                            month = 10,
                                                            year = 2016,
-                                                           raster_in = american_raster))
+                                                           raster_in = dem_raster))
 
 # apply function to list of days
 nov_list <-lapply(as.list(seq(1,30,1)), function(x) total_daily_solar(day = x, 
                                                            month = 11,
                                                            year = 2016,
-                                                           raster_in = american_raster))
+                                                           raster_in = dem_raster))
 
 # apply function to list of days
 dec_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                            month = 12,
                                                            year = 2016,
-                                                           raster_in = american_raster))
+                                                           raster_in = dem_raster))
 
 # apply function to list of days
 jan_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                            month = 1,
                                                            year = 2016,
-                                                           raster_in = american_raster))
+                                                           raster_in = dem_raster))
 # apply function to list of days
 feb_list <-lapply(as.list(seq(1,29,1)), function(x) total_daily_solar(day = x, 
                                                            month = 2,
                                                            year = 2016,
-                                                           raster_in = american_raster))
+                                                           raster_in = dem_raster))
 
 # run for mar
 march_list <-lapply(as.list(seq(1,31,1)), function(x) total_daily_solar(day = x, 
                                                              month = 3,
                                                              year = 2016,
-                                                             raster_in = american_raster))
+                                                             raster_in = dem_raster))
 
 
-#############################
-# test plot, changes daily! #
-#############################
+# #############################
+# # test plot, changes daily! #
+# #############################
+# 
+# # create stacks from each month and save
+# # oct
+# oct_stack <-rast(oct_list)
+# writeRaster(oct_stack, "~/ch1_margulis/rasters/insolation/oct_insol_stack_v1.tif")
+# 
+# 
+# # nov
+# nov_stack <-rast(nov_list)
+# writeRaster(nov_stack, "~/ch1_margulis/rasters/insolation/nov_insol_stack_v1.tif")
+# 
+# 
+# # dec
+# dec_stack <-rast(dec_list)
+# writeRaster(dec_stack, "~/ch1_margulis/rasters/insolation/dec_insol_stack_v1.tif")
+# 
+# 
+# # jan
+# jan_stack <-rast(jan_list)
+# writeRaster(jan_stack, "~/ch1_margulis/rasters/insolation/jan_insol_stack_v1.tif")
+# 
+# 
+# # feb
+# feb_stack <-rast(feb_list)
+# writeRaster(feb_stack, "~/ch1_margulis/rasters/insolation/feb_insol_stack_v1.tif")
+# 
+# 
+# # march
+# march_stack <-rast(march_list)
+# writeRaster(march_stack, "~/ch1_margulis/rasters/insolation/march_insol_stack_v1.tif")
 
-# create raster stack from lists
-list_list <-list(oct_list,nov_list,dec_list,jan_list,feb_list,march_list)
-stacks <-lapply(list_list, rast)
-stack <-rast(stacks)
-stack
+insol_list <-list.files("~/ch1_margulis/rasters/insolation", full.names = TRUE, pattern = '*stack')
+insol_stack <-rast(insol_list)
+writeRaster(insol_stack, "~/ch1_margulis/rasters/insolation/snsr_insol_stack_v1.tif")
 
 # take the mean of feb 12-26
-ondjfm_avg_solar <-app(stack, mean)
+ondjfm_avg_solar <-app(insol_stack, mean, cores = 14)
 plot(ondjfm_avg_solar)
+writeRaster(ondjfm_avg_solar, "~/ch1_margulis/rasters/insolation/snsr_dem_insol_v1.tif")
 
 # mean test
 global(ondjfm_avg_solar, mean, na.rm = TRUE)
 
 # mask for avg metrics
 mask <-rast("~/ch1_margulis/rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
-solar_mask <-mask(avg_solar_kwh, mask)
+solar_mask <-mask(ondjfm_avg_solar, mask)
 plot(solar_mask)
 
 # save
-writeRaster(ondjfm_avg_solar, "~/ch1_margulis/rasters/insolation/american_dem_insol_v1.tif")
+writeRaster(solar_mask, "~/ch1_margulis/rasters/insolation/snsr_dem_insol_masked_v1.tif")
 
 
 
