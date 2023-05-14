@@ -46,8 +46,6 @@ setwd("~/ch1_margulis")
 # with terra
 snsr <-vect("./vectors/snsr_shp.gpkg")
 snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
-plot(snsr)
-plot(snsr_basins, add = TRUE)
 
 # with sf
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
@@ -65,13 +63,15 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 cc_v1 <-rast("./rasters/nlcd_cc/cc_w0.tif")
 ez_bins <-rast("./rasters/categorized/dem_ez3_ns.tif")
-plot(ez_bins)
+prism_temp <-rast("./rasters/prism/prism_tmean_snsr_ondjfm.tif")
+insol <-rast("./rasters/insolation/snsr_dem_insol_masked_v1.tif")
 
 # convert to df for geom_raster
 dem_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
 cc_df <-as.data.frame(cc_v1, xy = TRUE, cells = TRUE)
 ez_df <-as.data.frame(ez_bins, xy = TRUE, cells = TRUE)
-head(ez_df)
+temp_df <-as.data.frame(prism_temp, xy = TRUE, cells = TRUE)
+insol_df <-as.data.frame(insol, xy = TRUE, cells = TRUE)
 
 # make cat variables
 ez_df$cat <-ifelse(ez_df$SNSR_DEM == 1, "EZ1_N", ez_df$SNSR_DEM)
@@ -168,6 +168,50 @@ ggsave(cc_plot,
        dpi = 600)
 
 system("open ./plots/cc_test_v9.png")
+
+
+#######################
+##### cc test plot ####
+#######################
+
+# set scale 
+temp_scale <-viridis(30, option = "A")
+head(temp_df)
+
+# plot
+temp_plot <-ggplot(temp_df) +
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray 
+  geom_tile(mapping = aes(x,y, fill = mean)) +
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
+  coord_sf(label_graticule = "N") +
+  scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
+  scale_fill_gradientn(colors = temp_scale, limits = c(-7,7), oob = squish) + # max of color bar so it saturates
+  labs(fill = "Mean ONDJFM Temperature (°C)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        axis.text.x =element_text(color="black"),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(color="black"),
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 18,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black")) 
+
+# save
+ggsave(temp_plot,
+       file = "./plots/temp_plot_v1.png",
+       width = 4.8, 
+       height = 8.5,
+       dpi = 600)
+
+system("open ./plots/temp_plot_v1.png")
 
 #######################
 ######  aspect ########

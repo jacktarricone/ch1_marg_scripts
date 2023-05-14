@@ -13,8 +13,8 @@ ext(snsr)
 
 # test download
 download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),
-                     start = 1990,
-                     end = 1990,
+                     start = 1985,
+                     end = 2016,
                      param = "srad",
                      path = "./rasters/daymet/")
 
