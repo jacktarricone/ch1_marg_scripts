@@ -3,6 +3,12 @@
 # may 15th, 2023
 
 library(terra)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(cowplot)
+library(viridis)
+library(data.table)
 
 setwd("~/ch1_margulis")
 
@@ -38,10 +44,6 @@ colnames(ez_df)[4] <-"ez"
 slope_df <-as.data.frame(slope, xy = TRUE, cells = TRUE)
 colnames(slope_df)[4] <-"slope_deg"
 
-plot(slope)
-head(ez_df)
-head(slope_df)
-
 # filter
 fm_df_v1 <-subset(fm_df, cell %in% ez_df$cell)
 insol_df_v1 <-subset(insol_df, cell %in% fm_df_v1$cell)
@@ -58,21 +60,18 @@ plot_df_v4 <-dplyr::full_join(plot_df_v3, slope_df_v1)
 plot_df_v5 <-dplyr::full_join(plot_df_v4, ez_df_v1)
 plot_df <-plot_df_v5  %>% tidyr::drop_na()
 head(plot_df)
+#write.csv(plot_df, "./csvs/american_plot_df.csv")
 
 # pull out north
 plot_n_df <-subset(plot_df, ez %in% c(1,3,5))
 plot_s_df <-subset(plot_df, ez %in% c(2,4,6))
 
-hist(plot_df$watts)
-
 # create plotting function
-plot_temp_vs_dem <-function(df, scale, title){
+plot_temp_vs_fm <-function(df, scale, title){
   
   plot <-ggplot() +
-    #geom_tile(data = plot_df, aes(y = frac_melt, x = temp_deg_c), color = 'grey', fill = 'grey', width = 9/100, height = 1/100) +
     geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = watts), alpha = .2) +
-    #geom_hline(yintercept = 0, linetype = 2, color = 'darkred', alpha = .5)+
-    scale_color_gradientn(colors = scale) +
+    scale_color_gradientn(colors = scale, name = expression(SW ~ '(W m'^{"-2"} ~ ')')) +
     scale_x_continuous(limits = c(-2,7), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
     labs(x = "Mean Temperature (°C)", y = "FM")+
@@ -80,14 +79,13 @@ plot_temp_vs_dem <-function(df, scale, title){
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'right',
-          legend.title = expression(Insolation ~ '(W m'^{"-2"} ~ ')'),
           plot.margin = unit(c(.25,.1,.1,.1), "cm"),
           legend.box.spacing = unit(0, "pt")) +
     guides(color = guide_colorbar(direction = "vertical",
                                  label.position = 'right',
                                  title.hjust = .5,
                                  barwidth = 1,
-                                 barheight = 19,
+                                 barheight = 16,
                                  frame.colour = "black", 
                                  ticks.colour = "black"))
   return(plot)
@@ -97,19 +95,23 @@ plot_temp_vs_dem <-function(df, scale, title){
 scale2 <-c("grey",viridis(30, option = "B", direction = 1))
 
 # plot
-temp_fm_plot <-plot_temp_vs_dem(df = plot_df,
+temp_fm_plot <-plot_temp_vs_fm(df = plot_df,
                                 scale = scale2,
                                 title = "American") 
 
 plot(temp_fm_plot)
+
 # save
 ggsave(temp_fm_plot,
-       file = "./plots/temp_fm_watts_v1.png",
+       file = "./plots/temp_fm_watts_v2.png",
        width = 6, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/temp_fm_watts_v1.png")
+system("open ./plots/temp_fm_watts_v2.png")
+
+
+
 
 
 # plot
