@@ -58,3 +58,89 @@ plot_df_v4 <-dplyr::full_join(plot_df_v3, slope_df_v1)
 plot_df_v5 <-dplyr::full_join(plot_df_v4, ez_df_v1)
 plot_df <-plot_df_v5  %>% tidyr::drop_na()
 head(plot_df)
+
+# pull out north
+plot_n_df <-subset(plot_df, ez %in% c(1,3,5))
+plot_s_df <-subset(plot_df, ez %in% c(2,4,6))
+
+hist(plot_df$watts)
+
+# create plotting function
+plot_temp_vs_dem <-function(df, scale, title){
+  
+  plot <-ggplot() +
+    #geom_tile(data = plot_df, aes(y = frac_melt, x = temp_deg_c), color = 'grey', fill = 'grey', width = 9/100, height = 1/100) +
+    geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = watts), alpha = .2) +
+    #geom_hline(yintercept = 0, linetype = 2, color = 'darkred', alpha = .5)+
+    scale_color_gradientn(colors = scale) +
+    scale_x_continuous(limits = c(-2,7), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
+    labs(x = "Mean Temperature (°C)", y = "FM")+
+    annotate(geom="text", x = .5, y = .93, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+          aspect.ratio = 1,
+          legend.position  = 'right',
+          legend.title = expression(Insolation ~ '(W m'^{"-2"} ~ ')'),
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(color = guide_colorbar(direction = "vertical",
+                                 label.position = 'right',
+                                 title.hjust = .5,
+                                 barwidth = 1,
+                                 barheight = 19,
+                                 frame.colour = "black", 
+                                 ticks.colour = "black"))
+  return(plot)
+}
+
+## set color
+scale2 <-c("grey",viridis(30, option = "B", direction = 1))
+
+# plot
+temp_fm_plot <-plot_temp_vs_dem(df = plot_df,
+                                scale = scale2,
+                                title = "American") 
+
+plot(temp_fm_plot)
+# save
+ggsave(temp_fm_plot,
+       file = "./plots/temp_fm_watts_v1.png",
+       width = 6, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/temp_fm_watts_v1.png")
+
+
+# plot
+temp_fm_plot <-plot_temp_vs_dem(df = plot_df,
+                                  bins = 100,
+                                  scale = scale2,
+                                  title = "American") 
+
+plot(temp_fm_plot)
+
+# plot
+temp_ez_s_plot <-plot_temp_vs_dem(df = plot_s_df,
+                                  bins = 100,
+                                  scale = scale2,
+                                  title = "South Facing") 
+plot(temp_ez_s_plot)
+
+# cowplot test
+temp_n_v_s <-plot_grid(temp_ez_n_plot, temp_ez_s_plot,
+                       labels = c("(a)", "(b)"),
+                       ncol = 2,
+                       align = "hv",
+                       label_size = 22,
+                       vjust =  2.4,
+                       hjust = 0,
+                       rel_widths = c(1/2, 1/2))
+# save
+ggsave(temp_n_v_s,
+       file = "./plots/american_temp_fm_ns_v2.png",
+       width = 12.5, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/american_temp_fm_ns_v2.png")
