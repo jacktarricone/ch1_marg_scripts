@@ -44,15 +44,16 @@ test
 srad_nc <-ncvar_get(test, "srad")
 srad_nc_rot_v1 <-nat::flip(srad_nc, direction = "y")
 srad_nc_rot <-rotate(srad_nc_rot_v1, -90)
-srad_nc_rast <-rast(srad_nc_rot)
-plot(srad_nc_rast[[180]])
-ext(srad_nc_rast) <-ext(snsr)
-crs(srad_nc_rast) <-crs(snsr)
-srad_nc_rast_v1 <-mask(srad_nc_rast, snsr)
-srad_nc_rast_v1
-srad_nc_mean <-app(srad_nc_rast_v1, mean, cores = 14)
-plot(srad_nc_mean)
-
+srad_mean <-apply(srad_nc_rot, c(1,2), mean)
+srad_nc_rast <-rast(srad_mean)
+ext(srad_nc_rast) <-ext(-125.33127456073, -116.028778808886, 34.3884392364541, 42.8389355269087)
+crs(srad_nc_rast) <-crs("+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=km +no_defs")
+plot(srad_nc_rast)
+srad_nc_rast
+srad_nc_rast_v1 <-project(srad_nc_rast, crs(snsr))
+snsr_r <-project(snsr, crs(srad_nc_rast_v1))
+plot(srad_nc_rast)
+plot(snsr_r, add = TRUE)
 
 tif_convert <-function(x){
   srad_raster <-raster(x)
