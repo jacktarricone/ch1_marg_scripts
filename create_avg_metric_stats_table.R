@@ -8,78 +8,83 @@ library(data.table)
 
 setwd("~/ch1_margulis")
 
-# # fm
-# fm_mean <-rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
-# fm_mean_df <-as.data.frame(fm_mean, xy = TRUE, cells = TRUE)
-# colnames(fm_mean_df)[4] <-"frac_melt"
-# head(fm_mean_df)
-# 
-# # max
-# max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
-# max_mean_df <-as.data.frame(max_mean, xy = TRUE, cells = TRUE)
-# colnames(max_mean_df)[4] <-"max_swe_mm"
-# head(max_mean_df)
-# 
-# # dom
-# dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
-# dom_mean_df <-as.data.frame(dom_mean, xy = TRUE, cells = TRUE)
-# colnames(dom_mean_df)[4] <-"dom_dowy"
-# head(dom_mean_df)
-# 
-# # aspect
-# ez <-rast("./rasters/categorized/dem_ez3_ns.tif")
-# ez_df <-as.data.frame(ez, xy = TRUE, cells = TRUE)
-# colnames(ez_df)[4] <-"ez"
-# head(ez_df)
-# 
-# # dem
-# dem <-rast("./rasters/static/SNSR_DEM.tif")
-# dem_df <-as.data.frame(dem, xy = TRUE, cells = TRUE)
-# colnames(dem_df)[4] <-"elevation"
-# head(dem_df)
-# 
-# # cc
-# cc <-rast("./rasters/nlcd_cc/cc_w0.tif")
-# cc_df <-as.data.frame(cc, xy = TRUE, cells = TRUE)
-# colnames(cc_df)[4] <-"cc_percent"
-# head(cc_df)
-# 
-# # temp
-# temp <-rast("./rasters/prism/prism_tmean_snsr_ondjfm.tif")
-# temp_df <-as.data.frame(temp, xy = TRUE, cells = TRUE)
-# colnames(temp_df)[4] <-"temp_c"
-# head(temp_df)
-# 
-# # insol
-# insol <-rast("./rasters/insolation/snsr_dem_insol_v2.tif")
-# insol_df <-as.data.frame(insol, xy = TRUE, cells = TRUE)
-# colnames(insol_df)[4] <-"insol_kwh"
-# head(insol_df)
-# 
-# 
-# # join
-# mean_df <-dplyr::full_join(max_mean_df, dom_mean_df)
-# mean_df$max_swe_m <-mean_df$max_swe_mm/1000
-# head(mean_df)
-# 
-# # fitlering for same cells
-# mean_aspect_df <-subset(mean_df, cell %in% ez_df$cell)
-# ez_filt <-subset(ez_df, cell %in% mean_aspect_df$cell)
-# dem_filt <-subset(dem_df, cell %in% ez_df$cell)
-# cc_filt <-subset(cc_df, cell %in% dem_df$cell)
-# fm_filt <-subset(fm_mean_df, cell %in% cc_df$cell)
-# temp_filt <-subset(temp_df, cell %in% fm_filt$cell)
-# insol_filt <-subset(insol_df, cell %in% temp_filt$cell)
-# 
-# # bind
-# mean_ez_df_v2 <-dplyr::full_join(mean_aspect_df, ez_filt)
-# mean_ez_df_v3 <-dplyr::full_join(mean_ez_df_v2, dem_filt)
-# mean_ez_df_v4 <-dplyr::full_join(mean_ez_df_v3, cc_filt)
-# mean_ez_df_v5 <-dplyr::full_join(mean_ez_df_v4, fm_filt)
-# mean_ez_df_v6 <-dplyr::full_join(mean_ez_df_v5, temp_filt)
-# mean_ez_df_v7 <-dplyr::full_join(mean_ez_df_v6, insol_filt)
-# mean_ez_df <-mean_ez_df_v7  %>% tidyr::drop_na()
-# write.csv(mean_ez_df, "./csvs/full_plotting_df_v1.csv")
+# read in df
+# fm
+fm_mean <-rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
+fm_mean_df <-as.data.frame(fm_mean, xy = TRUE, cells = TRUE)
+colnames(fm_mean_df)[4] <-"frac_melt"
+head(fm_mean_df)
+
+# max
+max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
+max_mean_df <-as.data.frame(max_mean, xy = TRUE, cells = TRUE)
+colnames(max_mean_df)[4] <-"max_swe_mm"
+head(max_mean_df)
+
+# dom
+dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
+dom_mean_df <-as.data.frame(dom_mean, xy = TRUE, cells = TRUE)
+colnames(dom_mean_df)[4] <-"dom_dowy"
+head(dom_mean_df)
+
+# aspect
+ez <-rast("./rasters/categorized/dem_ez3_ns.tif")
+ez_df <-as.data.frame(ez, xy = TRUE, cells = TRUE)
+colnames(ez_df)[4] <-"ez"
+head(ez_df)
+
+# dem
+dem <-rast("./rasters/static/SNSR_DEM.tif")
+dem_df <-as.data.frame(dem, xy = TRUE, cells = TRUE)
+colnames(dem_df)[4] <-"elevation"
+head(dem_df)
+
+# cc
+cc <-rast("./rasters/nlcd_cc/cc_w0.tif")
+cc_df <-as.data.frame(cc, xy = TRUE, cells = TRUE)
+colnames(cc_df)[4] <-"cc_percent"
+head(cc_df)
+
+# temp
+temp <-rast("./rasters/prism/prism_tmean_snsr_ondjfm.tif")
+temp_df <-as.data.frame(temp, xy = TRUE, cells = TRUE)
+colnames(temp_df)[4] <-"temp_c"
+head(temp_df)
+
+# insol
+insol <-rast("./rasters/insolation/snsr_dem_insol_v2.tif")
+insol_df <-as.data.frame(insol, xy = TRUE, cells = TRUE)
+colnames(insol_df)[4] <-"insol_kwh"
+head(insol_df)
+
+insol_watts <-rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
+insol_watts_df <-as.data.frame(insol_watts, xy = TRUE, cells = TRUE)
+colnames(insol_df)[4] <-"insol_watts"
+
+
+# join
+mean_df <-dplyr::full_join(max_mean_df, dom_mean_df)
+mean_df$max_swe_m <-mean_df$max_swe_mm/1000
+head(mean_df)
+
+# fitlering for same cells
+mean_aspect_df <-subset(mean_df, cell %in% ez_df$cell)
+ez_filt <-subset(ez_df, cell %in% mean_aspect_df$cell)
+dem_filt <-subset(dem_df, cell %in% ez_df$cell)
+cc_filt <-subset(cc_df, cell %in% dem_df$cell)
+fm_filt <-subset(fm_mean_df, cell %in% cc_df$cell)
+temp_filt <-subset(temp_df, cell %in% fm_filt$cell)
+insol_filt <-subset(insol_df, cell %in% temp_filt$cell)
+
+# bind
+mean_ez_df_v2 <-dplyr::full_join(mean_aspect_df, ez_filt)
+mean_ez_df_v3 <-dplyr::full_join(mean_ez_df_v2, dem_filt)
+mean_ez_df_v4 <-dplyr::full_join(mean_ez_df_v3, cc_filt)
+mean_ez_df_v5 <-dplyr::full_join(mean_ez_df_v4, fm_filt)
+mean_ez_df_v6 <-dplyr::full_join(mean_ez_df_v5, temp_filt)
+mean_ez_df_v7 <-dplyr::full_join(mean_ez_df_v6, insol_filt)
+mean_ez_df <-mean_ez_df_v7  %>% tidyr::drop_na()
+write.csv(mean_ez_df, "./csvs/full_plotting_df_v1.csv")
 
 # read in df
 mean_ez_df <-fread("./csvs/full_plotting_df_v1.csv")

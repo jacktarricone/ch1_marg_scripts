@@ -43,13 +43,20 @@ theme_classic <-function(base_size = 11, base_family = "",
 
 theme_set(theme_classic(14))
 
-# read in df
+
+# read in
 mean_ez_df <-fread("./csvs/full_plotting_df_v1.csv")
-head(mean_ez_df)
+mean_ez_df$insol_watts <-(mean_ez_df$insol_kwh*1000)/24
+max(mean_ez_df$insol_watts)
 
 # pull out north
 ez_n_df <-subset(mean_ez_df, ez %in% c(1,3,5))
 ez_s_df <-subset(mean_ez_df, ez %in% c(2,4,6))
+
+
+hist(ez_n_df$insol_watts, breaks = 100)
+mean(ez_n_df$insol_watts)
+mean(ez_s_df$insol_watts)
 
 ##############################
 ##############################
@@ -59,16 +66,16 @@ ez_s_df <-subset(mean_ez_df, ez %in% c(2,4,6))
 
 
 # create plotting function
-plot_insol_vs_fm <-function(df, bins, scale, title){
+plot_insol_vs_fm <-function(df, bins, scale, title, low_lim, high_lim){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df, aes(x = frac_melt, y = insol_kwh), color = 'grey', fill = 'grey', width = 1800/100, height = 7/100) +
-    geom_bin2d(data = df, bins = bins, aes(x = frac_melt, y= insol_kwh, fill = ..density..)) +
+    geom_tile(data = mean_ez_df, aes(x = frac_melt, y = insol_watts), color = 'grey', fill = 'grey', width = 1800/100, height = 250/100) +
+    geom_bin2d(data = df, bins = bins, aes(x = frac_melt, y= insol_watts, fill = ..density..)) +
     scale_fill_gradientn(colors = scale) +
     scale_x_continuous(limits = c(0,1), expand = (c(0,0))) +
-    scale_y_continuous(limits = c(0,7),expand = (c(0,0))) +
-    labs(y = expression(Insolation ~ '(kWh m'^{"-2"} ~ ')'), x = "FM")+
-    annotate(geom="text", y=6.6, x=.7, label= title, size = 8, fontface = "bold")+
+    scale_y_continuous(limits = c(low_lim,high_lim),expand = (c(0,0))) +
+    labs(y = expression(Insolation ~ '(W m'^{"-2"} ~ ')'), x = "FM")+
+    annotate(geom="text", y=50, x=.7, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -79,7 +86,7 @@ plot_insol_vs_fm <-function(df, bins, scale, title){
                                  label.position = 'right',
                                  title.hjust = .5,
                                  barwidth = 1,
-                                 barheight = 20,
+                                 barheight = 17,
                                  frame.colour = "black", 
                                  ticks.colour = "black"))
   return(plot)
@@ -92,30 +99,34 @@ scale1 <-c("grey",viridis(30, option = "D", direction = 1))
 insol_ez_n_plot <-plot_insol_vs_fm(df = ez_n_df,
                              bins = 100,
                              scale = scale1,
+                             low_lim = 30,
+                             high_lim = 250,
                              title = "North Facing") 
 # save
 ggsave(insol_ez_n_plot,
-       file = "./plots/insol_vs_fm_north_plot_v1.png",
+       file = "./plots/insol_vs_fm_north_plot_v3.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/insol_vs_fm_north_plot_v1.png")
+system("open ./plots/insol_vs_fm_north_plot_v3.png")
 
 # plot
 insol_ez_s_plot <-plot_insol_vs_fm(df = ez_s_df,
                             bins = 80,
                             scale = scale1,
+                            low_lim = 30,
+                            high_lim = 250,
                             title = "South Facing") 
 
 # save
 ggsave(insol_ez_s_plot,
-       file = "./plots/insol_vs_fm_south_plot_v1.png",
+       file = "./plots/insol_vs_fm_south_plot_v2.png",
        width = 6,
        height = 5,
        dpi = 600)
 
-system("open ./plots/insol_vs_fm_south_plot_v1.png")
+system("open ./plots/insol_vs_fm_south_plot_v2.png")
 
 # cowplot test
 n_v_s <-plot_grid(insol_ez_n_plot, insol_ez_s_plot,
@@ -128,12 +139,12 @@ n_v_s <-plot_grid(insol_ez_n_plot, insol_ez_s_plot,
                   rel_widths = c(1/2, 1/2))
 # save
 ggsave(n_v_s,
-       file = "./plots/insol_fm_ns_v1.png",
-       width = 11.5, 
+       file = "./plots/insol_fm_ns_v2.png",
+       width = 12.5, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/insol_fm_ns_v1.png")
+system("open ./plots/insol_fm_ns_v2.png")
 
 ##############################
 ##############################
