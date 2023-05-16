@@ -98,5 +98,81 @@ head(fm_usj_df)
 # join
 full_df <-full_join(fm_usj_df, tmean_usj_df)
 head(full_df)
-fwrite(full_df, "./csvs/usj_temp_fm_slope_analysis.csv", row.names = FALSE)
+# fwrite(full_df, "./csvs/usj_temp_fm_slope_analysis.csv", row.names = FALSE)
 full_df <-fread("./csvs/usj_temp_fm_slope_analysis.csv")
+
+# pull out one cell
+test <-filter(full_df, cell <10000)
+head(test)
+results_list <-as.list(test %>% group_by(cell) %>% 
+  do(extract_lm_stats(y = frac_melt, x = annual_tmean_c, data = .)))
+
+# pull out stats
+extract_lm_stats <-function(y,x,data){
+  intercept <-coef(lm(y ~ x, data))[[1]]
+  slope <-coef(lm(y ~ x, data))[[2]]
+  df <-as.data.frame(intercept, slope)
+  return(df)
+}
+
+# calculate number of non na obs per pixel
+tmean_n_obs <-app(tmean_stack_usj, function(x) sum(!is.na(x)))
+plot(tmean_n_obs)
+fm_n_obs <-app(fm_stack_usj, function(x) sum(!is.na(x)))
+plot(fm_n_obs)
+n_obs_v2 <-subst(fm_n_obs, 0, NA)
+plot(n_obs_v2)
+writeRaster(n_obs_v2, "./rasters/mk_results/max_n_obs.tif")
+
+# convert all values below 10 to NA
+masking_value <-subst(n_obs_v2, 0:27, NA)
+plot(masking_value)
+
+# if there are less than 10 observations per pixel, make NA
+fm_v3 <-mask(fm_stack_usj, masking_value, maskvalues = NA)
+
+analysis_stack <-c(fm_v3, tmean_stack_usj)
+analysis_stack 
+
+# slope_fun  <-function(x){ if (is.na(x[1])){ NA } else { lm(x[1:32] ~ x[33:64])$coefficients[2] }}
+# intercept_fun  <-function(x){ if (is.na(x[1])){ NA } else { lm(x[1:32] ~ x[33:64])$coefficients[1] }}
+# r2_fun <-function(x) { if (is.na(x[1])){ NA } else { m <- lm(x[1:32]] ~ x[1:32]]);summary(m)$r.squared }}
+
+###### mk test, trend.slope is full stats, 2 is just p-val and slope stats
+trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,  
+                        confidence.pass = FALSE, z.value.pass = FALSE,
+                        intercept.pass = FALSE) {
+  fit <- suppressWarnings( EnvStats::kendallTrendTest(y[1:32] ~ y[33:64]) )
+  fit.results <- fit$estimate[2]
+  if(p.value.pass == TRUE) { fit.results <- c(fit.results, fit$p.value) } 
+  if(z.value.pass == TRUE) { fit.results <- c(fit.results, fit$statistic) } 
+  if(confidence.pass == TRUE) { 
+    ci <- unlist(fit$interval["limits"])
+    if( length(ci) == 2) { 
+      fit.results <- c(fit.results, ci)
+    } else {
+      fit.results <- c(fit.results, c(NA,NA))
+    }			  
+  }
+  if(intercept.pass == TRUE) { fit.results <- c(fit.results, fit$estimate[3]) }  
+  if(tau.pass == TRUE) { fit.results <- c(fit.results, fit$estimate[1]) }  
+  return( fit.results )
+}
+
+# run mk test
+mk_results <-app(analysis_stack, fun = trend.slope2, cores = 14)
+mk_results
+
+
+
+
+# test plot
+ggplot(full_df)+
+  geom_bin2d(bins = 100, aes(y = frac_melt, x = annual_tmean_c, fill = ..density..)) +
+  #geom_tile(fill = 'darkred', width = 14/100, height = 1/100) +
+  scale_color_gradientn(colors = scale, name = expression(Insolation ~ '(W m'^{"-2"} ~ ')')) +
+  scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
+  scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
+  # geom_point(color = 'darkred')+
+  # geom_smooth(method='lm', se = FALSE)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
