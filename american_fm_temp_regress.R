@@ -46,7 +46,6 @@ theme_set(theme_classic(14))
 
 # bring vectors
 american <-vect("./vectors/ca_basins/american.gpkg")
-usj <-vect("./vectors/ca_basins/usj.gpkg")
 
 # rasters
 insol_v1 <-rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
@@ -106,10 +105,10 @@ plot_temp_vs_fm <-function(df, scale, title){
   plot <-ggplot() +
     geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = watts), alpha = .2, size = .5) +
     scale_color_gradientn(colors = scale, name = expression(atop("Mean SW",paste(~'(W m'^{"-2"},')')))) +
-    scale_x_continuous(limits = c(-2,7), expand = (c(0,0))) +
+    scale_x_continuous(limits = c(-8,8), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
     labs(x = "Mean Temperature (°C)", y = "FM")+
-    annotate(geom="text", x = .5, y = .93, label= title, size = 8, fontface = "bold")+
+    annotate(geom="text", x = -5, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -135,10 +134,10 @@ american_temp_fm_plot <-plot_temp_vs_fm(df = plot_df,
 
 # save
 ggsave(american_temp_fm_plot,
-       file = "./plots/american_temp_fm_watts_v6.png",
+       file = "./plots/american_temp_fm_watts_v7.png",
        width = 6, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/american_temp_fm_watts_v6.png")
+system("open ./plots/american_temp_fm_watts_v7.png")
 

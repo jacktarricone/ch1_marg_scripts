@@ -45,7 +45,6 @@ theme_classic <-function(base_size = 11, base_family = "",
 theme_set(theme_classic(14))
 
 # bring vectors
-american <-vect("./vectors/ca_basins/american.gpkg")
 usj <-vect("./vectors/ca_basins/usj.gpkg")
 
 # rasters
@@ -57,12 +56,12 @@ slope_v1 <-terrain(dem_v1, v="slope", neighbors=8, unit="degrees")
 ez_v1 <-rast("./rasters/categorized/dem_ez3_ns.tif")
 
 # format
-insol <-mask(crop(insol_v1,ext(american)), american)
-fm <-mask(crop(fm_v1,ext(american)), american)
-temp <-mask(crop(temp_v1,ext(american)), american)
-dem <-mask(crop(dem_v1,ext(american)), american)
-slope <-mask(crop(slope_v1,ext(american)), american)
-ez <-mask(crop(ez_v1,ext(american)), american)
+insol <-mask(crop(insol_v1,ext(usj)), usj)
+fm <-mask(crop(fm_v1,ext(usj)), usj)
+temp <-mask(crop(temp_v1,ext(usj)), usj)
+dem <-mask(crop(dem_v1,ext(usj)), usj)
+slope <-mask(crop(slope_v1,ext(usj)), usj)
+ez <-mask(crop(ez_v1,ext(usj)), usj)
 
 # convert to df
 temp_df <-as.data.frame(temp, xy = TRUE, cells = TRUE)
@@ -94,7 +93,7 @@ plot_df_v4 <-dplyr::full_join(plot_df_v3, slope_df_v1)
 # plot_df_v5 <-dplyr::full_join(plot_df_v4, ez_df_v1)
 plot_df <-plot_df_v4  %>% tidyr::drop_na()
 head(plot_df)
-#write.csv(plot_df, "./csvs/american_plot_df.csv")
+#write.csv(plot_df, "./csvs/usj_plot_df.csv")
 
 # # pull out north
 # plot_n_df <-subset(plot_df, ez %in% c(1,3,5))
@@ -106,10 +105,10 @@ plot_temp_vs_fm <-function(df, scale, title){
   plot <-ggplot() +
     geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = watts), alpha = .2, size = .5) +
     scale_color_gradientn(colors = scale, name = expression(atop("Mean SW",paste(~'(W m'^{"-2"},')')))) +
-    scale_x_continuous(limits = c(-2,7), expand = (c(0,0))) +
+    scale_x_continuous(limits = c(-8,8), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
     labs(x = "Mean Temperature (°C)", y = "FM")+
-    annotate(geom="text", x = .5, y = .93, label= title, size = 8, fontface = "bold")+
+    annotate(geom="text", x = -5, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -129,16 +128,16 @@ plot_temp_vs_fm <-function(df, scale, title){
 scale2 <-c(viridis(30, option = "D", direction = 1))
 
 # plot
-american_temp_fm_plot <-plot_temp_vs_fm(df = plot_df,
+usj_temp_fm_plot <-plot_temp_vs_fm(df = plot_df,
                                 scale = scale2,
-                                title = "American") 
+                                title = "USJ") 
 
 # save
-ggsave(american_temp_fm_plot,
-       file = "./plots/american_temp_fm_watts_v6.png",
+ggsave(usj_temp_fm_plot,
+       file = "./plots/usj_temp_fm_watts_v3.png",
        width = 6, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/american_temp_fm_watts_v6.png")
+system("open ./plots/usj_temp_fm_watts_v3.png")
 

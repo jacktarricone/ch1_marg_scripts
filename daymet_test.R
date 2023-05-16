@@ -1,8 +1,7 @@
-climateR::params
-remotes::install_github("mikejohnson51/AOI") # suggested!
-remotes::install_github("mikejohnson51/climateR")
 library(daymetr)
 library(terra)
+library(raster)
+library(ncdf4)
 library(raster)
 
 setwd("~/ch1_margulis")
@@ -10,7 +9,7 @@ setwd("~/ch1_margulis")
 # load in snsr shape
 snsr <-vect("./vectors/snsr_shp.gpkg")
 ext(snsr)
-
+?download_daymet_ncss
 # test download
 download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),
                      start = 1995,
@@ -18,6 +17,41 @@ download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.42199614
                      param = "srad",
                      path = "./rasters/daymet/")
 
+# test download
+download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),
+                     start = 1995,
+                     end = 2016,
+                     param = "tmax",
+                     frequency = "monthly",
+                     path = "./rasters/daymet/")
+
+download_daymet_ncss(
+  location = location,
+  start = 2010,
+  end = 2010,
+  frequency = "daily",
+  param = "swe",
+  path = tempdir(),
+  silent = FALSE)
+
+tmax_list <-list
+tmax_nc <-nc_open("./rasters/daymet/tmax/tmax_monavg_1995_ncss.nc")
+tmax_mat <-ncvar_get(tmax_nc, "tmax")
+tmax_lat <-ncvar_get(tmax_nc, "lat")
+tmax_lon <-ncvar_get(tmax_nc, "lon")
+tmax_mat_v1 <-nat::flip(tmax_mat, direction = "y")
+tmax_mat_v2 <-rotate(tmax_mat_v1 , -90)
+tmax_rast <-raster(rast(tmax_mat_v2))
+tmax_rast <-raster::stack("./rasters/daymet/tmax/tmax_monavg_1995_ncss.nc")
+crs(tmax_rast) <- "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=km +no_defs" # this works!!
+tmax_rast
+plot(tmax_rast[[1]])
+extent(tmax_rast) <-extent(-125.33127456073, -116.028778808886, 34.3884392364541, 42.8389355269087)
+test <- raster::projectRaster(tmax_rast, crs = "+init=epsg:4326")
+test <-projectRaster(tmax_rast[[1]], "initEPSG:4326")
+plot(test[[1]])
+writeRaster(tmax_rast[[1]], "./rasters/daymet/tmax_test.tif", overwrite = TRUE)
+plot(tmax_rast[[1]])
 srad_raster <-raster("./rasters/daymet/srad_daily_1990_ncss.nc")
 srad_repoj <-projectRaster(srad_raster, crs=crs(snsr))
 writeRaster(srad_v1, "./rasters/daymet/srad_daily_1990_ncss.tif")
