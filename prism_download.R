@@ -9,13 +9,16 @@ library(terra)
 # set paths
 setwd("~/ch1_margulis")
 prism_set_dl_dir("./rasters/prism")
-
+?prism
 # download normals
 get_prism_normals(type="tmean", resolution = "800m", mon = 1:12, keepZip = FALSE)
 get_prism_normals(type="tmax", resolution = "800m", mon = 1:12, keepZip = FALSE)
 get_prism_normals(type="tmean", resolution = "800m", mon = 1:12, keepZip = FALSE)
 pd_get_name(prism_archive_ls())
 
+# get annuals
+get_prism_monthlys(type = "tmean", year = 1985:2014, mon = 1, keepZip = FALSE)
+?get_prism_monthlys
 
 # pull out months
 oct_mean <- prism_archive_subset("tmean", 
