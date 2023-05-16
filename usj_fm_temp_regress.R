@@ -83,17 +83,16 @@ insol_df_v1 <-subset(insol_df, cell %in% fm_df_v1$cell)
 temp_df_v1 <-subset(temp_df, cell %in% insol_df_v1$cell)
 dem_df_v1 <-subset(dem_df, cell %in% temp_df_v1$cell)
 slope_df_v1 <-subset(slope_df, cell %in% dem_df_v1$cell)
-# ez_df_v1 <-subset(ez_df, cell %in% slope_df_v1$cell)
 
 # join
 plot_df_v1 <-dplyr::full_join(fm_df_v1, insol_df_v1)
 plot_df_v2 <-dplyr::full_join(plot_df_v1, temp_df_v1)
 plot_df_v3 <-dplyr::full_join(plot_df_v2, dem_df_v1)
 plot_df_v4 <-dplyr::full_join(plot_df_v3, slope_df_v1)
-# plot_df_v5 <-dplyr::full_join(plot_df_v4, ez_df_v1)
 plot_df <-plot_df_v4  %>% tidyr::drop_na()
 head(plot_df)
-#write.csv(plot_df, "./csvs/usj_plot_df.csv")
+# fwrite(plot_df, "./csvs/usj_plot_df_v1.csv", row.names = FALSE)
+plot_df <-fread("./csvs/usj_plot_df_v1.csv")
 
 # # pull out north
 # plot_n_df <-subset(plot_df, ez %in% c(1,3,5))
@@ -104,23 +103,24 @@ plot_temp_vs_fm <-function(df, scale, title){
   
   plot <-ggplot() +
     geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = watts), alpha = .2, size = .5) +
-    scale_color_gradientn(colors = scale, name = expression(atop("Mean SW",paste(~'(W m'^{"-2"},')')))) +
+    scale_color_gradientn(colors = scale, name = expression(Insolation ~ '(W m'^{"-2"} ~ ')')) +
     scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean Temperature (°C)", y = "FM")+
+    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
     annotate(geom="text", x = -3, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
-          legend.position  = 'right',
+          legend.position  = 'top',
           plot.margin = unit(c(.25,.1,.1,.1), "cm"),
           legend.box.spacing = unit(0, "pt")) +
-    guides(color = guide_colorbar(direction = "vertical",
-                                 label.position = 'right',
-                                 title.hjust = .5,
-                                 barwidth = 1,
-                                 barheight = 16,
-                                 frame.colour = "black", 
-                                 ticks.colour = "black"))
+    guides(color = guide_colorbar(direction = "horizontal",
+                                  label.position = 'bottom',
+                                  title.position = 'top',
+                                  title.hjust = .5,
+                                  barwidth = 20,
+                                  barheight = 1,
+                                  frame.colour = "black", 
+                                  ticks.colour = "black"))
   return(plot)
 }
 
@@ -134,12 +134,12 @@ usj_temp_fm_plot <-plot_temp_vs_fm(df = plot_df,
 
 # save
 ggsave(usj_temp_fm_plot,
-       file = "./plots/usj_temp_fm_watts_v5.png",
-       width = 6, 
-       height = 5,
+       file = "./plots/usj_temp_fm_watts_v6.png",
+       width = 5, 
+       height = 5.8,
        dpi = 600)
 
-system("open ./plots/usj_temp_fm_watts_v5.png")
+system("open ./plots/usj_temp_fm_watts_v6.png")
 
 
 # create plotting function
@@ -147,21 +147,22 @@ plot_dem_fm_temp <-function(df, scale, title){
   
   plot <-ggplot() +
     geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = elevation), alpha = .2, size = .5) +
-    scale_color_gradientn(colors = scale, name = "(meters)") +
+    scale_color_gradientn(colors = scale, name = "Elevation (m)") +
     scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean ONDJFM Temp (°C)", y = "FM")+
+    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
     annotate(geom="text", x = -3, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
-          legend.position  = 'right',
+          legend.position  = 'top',
           plot.margin = unit(c(.25,.1,.1,.1), "cm"),
           legend.box.spacing = unit(0, "pt")) +
-    guides(color = guide_colorbar(direction = "vertical",
-                                  label.position = 'right',
+    guides(color = guide_colorbar(direction = "horizontal",
+                                  label.position = 'bottom',
+                                  title.position = 'top',
                                   title.hjust = .5,
-                                  barwidth = 1,
-                                  barheight = 16,
+                                  barwidth = 20,
+                                  barheight = 1,
                                   frame.colour = "black", 
                                   ticks.colour = "black"))
   return(plot)
@@ -177,10 +178,15 @@ usj_temp_fm_plot_v2 <-plot_dem_fm_temp(df = plot_df,
 
 # save
 ggsave(usj_temp_fm_plot_v2,
-       file = "./plots/usj_temp_fm_dem_v1.png",
-       width = 6, 
-       height = 5,
+       file = "./plots/usj_temp_fm_dem_v2.png",
+       width = 5, 
+       height = 5.8,
        dpi = 600)
 
-system("open ./plots/usj_temp_fm_dem_v1.png")
+system("open ./plots/usj_temp_fm_dem_v2.png")
 
+dm <-rast("./rasters/daymet/tmean_normal_1985_2016.tif")
+hist(dm, breaks = 100, main = "Daymet 1985-2015 ONDJFM Mean Temp")
+
+prism <-rast("./rasters/prism/prism_tmean_snsr_ondjfm.tif")
+hist(prism, breaks = 100, main = "PRISM 1990-2019 ONDJFM Mean Temp")

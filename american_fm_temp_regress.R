@@ -108,7 +108,7 @@ plot_temp_vs_fm <-function(df, scale, title){
     scale_color_gradientn(colors = scale, name = expression(Insolation ~ '(W m'^{"-2"} ~ ')')) +
     scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean Temperature (°C)", y = "FM")+
+    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
     annotate(geom="text", x = -2, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
@@ -119,7 +119,7 @@ plot_temp_vs_fm <-function(df, scale, title){
                                   label.position = 'bottom',
                                   title.position = 'top',
                                   title.hjust = .5,
-                                  barwidth = 21,
+                                  barwidth = 20,
                                   barheight = 1,
                                   frame.colour = "black", 
                                   ticks.colour = "black"))
@@ -152,7 +152,7 @@ plot_dem_fm_temp <-function(df, scale, title){
     scale_color_gradientn(colors = scale, name = "Elevation (m)") +
     scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean ONDJFM Temp (°C)", y = "FM")+
+    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
     annotate(geom="text", x = -2, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
@@ -163,7 +163,7 @@ plot_dem_fm_temp <-function(df, scale, title){
                                   label.position = 'bottom',
                                   title.position = 'top',
                                   title.hjust = .5,
-                                  barwidth = 16,
+                                  barwidth = 20,
                                   barheight = 1,
                                   frame.colour = "black", 
                                   ticks.colour = "black"))
@@ -180,12 +180,12 @@ american_temp_fm_plot_v2 <-plot_dem_fm_temp(df = plot_df,
 
 # save
 ggsave(american_temp_fm_plot_v2,
-       file = "./plots/american_temp_fm_dem_v2.png",
-       width = 6, 
-       height = 5,
+       file = "./plots/american_temp_fm_dem_v3.png",
+       width = 5, 
+       height = 5.8,
        dpi = 600)
 
-system("open ./plots/american_temp_fm_dem_v2.png")
+system("open ./plots/american_temp_fm_dem_v3.png")
 
 
 # filter watts
