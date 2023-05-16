@@ -94,6 +94,7 @@ plot_df_v4 <-dplyr::full_join(plot_df_v3, slope_df_v1)
 plot_df <-plot_df_v4  %>% tidyr::drop_na()
 head(plot_df)
 #write.csv(plot_df, "./csvs/american_plot_df.csv")
+plot_df <-fread("./csvs/american_plot_df.csv")
 
 # # pull out north
 # plot_n_df <-subset(plot_df, ez %in% c(1,3,5))
@@ -141,3 +142,15 @@ ggsave(american_temp_fm_plot,
 
 system("open ./plots/american_temp_fm_watts_v7.png")
 
+
+hist(plot_df$watts, breaks = 100)
+
+# filter watts
+w50 <-filter(plot_df, watts <= 50)
+w100 <-filter(plot_df, watts > 50 & watts <= 100)
+w150 <-filter(plot_df, watts > 100 & watts <= 150)
+w200 <-filter(plot_df, watts > 150 & watts <= 200)
+w250 <-filter(plot_df, watts > 200 & watts <= 250)
+
+hist(w50$watts, breaks = 100)
+lm(w)
