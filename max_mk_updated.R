@@ -31,7 +31,7 @@ stack_v3
 trend.slope2 <-function(y, tau.pass = FALSE, p.value.pass = TRUE,  
                         confidence.pass = FALSE, z.value.pass = FALSE,
                         intercept.pass = FALSE) {
-  fit <- suppressWarnings( EnvStats::kendallTrendTest(y ~ 1) )
+  fit <- suppressWarnings( EnvStats::kendallTrendTest(y[1:32] ~ y[33:62]) )
   fit.results <- fit$estimate[2]
   if(p.value.pass == TRUE) { fit.results <- c(fit.results, fit$p.value) } 
   if(z.value.pass == TRUE) { fit.results <- c(fit.results, fit$statistic) } 
