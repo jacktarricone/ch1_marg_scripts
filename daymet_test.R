@@ -8,32 +8,50 @@ setwd("~/ch1_margulis")
 
 # load in snsr shape
 snsr <-vect("./vectors/snsr_shp.gpkg")
-ext(snsr)
-?download_daymet_ncss
-# test download
-download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),
-                     start = 1995,
-                     end = 2016,
-                     param = "srad",
-                     path = "./rasters/daymet/")
+dem <-rast("./rasters/static/SNSR_DEM.tif")
 
-# test download
-download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),
-                     start = 1995,
-                     end = 2016,
-                     param = "tmax",
-                     frequency = "monthly",
-                     path = "./rasters/daymet/")
+# # test download
+# download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),
+#                      start = 1995,
+#                      end = 2016,
+#                      param = "srad",
+#                      path = "./rasters/daymet/")
+# 
+# # test download
+# download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),
+#                      start = 1985,
+#                      end = 1994,
+#                      param = "tmax",
+#                      frequency = "monthly",
+#                      path = "./rasters/daymet/")
 
-# format data, so dumb
-tmax_rast <-raster::stack("./rasters/daymet/tmax/tmax_monavg_1995_ncss.nc")
-crs(tmax_rast) <-"+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=km +no_defs" # this works!!
-tmax_repoj <- raster::projectRaster(tmax_rast, crs = "+init=epsg:4326")
-tmax_rast <-rast(tmax_repoj) 
-plot(test_rast[[9]])
-plot(snsr, add = TRUE)
-writeRaster(test_rast[[9]], "./rasters/daymet/tmax_test.tif", overwrite = TRUE)
+# format data
+tmax_list <-list.files("./rasters/daymet/tmax", full.names = TRUE)
+x <-tmax_list[10]
 
+format_nc_tif <-function(x){
+  
+  # read in annaul monthly stack
+  tmax_raster <-raster::stack(x)
+  
+  # reset crs bc it's wrong, +datum=WGS84, and units = km
+  crs(tmax_raster) <-"+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=km +no_defs" # this works!!
+  
+  # reproject and covert to rast
+  tmax_v3 <-raster::projectRaster(tmax_v2, crs = "+init=epsg:4326")
+  tmax_v4 <-rast(tmax_v3)
+  
+  # pull oct, nov, dec
+  tmax_v5 <-resample(tmax_v4, dem)
+  plot(tmax_v4[[4]])
+  plot(snsr, add = TRUE)
+  tmax_v5 <-mask(tmax_v4, snsr)
+  plot(tmax_v5[[2]])
+  # writeRaster(tmax_v6[[1]], "./rasters/daymet/tmax_v6.tif")
+  name_v1 <-basename(x)
+  name <-gsub("*s.nc","s.tif",name_v1)
+  writeRaster(srad_repoj, paste0("./rasters/daymet/tmax",name))
+}
 srad_v1 <-project(srad, crs(snsr))
 ext(srad_v1) <-ext(snsr)
 plot(srad_v1)
