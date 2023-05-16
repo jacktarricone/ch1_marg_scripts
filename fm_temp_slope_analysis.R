@@ -48,31 +48,55 @@ theme_set(theme_classic(14))
 usj <-vect("./vectors/ca_basins/usj.gpkg")
 
 # single rasters: insol, temp normal, dem
-insol_v1 <-rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
-insol_usj <-mask(crop(insol_v1,ext(usj)), usj)
+insol_usj <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"),ext(usj)), usj)
+names(insol_usj) <-"insol_watts"
 plot(insol_usj)
 
 # temp
-temp_v1 <-rast("./rasters/daymet/tmean_normal_1985_2016.tif")
-temp_usj <-mask(crop(temp_v1,ext(usj)), usj)
+temp_usj <-mask(crop(rast("./rasters/daymet/tmean_normal_1985_2016.tif"),ext(usj)), usj)
+names(temp_usj) <-"mean_temp_c"
 plot(temp_usj)
 
-# temp
-dem_v1 <-rast("./rasters/static/SNSR_DEM.tif")
-dem_usj <-mask(crop(dem_v1,ext(usj)), usj)
+# dem
+dem_usj <-mask(crop(rast("./rasters/static/SNSR_DEM.tif"),ext(usj)), usj)
+names(dem_usj) <-"elevation"
 plot(dem_usj)
 
+### stacks
 # fm load and format
 fm_list <-list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
-fm_stack_v1 <-rast(fm_list[1:32])
-fm_stack_usj <-mask(crop(fm_stack_v1,ext(usj)), usj)
+fm_stack_usj <-mask(crop(rast(fm_list[1:32]),ext(usj)), usj)
 plot(fm_stack_usj[[31]])
 
-# fm load and format
+# temp load and format
 tmean_list <-list.files("./rasters/daymet/tmean", full.names = TRUE)
-tmean_stack_v1 <-rast(tmean_list[1:32])
-fm_stack_usj <-mask(crop(tmean_stack_v1,ext(usj)), usj)
-plot(fm_stack_usj[[2]])
+tmean_stack_usj <-mask(crop(rast(tmean_list[1:32]),ext(usj)), usj)
+plot(tmean_stack_usj[[2]])
 
+# rename layers
+wy_names <-seq(1985,2016,1)
+names(tmean_stack_usj) <-wy_names
+names(fm_stack_usj) <-wy_names
+tmean_stack_usj
 
-dem_v1 <-rast("./rasters/static/SNSR_DEM.tif")
+# stack with other layers
+tmean_full <-c(insol_usj, temp_usj, dem_usj, tmean_stack_usj)
+fm_full <-c(insol_usj, temp_usj, dem_usj, fm_stack_usj)
+
+# convert to df
+tmean_usj_df_v1 <-as.data.frame(tmean_full, xy=TRUE, cells=TRUE)
+tmean_usj_df <-as.data.frame(pivot_longer(tmean_usj_df_v1, 7:38, names_to = "wy"))
+colnames(tmean_usj_df)[8] <-'annual_tmean_c'
+head(tmean_usj_df)
+
+# convert to df
+fm_usj_df_v1 <-as.data.frame(fm_full, xy=TRUE, cells=TRUE)
+fm_usj_df <-as.data.frame(pivot_longer(fm_usj_df_v1, 7:38, names_to = "wy"))
+colnames(fm_usj_df)[8] <-'frac_melt'
+head(fm_usj_df)
+
+# join
+full_df <-full_join(fm_usj_df, tmean_usj_df)
+head(full_df)
+fwrite(full_df, "./csvs/usj_temp_fm_slope_analysis.csv", row.names = FALSE)
+full_df <-fread("./csvs/usj_temp_fm_slope_analysis.csv")
