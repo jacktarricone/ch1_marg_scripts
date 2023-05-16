@@ -19,11 +19,11 @@ x <-1
 calc_ondjfm_mean <-function(x){
   
   # read in list
-  tmax_list <-list.files("./rasters/daymet/tmax/tif_stacks", full.names = TRUE)
+  list <-list.files("./rasters/daymet/tmin/tif_stacks", full.names = TRUE)
   
   # read in two calendar years to complete wy
-  y1 <-tmax_list[x]
-  y2 <-tmax_list[x+1]
+  y1 <-list[x]
+  y2 <-list[x+1]
   
   # bind and trim down to oct-march
   rast_in <-rast(c(y1,y2))
@@ -35,11 +35,46 @@ calc_ondjfm_mean <-function(x){
   # name and save
   name_v1 <-basename(y2)
   name <-gsub("tmax_monavg","tmax_mean_ondjfm",name_v1)
-  writeRaster(mean, paste0("./rasters/daymet/tmax/wy_mean/",name))
+  writeRaster(mean, paste0("./rasters/daymet/tmin/wy_mean/",name))
   print(paste0(name, " saving complete!"))
 }
 
+# run
 lapply(seq(1,33,1), calc_ondjfm_mean)
+
+x <-1
+
+# mean min and max
+calc_yearly_mean <-function(x){
+  
+  # read in list
+  min_list <-list.files("./rasters/daymet/tmin/wy_mean", full.names = TRUE)
+  max_list <-list.files("./rasters/daymet/tmax/wy_mean", full.names = TRUE)
+  
+  # read in two calendar years to complete wy
+  min_rast <-min_list[x]
+  max_rast <-max_list[x]
+  
+  # bind and trim down to oct-march
+  rast_in <-rast(c(min_rast,max_rast))
+  
+  # calc mean
+  mean <-terra::app(rast_in, fun = 'mean')
+  
+  # name and save
+  name_v1 <-basename(max_rast)
+  name <-gsub("tmax_mean_ondjfm","tmean_ondjfm",name_v1)
+  writeRaster(mean, paste0("./rasters/daymet/tmean/",name))
+  print(paste0(name, " saving complete!"))
+}
+
+# calc
+lapply(seq(1,32,1), calc_yearly_mean)
+
+# calculate normal over the study period
+tmean_rast <-rast(list.files("./rasters/daymet/tmean/", full.names = TRUE))
+tmean_normal <-app(tmean_rast, fun = 'mean')
+writeRaster(tmean_normal, "./rasters/daymet/tmean_normal_1985_2016.tif")
 
 # test download
 download_daymet_ncss(location = c(41.8758638835292,-123.065041220838,35.4219961410279,-117.651990878793),

@@ -50,7 +50,7 @@ usj <-vect("./vectors/ca_basins/usj.gpkg")
 # rasters
 insol_v1 <-rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
 fm_v1 <-rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
-temp_v1 <-rast("./rasters/prism/prism_tmean_snsr_ondjfm.tif")
+temp_v1 <-rast("./rasters/daymet/tmean_normal_1985_2016.tif")
 dem_v1 <-rast("./rasters/static/SNSR_DEM.tif")
 slope_v1 <-terrain(dem_v1, v="slope", neighbors=8, unit="degrees")
 ez_v1 <-rast("./rasters/categorized/dem_ez3_ns.tif")
@@ -105,10 +105,10 @@ plot_temp_vs_fm <-function(df, scale, title){
   plot <-ggplot() +
     geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = watts), alpha = .2, size = .5) +
     scale_color_gradientn(colors = scale, name = expression(atop("Mean SW",paste(~'(W m'^{"-2"},')')))) +
-    scale_x_continuous(limits = c(-8,8), expand = (c(0,0))) +
+    scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
     labs(x = "Mean Temperature (°C)", y = "FM")+
-    annotate(geom="text", x = -5, y = .93, label= title, size = 8, fontface = "bold")+
+    annotate(geom="text", x = -3, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -134,10 +134,53 @@ usj_temp_fm_plot <-plot_temp_vs_fm(df = plot_df,
 
 # save
 ggsave(usj_temp_fm_plot,
-       file = "./plots/usj_temp_fm_watts_v3.png",
+       file = "./plots/usj_temp_fm_watts_v5.png",
        width = 6, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/usj_temp_fm_watts_v3.png")
+system("open ./plots/usj_temp_fm_watts_v5.png")
+
+
+# create plotting function
+plot_dem_fm_temp <-function(df, scale, title){
+  
+  plot <-ggplot() +
+    geom_point(data = plot_df, aes(y = frac_melt, x= temp_deg_c, color = elevation), alpha = .2, size = .5) +
+    scale_color_gradientn(colors = scale, name = "(meters)") +
+    scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
+    labs(x = "Mean ONDJFM Temp (°C)", y = "FM")+
+    annotate(geom="text", x = -3, y = .93, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+          aspect.ratio = 1,
+          legend.position  = 'right',
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(color = guide_colorbar(direction = "vertical",
+                                  label.position = 'right',
+                                  title.hjust = .5,
+                                  barwidth = 1,
+                                  barheight = 16,
+                                  frame.colour = "black", 
+                                  ticks.colour = "black"))
+  return(plot)
+}
+
+## set color
+scale2 <-c(viridis(30, option = "A", direction = 1))
+
+# plot
+usj_temp_fm_plot_v2 <-plot_dem_fm_temp(df = plot_df,
+                                   scale = scale2,
+                                   title = "USJ") 
+
+# save
+ggsave(usj_temp_fm_plot_v2,
+       file = "./plots/usj_temp_fm_dem_v1.png",
+       width = 6, 
+       height = 5,
+       dpi = 600)
+
+system("open ./plots/usj_temp_fm_dem_v1.png")
 
