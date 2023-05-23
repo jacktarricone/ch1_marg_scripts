@@ -66,7 +66,7 @@ plot(dem_american)
 # fm load and format
 fm_list <-list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
 fm_stack_american <-mask(crop(rast(fm_list[1:32]),ext(american)), american)
-plot(fm_stack_american[[31]])
+plot(fm_stack_american[[32]])
 
 # temp load and format
 tmean_list <-list.files("./rasters/daymet/tmean", full.names = TRUE)
@@ -91,8 +91,29 @@ plot(masking_value)
 # if there are less than 10 observations per pixel, make NA
 fm_v3 <-mask(fm_stack_american, masking_value, maskvalues = NA)
 
+
+# stack and join
+# fm
+fm_stack <-c(fm_v3, dem_american, temp_american, insol_american)
+fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
+fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,4:38, names_to = 'wy', values_to = 'frac_melt'))
+head(fm_df)
+
+# tmean
+tmean_stack <-c(tmean_stack_american, dem_american, temp_american, insol_american)
+tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
+tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,4:38, names_to = 'wy', values_to = 'ondjfm_temp_c'))
+head(tmean_df)
+
+# full join
+analysis_df <-full_join(fm_df, tmean_df)
+
 analysis_stack <-c(fm_v3, tmean_stack_american)
 analysis_stack 
+
+# convert to df
+analysis_df <-as.data.frame(analysis_stack, xy = TRUE, cell = TRUE)
+head(analysis_df)
 
 # slope_fun  <-function(x){ if (is.na(x[1])){ NA } else { lm(x[1:32] ~ x[33:64])$coefficients[2] }}
 # intercept_fun  <-function(x){ if (is.na(x[1])){ NA } else { lm(x[1:32] ~ x[33:64])$coefficients[1] }}
@@ -119,9 +140,27 @@ fm_temp_mk <-function(y, tau.pass = FALSE, p.value.pass = TRUE,
   return( fit.results )
 }
 
+###### mk test, trend.slope is full stats, 2 is just p-val and slope stats
+spearman_rho <-function(x) {
+  fit <-cor.test(analysis_stack[1:32], analysis_stack[33:64], method = 'spearman')
+  return(fit)
+}
+
+fun_cor =  function(x) {
+  Rs = pcor.test(x[1:20],x[21:40],x[41:60])
+  Rx = Rs$estimate
+  Px = Rs$p.value
+  return(c(Rx, Px))
+}
+
 # run mk test
-mk_results <-app(analysis_stack, fun = fm_temp_mk, cores = 14)
-mk_results
+spearman_results <-app(analysis_stack, fun = fun_cor, cores = 14)
+spearman_results
+
+fit <-cor.test(analysis_stack[1], analysis_stack[32], method = 'spearman')
+
+cor.test(analysis_stack[[1:32]], analysis_stack[[3:64]], method = 'spearman')
+
 
 # pull out results
 p_val <-mk_results[[2]]
@@ -139,16 +178,8 @@ plot(p_val)
 plot(sig_p_val)
 plot(slope)
 plot(sig_slope)
-hist(slope)
 
-
-# test plot
-ggplot(full_df)+
-  geom_bin2d(bins = 100, aes(y = frac_melt, x = annual_tmean_c, fill = ..density..)) +
-  #geom_tile(fill = 'darkred', width = 14/100, height = 1/100) +
-  scale_color_gradientn(colors = scale, name = expression(Insolation ~ '(W m'^{"-2"} ~ ')')) +
-  scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
-  scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-  # geom_point(color = 'darkred')+
-  # geom_smooth(method='lm', se = FALSE)+
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1))
+writeRaster(p_val, "./rasters/temp_fm_mk/american_pval.tif")
+writeRaster(sig_p_val, "./rasters/temp_fm_mk/american_sig_pval.tif")
+writeRaster(slope, "./rasters/temp_fm_mk/american_slope.tif")
+writeRaster(sig_slope, "./rasters/temp_fm_mk/american_sig_slope.tif")
