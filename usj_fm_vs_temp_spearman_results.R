@@ -44,7 +44,7 @@ theme_classic <-function(base_size = 11, base_family = "",
 theme_set(theme_classic(14))
 
 # bring vectors
-american <-vect("./vectors/ca_basins/american.gpkg")
+american <-vect("./vectors/ca_basins/usj.gpkg")
 
 # single rasters: insol, temp normal, dem
 insol_american <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"),ext(american)), american)
@@ -109,9 +109,9 @@ analysis_df <-analysis_df %>% drop_na()
 tail(analysis_df)
 head(analysis_df)
 
-# quick test df with two cells
-test_df <-filter(analysis_df, cell == 841193)
-head(test_df)
+# # quick test df with two cells
+# test_df <-filter(analysis_df, cell == 841193)
+# head(test_df)
 
 # # test ft
 # fit <-cor.test(test_df$frac_melt, test_df$ondjfm_temp_c, method = 'spearman', exact=FALSE)
@@ -127,7 +127,7 @@ results_raw <-as.data.frame(unlist(results_v1$corr))
 head(results_raw)
 
 # extract results from unlist/unorganized df
-# p
+# p_val
 p_val <-as.data.frame(as.numeric(results_raw[seq(2, nrow(results_raw), 7), ]))
 names(p_val)[1] <-"p_val"
 head(p_val)
@@ -155,51 +155,64 @@ head(spearman_df)
 # combine both for full df
 results_df <-full_join(single_cell_df,spearman_df)
 head(results_df)
-# fwrite(results_df, "./csvs/american_spearman_results_v2.csv", row.names = FALSE)
+fwrite(results_df, "./csvs/usj_spearman_results_v1.csv", row.names = FALSE)
 
+# test hists
 hist(results_df$rho_val, breaks = 100)
 hist(results_df$p_val, breaks = 100)
 
-sig <-filter(results_df, p_val < .05)
-
+# filter for sig
+sig_df <-filter(results_df, p_val < .05)
+not_sig_df <-filter(results_df, p_val > .05)
 
 # create plotting function
-plot_rho_vs_elevation <-function(df, scale, title){
+plot_rho_vs_elevation <-function(not_sig, sig, scale, title){
   
   plot <-ggplot() +
-    geom_point(data = df, aes(y = rho_val, x = elevation, color = insol_watts), alpha = .2, size = .5) +
-    scale_color_gradientn(colors = scale, name = expression(atop("Mean SW",paste(~'(W m'^{"-2"},')')))) +
-    scale_x_continuous(limits = c(min(results_df$elevation),min(results_df$elevation)), expand = (c(0,0))) +
-    scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean Temperature (°C)", y = "FM")+
-    annotate(geom="text", x = .5, y = .93, label= title, size = 8, fontface = "bold")+
+    geom_point(data = sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .1, size = .4, shape = 21) +
+    geom_point(data = not_sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .1, size = .4, shape = 0) +
+    scale_color_gradientn(colors = scale, name = "Mean Temperature (°C)") +
+    scale_x_continuous(limits = c(min(results_df$elevation),max(results_df$elevation)), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,.73),expand = (c(0,0))) +
+    labs(x = "Elevation (m)", y = "Spearman's Rho")+
+    annotate(geom="text", x = 3500, y = .1, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
-          legend.position  = 'right',
+          legend.position  = 'top',
           plot.margin = unit(c(.25,.1,.1,.1), "cm"),
           legend.box.spacing = unit(0, "pt")) +
-    guides(color = guide_colorbar(direction = "vertical",
-                                  label.position = 'right',
+    guides(color = guide_colorbar(direction = "horizontal",
+                                  label.position = 'bottom',
+                                  title.position = 'top',
                                   title.hjust = .5,
-                                  barwidth = 1,
-                                  barheight = 16,
+                                  barwidth = 20,
+                                  barheight = 1,
                                   frame.colour = "black", 
                                   ticks.colour = "black"))
   return(plot)
 }
 
 ## set color
-scale2 <-c(viridis(30, option = "D", direction = 1))
+scale2 <-c(viridis(30, option = "A", direction = 1))
 
 # plot
-american_temp_fm_plot <-plot_temp_vs_fm(df = analysis_df,
-                                        scale = scale2,
-                                        title = "American") 
+american_rho_ele_plot <-plot_rho_vs_elevation(not_sig = not_sig_df, 
+                                              sig = sig_df,
+                                              scale = scale2,
+                                              title = "USJ") 
 # save
-ggsave(american_temp_fm_plot,
-       file = "./plots/spearman_test_v1.png",
-       width = 6, 
-       height = 5,
+ggsave(american_rho_ele_plot,
+       file = "./plots/usj_rho_ele_temp_spearman_test_v2.png",
+       width = 5, 
+       height = 5.8,
        dpi = 600)
 
-system("open ./plots/spearman_test_v1.png")
+system("open ./plots/usj_rho_ele_temp_spearman_test_v2.png")
+
+
+
+
+
+
+
+

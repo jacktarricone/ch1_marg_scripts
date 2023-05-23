@@ -161,28 +161,122 @@ hist(results_df$rho_val, breaks = 100)
 hist(results_df$p_val, breaks = 100)
 
 sig <-filter(results_df, p_val < .05)
-
+head(results_df)
 
 # create plotting function
 plot_rho_vs_elevation <-function(df, scale, title){
   
   plot <-ggplot() +
-    geom_point(data = df, aes(y = rho_val, x = elevation, color = insol_watts), alpha = .2, size = .5) +
-    scale_color_gradientn(colors = scale, name = expression(atop("Mean SW",paste(~'(W m'^{"-2"},')')))) +
-    scale_x_continuous(limits = c(min(results_df$elevation),min(results_df$elevation)), expand = (c(0,0))) +
-    scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean Temperature (°C)", y = "FM")+
-    annotate(geom="text", x = .5, y = .93, label= title, size = 8, fontface = "bold")+
+    geom_point(data = df, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .05, size = .2) +
+    scale_color_gradientn(colors = scale, name = "Mean Temperature (°C)") +
+    scale_x_continuous(limits = c(min(results_df$elevation),max(results_df$elevation)), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,.8),expand = (c(0,0))) +
+    labs(x = "Elevation (m)", y = "Spearman's Rho")+
+    annotate(geom="text", x = 3800, y = .73, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
-          legend.position  = 'right',
+          legend.position  = 'top',
           plot.margin = unit(c(.25,.1,.1,.1), "cm"),
           legend.box.spacing = unit(0, "pt")) +
-    guides(color = guide_colorbar(direction = "vertical",
-                                  label.position = 'right',
+    guides(color = guide_colorbar(direction = "horizontal",
+                                  label.position = 'bottom',
+                                  title.position = 'top',
                                   title.hjust = .5,
-                                  barwidth = 1,
-                                  barheight = 16,
+                                  barwidth = 20,
+                                  barheight = 1,
+                                  frame.colour = "black", 
+                                  ticks.colour = "black"))
+  return(plot)
+}
+
+## set color
+scale2 <-c(viridis(30, option = "A", direction = 1))
+
+# plot
+american_rho_ele_plot <-plot_rho_vs_elevation(df = results_df,
+                                        scale = scale2,
+                                        title = "American") 
+# save
+ggsave(american_rho_ele_plot,
+       file = "./plots/rho_ele_temp_spearman_test_v3.png",
+       width = 5, 
+       height = 5.8,
+       dpi = 600)
+
+system("open ./plots/rho_ele_temp_spearman_test_v3.png")
+
+
+
+# create plotting function
+plot_rho_ele_temp <-function(df, scale, title){
+  
+  plot <-ggplot() +
+    geom_point(data = df, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .05, size = .2) +
+    scale_color_gradientn(colors = scale, name = "Mean Temperature (°C)") +
+    scale_x_continuous(limits = c(min(results_df$elevation),max(results_df$elevation)), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,.8),expand = (c(0,0))) +
+    labs(x = "Elevation (m)", y = "Spearman's Rho")+
+    annotate(geom="text", x = 3800, y = .73, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+          aspect.ratio = 1,
+          legend.position  = 'top',
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(color = guide_colorbar(direction = "horizontal",
+                                  label.position = 'bottom',
+                                  title.position = 'top',
+                                  title.hjust = .5,
+                                  barwidth = 20,
+                                  barheight = 1,
+                                  frame.colour = "black", 
+                                  ticks.colour = "black"))
+  return(plot)
+}
+
+## set color
+scale2 <-c(viridis(30, option = "A", direction = 1))
+
+# plot
+american_rho_ele_temp_plot <-plot_rho_ele_temp(df = results_df,
+                                              scale = scale2,
+                                              title = "American") 
+# save
+ggsave(american_rho_ele_temp_plot,
+       file = "./plots/rho_ele_temp_spearman_test_v3.png",
+       width = 5, 
+       height = 5.8,
+       dpi = 600)
+
+system("open ./plots/rho_ele_temp_spearman_test_v3.png")
+
+
+
+
+
+
+
+
+
+plot_rho_ele_sw <-function(df, scale, title){
+  
+  plot <-ggplot() +
+    geom_point(data = df, aes(y = rho_val, x = elevation, color = insol_watts), alpha = .05, size = .2) +
+    scale_color_gradientn(colors = scale, name = expression("Insolation",paste(~'(W m'^{"-2"},')'))) +
+    scale_x_continuous(limits = c(min(results_df$elevation),max(results_df$elevation)), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,.8),expand = (c(0,0))) +
+    labs(x = "Elevation (m)", y = "Spearman's Rho")+
+    annotate(geom="text", x = 3800, y = .73, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+          aspect.ratio = 1,
+          legend.position  = 'top',
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(color = guide_colorbar(direction = "horizontal",
+                                  label.position = 'bottom',
+                                  title.position = 'top',
+                                  title.hjust = .5,
+                                  barwidth = 20,
+                                  barheight = 1,
                                   frame.colour = "black", 
                                   ticks.colour = "black"))
   return(plot)
@@ -192,14 +286,14 @@ plot_rho_vs_elevation <-function(df, scale, title){
 scale2 <-c(viridis(30, option = "D", direction = 1))
 
 # plot
-american_temp_fm_plot <-plot_temp_vs_fm(df = analysis_df,
-                                        scale = scale2,
-                                        title = "American") 
+american_rho_ele_sw_plot <-plot_rho_ele_sw(df = results_df,
+                                               scale = scale2,
+                                               title = "American") 
 # save
-ggsave(american_temp_fm_plot,
-       file = "./plots/spearman_test_v1.png",
-       width = 6, 
-       height = 5,
+ggsave(american_rho_ele_sw_plot,
+       file = "./plots/rho_ele_sw_spearman_test_v1.png",
+       width = 5, 
+       height = 5.8,
        dpi = 600)
 
-system("open ./plots/spearman_test_v1.png")
+system("open ./plots/rho_ele_sw_spearman_test_v1.png")
