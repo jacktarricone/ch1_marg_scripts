@@ -3,8 +3,8 @@
 # may 15th, 2023
 
 library(terra)
-library(tidyr)
-library(ggplot2)
+library(broom)
+library(tidyverse)
 library(scales)
 library(cowplot)
 library(viridis)
@@ -71,7 +71,7 @@ plot(fm_stack_american[[32]])
 # temp load and format
 tmean_list <-list.files("./rasters/daymet/tmean", full.names = TRUE)
 tmean_stack_american <-mask(crop(rast(tmean_list[1:32]),ext(american)), american)
-plot(tmean_stack_american[[2]])
+plot(tmean_stack_american[[32]])
 
 # rename layers
 wy_names <-seq(1985,2016,1)
@@ -91,29 +91,56 @@ plot(masking_value)
 # if there are less than 10 observations per pixel, make NA
 fm_v3 <-mask(fm_stack_american, masking_value, maskvalues = NA)
 
-
 # stack and join
 # fm
-fm_stack <-c(fm_v3, dem_american, temp_american, insol_american)
+fm_stack <-c(dem_american, temp_american, insol_american, fm_v3)
 fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
-fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,4:38, names_to = 'wy', values_to = 'frac_melt'))
+fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,7:38, names_to = 'wy', values_to = 'frac_melt'))
 head(fm_df)
 
 # tmean
-tmean_stack <-c(tmean_stack_american, dem_american, temp_american, insol_american)
+tmean_stack <-c(dem_american, temp_american, insol_american, tmean_stack_american)
 tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
-tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,4:38, names_to = 'wy', values_to = 'ondjfm_temp_c'))
+tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,7:38, names_to = 'wy', values_to = 'ondjfm_temp_c'))
 head(tmean_df)
 
 # full join
 analysis_df <-full_join(fm_df, tmean_df)
+analysis_df <-analysis_df %>% drop_na()
+tail(analysis_df)
 
-analysis_stack <-c(fm_v3, tmean_stack_american)
-analysis_stack 
+# quick test df with two cells
+test_df <-filter(analysis_df, cell == 122)
+head(test_df)
 
-# convert to df
-analysis_df <-as.data.frame(analysis_stack, xy = TRUE, cell = TRUE)
-head(analysis_df)
+# test ft
+fit <-cor.test(analysis_df$frac_melt, analysis_df$ondjfm_temp_c, method = 'spearman', exact=FALSE)
+fit
+
+##### run spearman test on each cell for all 32 years
+# https://stackoverflow.com/questions/8791650/spearman-correlation-by-group-in-r
+result_df <-analysis_df %>% 
+  nest(data = -cell) %>%
+  mutate(cor = map(data,~cor.test(.x$frac_melt, .x$ondjfm_temp_c, method = "spearman", extact = FALSE))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied) %>% 
+  select(-data, -cor)
+
+head(result_df)
+
+library(data.table)
+DT <- as.data.table(df)
+setkey(analysis_df, cell)
+analysis_df[,list(corr = cor(frac_melt,ondjfm_temp_c,method = 'spearman', exact = FALSE)), by = group]
+
+# split the data by group then apply spearman correlation
+# to each element of that list
+j <- lapply(split(analysis_df, analysis_df$cell), 
+            function(x){cor.test(.x$frac_melt,.x$ondjfm_temp_c, method = "spearman", exact = FALSE)})
+
+# Bring it together
+data.frame(group = names(j), corr = unlist(j), row.names = NULL)
+
 
 # slope_fun  <-function(x){ if (is.na(x[1])){ NA } else { lm(x[1:32] ~ x[33:64])$coefficients[2] }}
 # intercept_fun  <-function(x){ if (is.na(x[1])){ NA } else { lm(x[1:32] ~ x[33:64])$coefficients[1] }}
