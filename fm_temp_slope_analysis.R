@@ -108,9 +108,10 @@ head(tmean_df)
 analysis_df <-full_join(fm_df, tmean_df)
 analysis_df <-analysis_df %>% drop_na()
 tail(analysis_df)
+head(analysis_df)
 
 # quick test df with two cells
-test_df <-filter(analysis_df, cell == 122)
+test_df <-filter(analysis_df, cell == 841193 | cell == 582)
 head(test_df)
 
 # test ft
@@ -119,24 +120,62 @@ fit
 
 ##### run spearman test on each cell for all 32 years
 # https://stackoverflow.com/questions/8791650/spearman-correlation-by-group-in-r
-result_df <-analysis_df %>% 
-  nest(data = -cell) %>%
-  mutate(cor = map(data,~cor.test(.x$frac_melt, .x$ondjfm_temp_c, method = "spearman", extact = FALSE))) %>%
-  mutate(tidied = map(cor, tidy)) %>% 
-  unnest(tidied) %>% 
-  select(-data, -cor)
+# result_df <-analysis_df %>% 
+#   nest(data = -cell) %>%
+#   mutate(cor = map(data,~cor.test(.x$frac_melt, .x$ondjfm_temp_c, method = "spearman", extact = FALSE))) %>%
+#   mutate(tidied = map(cor, tidy)) %>% 
+#   unnest(tidied) %>% 
+#   select(-data, -cor)
 
-head(result_df)
+# covert to data table and set key
+DT <- as.data.table(test_df)
+setkey(DT, cell)
 
-library(data.table)
-DT <- as.data.table(df)
-setkey(analysis_df, cell)
-analysis_df[,list(corr = cor(frac_melt,ondjfm_temp_c,method = 'spearman', exact = FALSE)), by = group]
+# run much faster, 
+results_v1 <-DT[,list(corr = cor.test(frac_melt,ondjfm_temp_c,method = 'spearman', exact = FALSE)), by = cell]
+results_raw <-as.data.frame(unlist(results_v1$corr))
+results_raw
+
+# extact p.value by sequencing
+p_val <-as.data.frame(results_raw[seq(2, nrow(results_raw), 7), ])
+names(p_val)[1] <-"p_val"
+p_val
+
+rho_val <-as.data.frame(results_raw[seq(3, nrow(results_raw), 7), ])
+names(rho_val)[1] <-"rho_val"
+rho_val
+
+
+# convert to data frame 
+dfList <- lapply(unique(results_v1$corr),function(x){
+  y <- results_v1$corr[x]
+  data.frame(group = x,
+             rho_value = y$estimate,
+             p_value = y$p.value)
+})
+
+
+data.frame(cell = results_v1$cell[1], rho = tmp$estimate, p.value = tmp$p.value)
+
+lapply(results_v1$corr, tidy) %>% 
+  bind_rows() %>% 
+  mutate(group = names(spear)) %>%
+  rename(rho = estimate) %>%
+  select(group, rho, p.value)
+
+results_v2 <-tidyr::pivot_wider(results_v1, values_from = corr)
+
+test <-dcast(df, .~cell, value.var="cell")[, ".":=NULL][]
+head(test)
 
 # split the data by group then apply spearman correlation
 # to each element of that list
+j <- lapply(split(test_df, test_df$cell), 
+            function(x){cor.test(x$frac_melt,x$ondjfm_temp_c, method = "spearman", exact = FALSE)})
+
+
 j <- lapply(split(analysis_df, analysis_df$cell), 
-            function(x){cor.test(.x$frac_melt,.x$ondjfm_temp_c, method = "spearman", exact = FALSE)})
+            function(x){cor.test(x$frac_melt,x$ondjfm_temp_c, method = "spearman", exact = FALSE)})
 
 # Bring it together
 data.frame(group = names(j), corr = unlist(j), row.names = NULL)
