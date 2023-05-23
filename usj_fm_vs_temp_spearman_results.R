@@ -165,17 +165,20 @@ hist(results_df$p_val, breaks = 100)
 sig_df <-filter(results_df, p_val < .05)
 not_sig_df <-filter(results_df, p_val > .05)
 
+percent_sig <-(nrow(sig_df)/nrow(results_df))*100
+percent_no_sig <-(nrow(not_sig_df)/nrow(results_df))*100
+
 # create plotting function
 plot_rho_vs_elevation <-function(not_sig, sig, scale, title){
   
   plot <-ggplot() +
-    geom_point(data = sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .1, size = .4, shape = 21) +
-    geom_point(data = not_sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .1, size = .4, shape = 0) +
+    geom_point(data = not_sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .05, size = .1, shape = 4) +
+    geom_point(data = sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .3, size = .4, shape = 19) +
     scale_color_gradientn(colors = scale, name = "Mean Temperature (°C)") +
     scale_x_continuous(limits = c(min(results_df$elevation),max(results_df$elevation)), expand = (c(0,0))) +
-    scale_y_continuous(limits = c(0,.73),expand = (c(0,0))) +
+    scale_y_continuous(limits = c(-.2,.8),expand = (c(0,0))) +
     labs(x = "Elevation (m)", y = "Spearman's Rho")+
-    annotate(geom="text", x = 3500, y = .1, label= title, size = 8, fontface = "bold")+
+    annotate(geom="text", x = 3500, y = -.1, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'top',
@@ -202,12 +205,59 @@ american_rho_ele_plot <-plot_rho_vs_elevation(not_sig = not_sig_df,
                                               title = "USJ") 
 # save
 ggsave(american_rho_ele_plot,
-       file = "./plots/usj_rho_ele_temp_spearman_test_v2.png",
+       file = "./plots/usj_rho_ele_temp_spearman_test_v7.png",
        width = 5, 
        height = 5.8,
        dpi = 600)
 
-system("open ./plots/usj_rho_ele_temp_spearman_test_v2.png")
+system("open ./plots/usj_rho_ele_temp_spearman_test_v7.png")
+
+
+
+
+# create plotting function
+plot_rho_ele_sw <-function(not_sig, sig, scale, title){
+  
+  plot <-ggplot() +
+    geom_point(data = not_sig, aes(y = rho_val, x = elevation, color = insol_watts), alpha = .05, size = .1, shape = 4) +
+    geom_point(data = sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .3, size = .4, shape = 19) +
+    scale_color_gradientn(colors = scale, name = expression("Insolation",paste(~'(W m'^{"-2"},')'))) +
+    scale_x_continuous(limits = c(min(results_df$elevation),max(results_df$elevation)), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(-.2,.8),expand = (c(0,0))) +
+    labs(x = "Elevation (m)", y = "Spearman's Rho")+
+    annotate(geom="text", x = 3500, y = -.1, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+          aspect.ratio = 1,
+          legend.position  = 'top',
+          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(color = guide_colorbar(direction = "horizontal",
+                                  label.position = 'bottom',
+                                  title.position = 'top',
+                                  title.hjust = .5,
+                                  barwidth = 20,
+                                  barheight = 1,
+                                  frame.colour = "black", 
+                                  ticks.colour = "black"))
+  return(plot)
+}
+
+## set color
+scale2 <-c(viridis(30, option = "D", direction = 1))
+
+# plot
+american_rho_ele_sw <-plot_rho_ele_sw(not_sig = not_sig_df, 
+                                              sig = sig_df,
+                                              scale = scale2,
+                                              title = "USJ") 
+# save
+ggsave(american_rho_ele_sw,
+       file = "./plots/usj_rho_ele_swe_spearman_test_v1.png",
+       width = 5, 
+       height = 5.8,
+       dpi = 600)
+
+system("open ./plots/usj_rho_ele_swe_spearman_test_v1.png")
 
 
 
