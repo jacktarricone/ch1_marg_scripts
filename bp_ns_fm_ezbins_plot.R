@@ -73,40 +73,56 @@ years <-seq(1985,2016,1)
 colnames(df)[6:ncol(df)] <-years
 colnames(df)[4] <-"ele_bin"
 
-# join ascpect categorical and fm dataframes
-fm_joined <-right_join(fm_ac_filt,fm_filt,by = c("cell","x","y"))
-fm_joined$SNSR_aspect <-fm_ac_filt$SNSR_aspect # fix aspect col
-head(fm_joined)
+
 
 # pivot longer for test
 # creates "year" col and "fm_percent" col while preserving meta data info
-fm_mk_test_df <-as.data.frame(fm_joined %>%
- pivot_longer(-c(cell,x,y,SNSR_aspect), names_to = "year", values_to = "fm_percent"))
+long_df <-as.data.frame((df) %>%
+ pivot_longer(-c(cell,x,y,ele_bin,aspect), names_to = "year", values_to = "frac_melt"))
 
-# convert to int for test
-fm_mk_test_df$year <-as.integer(fm_mk_test_df$year)
-fm_mk_test_df$fm_percent_100 <-fm_mk_test_df$fm_percent*100
-fm_mk_df <-fm_mk_test_df[order(fm_mk_test_df$year),] # sort by year
-head(fm_mk_df) # looks good!
+head(long_df)
+# fwrite(long_df, "./csvs/fm_eb_ns_csv_v1.csv")
+
+# read back in using data.table
+long_df <-fread("./csvs/fm_eb_ns_csv_v1.csv")
+long_sample <-long_df[sample(.N, 100000)]
+
+# test hists
+hist(long_df$frac_melt, breaks = 100)
+hist(long_sample$frac_melt, breaks = 100)
 
 ##################################
 #### make time series box plot ###
 ##################################
 
 # starting plot
-fm <-ggplot(fm_mk_df, mapping = aes(x = as.factor(year), y = fm_percent_100, fill = as.factor(SNSR_aspect))) +
+fm <-ggplot(long_sample, mapping = aes(x = as.factor(ele_bin), y = frac_melt, fill = as.factor(aspect))) +
   geom_boxplot(linewidth = .5, width = .4, outlier.size = .01, outlier.shape = 1) +
   scale_fill_manual(name = "Aspect",
-                    values = c('1' = 'goldenrod', '2' = 'cornflowerblue'),
+                    values = c('1' = 'darkblue', '3' = 'darkorange'),
                     labels = c('North Facing', 'South Facing'))+
-  xlab("Year") + ylab("fm (%)") +
-  scale_y_continuous(limits = c(0,100)) +
+  xlab("Elevation Zone") + ylab("FM") +
+  scale_y_continuous(limits = c(0,1)) +
   theme_classic(11) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size = 1),
-        axis.text.x = element_text(angle = 75, hjust = 1),
-        legend.position = "none")
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1),
+        legend.position = c(.9,.9),
+        legend.title = element_blank(),
+        legend.margin=margin(-5,1,1,1),
+        legend.box.background = element_rect(colour = "black"))
 
-print(fm)
+# test save
+ggsave(fm,
+       file = "./plots/fm_ez_ns_boxplot_test_v1.pdf",
+       width = 8, 
+       height = 4,
+       units = "in",
+       dpi = 150) 
+
+system("open ./plots/fm_ez_ns_boxplot_test_v1.pdf")
+
+
+
+
 
 # stack plots
 plot_grid(fm, max,
