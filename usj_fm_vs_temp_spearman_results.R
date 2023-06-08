@@ -63,7 +63,7 @@ plot(dem_american)
 
 ### stacks
 # fm load and format
-fm_list <-list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
+fm_list <- list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
 fm_stack_american <-mask(crop(rast(fm_list[1:32]),ext(american)), american)
 plot(fm_stack_american[[32]])
 
@@ -220,7 +220,7 @@ plot_rho_ele_sw <-function(not_sig, sig, scale, title){
   
   plot <-ggplot() +
     geom_point(data = not_sig, aes(y = rho_val, x = elevation, color = insol_watts), alpha = .05, size = .1, shape = 4) +
-    geom_point(data = sig, aes(y = rho_val, x = elevation, color = mean_temp_c), alpha = .3, size = .4, shape = 19) +
+    geom_point(data = sig, aes(y = rho_val, x = elevation, color = insol_watts), alpha = .3, size = .4, shape = 19) +
     scale_color_gradientn(colors = scale, name = expression("Insolation",paste(~'(W m'^{"-2"},')'))) +
     scale_x_continuous(limits = c(min(results_df$elevation),max(results_df$elevation)), expand = (c(0,0))) +
     scale_y_continuous(limits = c(-.2,.8),expand = (c(0,0))) +
@@ -252,15 +252,17 @@ american_rho_ele_sw <-plot_rho_ele_sw(not_sig = not_sig_df,
                                               title = "USJ") 
 # save
 ggsave(american_rho_ele_sw,
-       file = "./plots/usj_rho_ele_swe_spearman_test_v1.png",
+       file = "./plots/usj_rho_ele_swe_spearman_test_v2.png",
        width = 5, 
        height = 5.8,
        dpi = 600)
 
-system("open ./plots/usj_rho_ele_swe_spearman_test_v1.png")
+system("open ./plots/usj_rho_ele_swe_spearman_test_v2.png")
 
 
-
+mean(results_df$rho_val)
+hist(results_df$rho_val, breaks = 100)
+mean(results_df$p_val)
 
 
 
