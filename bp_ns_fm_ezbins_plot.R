@@ -74,7 +74,6 @@ colnames(df)[6:ncol(df)] <-years
 colnames(df)[4] <-"ele_bin"
 
 
-
 # pivot longer for test
 # creates "year" col and "fm_percent" col while preserving meta data info
 long_df <-as.data.frame((df) %>%
@@ -84,8 +83,18 @@ head(long_df)
 # fwrite(long_df, "./csvs/fm_eb_ns_csv_v1.csv")
 
 # read back in using data.table
-long_df <-fread("./csvs/fm_eb_ns_csv_v1.csv")
-long_sample <-long_df[sample(.N, 100000)]
+long_df_v1 <-fread("./csvs/fm_eb_ns_csv_v1.csv")
+long_df <-long_df_v1[sample(.N, 100000)]
+
+# rename
+long_df$bin_name <-ifelse(long_df$ele_bin == 1, "1500-1900 m", long_df$ele_bin)
+long_df$bin_name <-ifelse(long_df$ele_bin == 2, "1900-2300 m", long_df$bin_name)
+long_df$bin_name <-ifelse(long_df$ele_bin == 3, "2300-2700 m", long_df$bin_name)
+long_df$bin_name <-ifelse(long_df$ele_bin == 4, "2700-3100 m", long_df$bin_name)
+long_df$bin_name <-ifelse(long_df$ele_bin == 5, "3100-3500 m", long_df$bin_name)
+long_df$bin_name <-ifelse(long_df$ele_bin == 6, "3500-4361 m", long_df$bin_name)
+
+head(long_df)
 
 # test hists
 hist(long_df$frac_melt, breaks = 100)
@@ -96,29 +105,29 @@ hist(long_sample$frac_melt, breaks = 100)
 ##################################
 
 # starting plot
-fm <-ggplot(long_sample, mapping = aes(x = as.factor(ele_bin), y = frac_melt, fill = as.factor(aspect))) +
+fm <-ggplot(long_df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = as.factor(aspect))) +
   geom_boxplot(linewidth = .5, width = .4, outlier.size = .01, outlier.shape = 1) +
   scale_fill_manual(name = "Aspect",
-                    values = c('1' = 'darkblue', '3' = 'darkorange'),
+                    values = c('1' = 'cornflowerblue', '3' = 'darkorange'),
                     labels = c('North Facing', 'South Facing'))+
   xlab("Elevation Zone") + ylab("FM") +
   scale_y_continuous(limits = c(0,1)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1),
-        legend.position = c(.9,.9),
+        legend.position = c(.88,.86),
         legend.title = element_blank(),
         legend.margin=margin(-5,1,1,1),
         legend.box.background = element_rect(colour = "black"))
 
 # test save
 ggsave(fm,
-       file = "./plots/fm_ez_ns_boxplot_test_v1.pdf",
-       width = 8, 
-       height = 4,
+       file = "./plots/fm_ez_ns_boxplot_test_v2.png",
+       width = 6, 
+       height = 3,
        units = "in",
-       dpi = 150) 
+       dpi = 300) 
 
-system("open ./plots/fm_ez_ns_boxplot_test_v1.pdf")
+system("open ./plots/fm_ez_ns_boxplot_test_v2.png")
 
 
 
