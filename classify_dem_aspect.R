@@ -15,16 +15,19 @@ hist(dem, breaks = 100)
 dem_max <-as.numeric(global(dem,max,na.rm=T))
 
 # bin into 11 elevation categories by 250m
-dem_classes <-matrix(c(1500,2250,1, # 1 = north
-                       2250,3000,2,
-                       3000,dem_max,3), # 2 = south), # 3 = east 
+dem_classes <-matrix(c(1500,1900,1, # 1 = north
+                       1900,2300,2,
+                       2300,2700,3,
+                       2700,3100,4,
+                       3100,3500,5,
+                       3500,dem_max,6), # 2 = south), # 3 = east 
                        ncol=3, byrow=TRUE)
 
 # classify using matrix
-dem_3z <-classify(dem, rcl = dem_classes)
-plot(dem_3z)
-hist(dem_3z)
-writeRaster(dem_3z, "./rasters/categorized/dem_3z.tif")
+dem_6b <-classify(dem, rcl = dem_classes)
+plot(dem_6b)
+hist(dem_6b)
+writeRaster(dem_6b, "./rasters/categorized/dem_6zb.tif")
 
 # compute metricsf
 aspect <-terrain(dem, v = "aspect", neighbors = 8, unit = "degrees")
@@ -35,7 +38,7 @@ slope_thres <-slope
 values(slope_thres)[values(slope_thres) < 4] = NA
 # writeRaster(slope_thres, "./rasters/categorized/slope_4_na.tif", overwrite = TRUE)
 
-# 
+# mask for aspect
 aspect_thres <-mask(aspect, slope_thres, maskvalue = NA)
 plot(aspect_thres)
 # writeRaster(aspect_thres, "./rasters/categorized/aspect_thres_4.tif", overwrite = TRUE)

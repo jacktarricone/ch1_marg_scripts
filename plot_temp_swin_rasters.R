@@ -146,7 +146,7 @@ temp_plot <-ggplot(temp_df) +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # for gray
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
   scale_fill_gradientn(colors = temp_scale, limits = c(-6,6), oob = squish) + # max of color bar so it saturates
-  labs(fill = "Mean ONDJFM Temp (°C)") +
+  labs(fill = expression('ONDJFM ' ~T["Mean"] ~ '(°C)')) +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -168,12 +168,12 @@ temp_plot <-ggplot(temp_df) +
                                ticks.colour = "black"))
 # save
 ggsave(temp_plot,
-       file = "./plots/temp_plot_v3.png",
+       file = "./plots/temp_plot_v4.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/temp_plot_v3.png")
+system("open ./plots/temp_plot_v4.png")
 
 
 ######################################################
@@ -193,10 +193,11 @@ full <-plot_grid(sw_plot, temp_plot,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/sw_temp_plot_v1.png",
+       file = "./plots/sw_temp_plot_v2.png",
        width = 9, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/sw_temp_plot_v1.png")
+
+system("open ./plots/sw_temp_plot_v2.png")
   

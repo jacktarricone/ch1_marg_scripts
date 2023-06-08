@@ -1,4 +1,4 @@
-# max vs dem
+# fm vs. elevation bins n/s
 # may 2nd, 2023
 
 library(terra)

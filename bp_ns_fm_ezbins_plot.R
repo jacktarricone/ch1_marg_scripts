@@ -6,6 +6,7 @@ library(terra)
 library(lubridate)
 library(tidyverse)
 library(cowplot)
+library(data.table)
 
 theme_classic <- function(base_size = 11, base_family = "",
                           base_line_size = base_size / 22,
@@ -65,18 +66,12 @@ stack <-c(dem_6b,aspect_ns,fm_stack)
 df <-as.data.frame(stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
 head(df)
 
-# filter down to same cell numbers for each df
-fm_filt <-subset(fm_df, cell %in% ac_df$cell)
-fm_ac_filt <-subset(ac_df, cell %in% fm_df$cell)
-
-# check if the same
-identical(fm_filt$cell, fm_ac_filt$cell) # yes
-
 # years seq
 years <-seq(1985,2016,1)
 
 # rename columns, which are the annual rasters, with the correct year name
-colnames(fm_filt)[4:ncol(fm_filt)] <-years
+colnames(df)[6:ncol(df)] <-years
+colnames(df)[4] <-"ele_bin"
 
 # join ascpect categorical and fm dataframes
 fm_joined <-right_join(fm_ac_filt,fm_filt,by = c("cell","x","y"))
