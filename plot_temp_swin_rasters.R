@@ -68,12 +68,21 @@ temp_v1 <-crop(temp_v2, ext(snsr))
 temp <-mask(temp_v1, sw, maskvalue = NA)
 plot(temp)
 
+# na rast
+# create na df
+# make NA rast for plotting
+na_v1 <-subst(temp, NA, -999)
+values(na_v1)[values(na_v1) > -999] = NA
+na <-mask(na_v1, snsr)
+
 # convert to df for geom_raster
 # fm_df <-as.data.frame(fm_cm, xy = TRUE, cells = TRUE)
 sw_df <-as.data.frame(sw, xy = TRUE, cells = TRUE)
 temp_df <-as.data.frame(temp, xy = TRUE, cells = TRUE)
+na_df <-as.data.frame(na, xy = TRUE, cells = TRUE)
 
-
+hist(sw_df$mean, breaks = 100)
+max(sw_df$mean)
 
 ######################
 ######################
@@ -82,16 +91,16 @@ temp_df <-as.data.frame(temp, xy = TRUE, cells = TRUE)
 ######################
 
 # set scale 
-fm_scale <-c(viridis(30, option = "C", direction = 1))
+sw_scale <-c(viridis(30, option = "C", direction = 1))
 
 # plot
-fm_plot <-ggplot(fm_df) +
-  geom_tile(mapping = aes(x,y, fill = lyr.1)) +
-  geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') + # plot nan points as gray
+sw_plot <-ggplot(sw_df) +
+  geom_tile(mapping = aes(x,y, fill = mean)) +
+  geom_tile(data = na_df, mapping = aes(x,y, fill = mean), color = 'grey50') + # plot nan points as gray
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # 
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = fm_scale, limits = c(0,1), oob = squish) + # fm of color bar so it saturates
-  labs(fill = "FM") +
+  scale_fill_gradientn(colors = sw_scale, limits = c(40,260), oob = squish) + # fm of color bar so it saturates
+  labs(fill = expression(SW["in"] ~ '(W m'^{"-2"} ~ ')')) +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -112,33 +121,32 @@ fm_plot <-ggplot(fm_df) +
                                frame.colour = "black", 
                                ticks.colour = "black"))
 # save
-ggsave(fm_plot,
-       file = "./plots/fm_snsr_v1.png",
+ggsave(sw_plot,
+       file = "./plots/sw_plot_v3.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/fm_snsr_v1.png")
-hist(fm, breaks = 100)
+system("open ./plots/sw_plot_v3.png")
 
 ######################
 ######################
-######## max #########
+######## temp #########
 ######################
 ######################
 
 
 # set scale 
-max_scale <-brewer.pal(9, 'YlGnBu')
+temp_scale <-rev(brewer.pal(9, 'Spectral'))
 
 # plot
-max_plot <-ggplot(max_df) +
-  geom_tile(mapping = aes(x,y, fill = lyr.1)) +
-  geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') +
+temp_plot <-ggplot(temp_df) +
+  geom_tile(mapping = aes(x,y, fill = mean)) +
+  geom_tile(data = na_df, mapping = aes(x,y, fill = mean), color = 'grey50') +
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # for gray
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = max_scale, limits = c(0,1.5), oob = squish) + # max of color bar so it saturates
-  labs(fill = "Max SWE (m)") +
+  scale_fill_gradientn(colors = temp_scale, limits = c(-6,6), oob = squish) + # max of color bar so it saturates
+  labs(fill = "Mean ONDJFM Temp (°C)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(panel.border = element_rect(color = NA, fill=NA),
@@ -159,84 +167,36 @@ max_plot <-ggplot(max_df) +
                                frame.colour = "black", 
                                ticks.colour = "black"))
 # save
-ggsave(max_plot,
-       file = "./plots/max_test_v17.png",
+ggsave(temp_plot,
+       file = "./plots/temp_plot_v3.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_test_v17.png")
-
-######################
-######################
-#####    dom.  #######
-######################
-######################
-
-head(dom_df)
-dom_df$apr1_anom <-dom_df$lyr.1-181
-hist(dom_df$apr1_anom, breaks = 100)
-
-# set scale 
-trend_scale <-c(rev(brewer.pal(9, "Reds")), "white" , brewer.pal(9, "Blues"))
-trend_scale
-
-# plot
-dom_plot <-ggplot(dom_df) +
-  geom_tile(mapping = aes(x,y, fill = apr1_anom)) +
-  geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # for gray
-  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = trend_scale, limits = c(-50,50), oob = squish) + # max of color bar so it saturates
-  labs(fill = "DOM relative to April 1 (days)") +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  theme(panel.border = element_rect(color = NA, fill=NA),
-        axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "bottom",
-        plot.margin = unit(c(0,0,0,0), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "horizontal",
-                               label.position = 'top',
-                               title.position ='bottom',
-                               title.hjust = .5,
-                               barwidth = 15,
-                               barheight = 1,
-                               frame.colour = "black", 
-                               ticks.colour = "black"))
-
-# save
-ggsave(dom_plot,
-       file = "./plots/dom_test_v9.png",
-       width = 4.5, 
-       height = 8,
-       dpi = 600)
-
-system("open ./plots/dom_test_v9.png")
+system("open ./plots/temp_plot_v3.png")
 
 
-
+######################################################
+######################################################
+######################################################
+######################################################
 # cowplot test
-full <-plot_grid(max_plot, dom_plot, fm_plot,                 
-                 labels = c("(a)", "(b)", "(c)"),
-                 ncol = 3,
+full <-plot_grid(sw_plot, temp_plot,                
+                 labels = c("(a)", "(b)"),
+                 ncol = 2,
                  nrow = 1,
                  align = "hv",
                  label_size = 22,
                  vjust =  2,
                  hjust = -.2,
-                 rel_widths = c(1/3, 1/3, 1/3))
+                 rel_widths = c(1/2, 1/2))
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/max_dom_fm_v1.png",
-       width = 13.5, 
+       file = "./plots/sw_temp_plot_v1.png",
+       width = 9, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/max_dom_fm_v1.png")
+system("open ./plots/sw_temp_plot_v1.png")
   
