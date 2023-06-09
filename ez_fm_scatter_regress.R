@@ -71,9 +71,10 @@ bin_stats <-as.data.frame((df) %>%
 # print
 bin_stats
 
-zone <-filter(df_v1, ele_bin == 6 & aspect == 3)
+zone <-filter(df, ele_bin == 6 & aspect == 3)
 mod <-lm(frac_melt ~ temp_c, zone)
 summary(mod)
+plot(mod)
 
 ## set color
 scale <-c("grey",viridis(30, option = "H", direction = 1))
@@ -96,7 +97,7 @@ p1 <-ggplot(data = df, aes(y = frac_melt, x = temp_c)) +
   scale_y_continuous(limits = c(0,1),  expand = c(0,0))+
   scale_x_continuous(limits = c(-10,10), expand = c(.1,.1))+
   geom_smooth(method = "lm", se = FALSE, color = "darkred") +
-  stat_cor(label.y = .92, size = 3, color = "darkred")+ 
+  stat_cor(method = "spearman", label.y = .92, size = 3, color = "darkred")+ 
   stat_regline_equation(label.y = .82, size = 3, color = "darkred") +
   labs(y = "FM", x = expression('ONDJFM ' ~T["Mean"] ~ '(°C)')) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1))+
@@ -107,12 +108,49 @@ p1 <-ggplot(data = df, aes(y = frac_melt, x = temp_c)) +
 # p2 <- p1 +  geom_text(data=eq,aes(x = -2, y = .92,label=V1), color = "darkred", size = 2, parse = TRUE, inherit.aes=FALSE) + 
 #   facet_wrap(~ aspect_name + bin_name, ncol = 6) 
 # p2
+p1
 
 # test save
-ggsave(file = "./plots/temp_fm_facet_v6.png",
+ggsave(file = "./plots/temp_fm_facet_v7.png",
        width = 11, 
        height = 5,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/temp_fm_facet_v6.png")
+system("open ./plots/temp_fm_facet_v7.png")
+
+# test plotting just slopes
+slopes <-c(.069,.055,.036,.024,.012,.0043)
+intercepts <-c(.033,.08,.11,.085,.068,.0043)
+my_colors <-c("#f8f9ac","#89a02e","#ba4202","#751504","#7d4a2b","#b5b5b5")
+
+ggplot()+
+  geom_abline(aes(slope = slopes[1], intercept = intercepts[1], color = "ez1"), linewidth = 1.5)+
+  geom_abline(aes(slope = slopes[2], intercept = intercepts[2], color = "ez2"), linewidth = 1.5)+
+  geom_abline(aes(slope = slopes[3], intercept = intercepts[3], color = "ez3"), linewidth = 1.5)+
+  geom_abline(aes(slope = slopes[4], intercept = intercepts[4], color = "ez4"), linewidth = 1.5)+
+  geom_abline(aes(slope = slopes[5], intercept = intercepts[5], color = "ez5"), linewidth = 1.5)+
+  geom_abline(aes(slope = slopes[6], intercept = intercepts[6], color = "ez6"), linewidth = 1.5)+
+  scale_color_manual(name = "Elevation Zones",
+                     values = c("ez1"=my_colors[1], "ez2"=my_colors[2], "ez3"=my_colors[3], 
+                                "ez4"=my_colors[4], "ez5"=my_colors[5], "ez6"=my_colors[6]),
+                     labels = c('1500-1900 m', '1900-2300 m', '2300-2700 m',
+                                '2700-3100 m','3100-3500 m', '3500-4361 m'))+
+  scale_y_continuous(limits = c(0,.5)) +
+  scale_x_continuous(limits = c(-6,6)) +
+  labs(y = "FM", x = expression('ONDJFM ' ~T["Mean"] ~ '(°C)')) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1),
+        legend.position = c(.2,.75))
+
+# test save
+ggsave(file = "./plots/slopes_ez_temp_fm_v1.png",
+       width = 6, 
+       height = 5,
+       units = "in",
+       dpi = 300) 
+
+system("open ./plots/slopes_ez_temp_fm_v1.png")
+
+
+
+
