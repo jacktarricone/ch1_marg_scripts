@@ -97,16 +97,21 @@ long_df$bin_name <-ifelse(long_df$ele_bin == 6, "3500-4361 m", long_df$bin_name)
 head(long_df)
 
 # test hists
-hist(long_df$frac_melt, breaks = 100)
-hist(long_sample$frac_melt, breaks = 100)
+hist(long_df_v1$frac_melt, breaks = 50)
+hist(long_df$frac_melt, breaks = 50)
+mean(long_df_v1$frac_melt)
+mean(long_df$frac_melt)
 
 ##################################
 #### make time series box plot ###
 ##################################
 
+
 # starting plot
 fm <-ggplot(long_df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = as.factor(aspect))) +
-  geom_boxplot(linewidth = .5, width = .4, outlier.size = .01, outlier.shape = 1) +
+  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1) +
+  stat_summary(fun.y=median, colour="black", geom="text", show_guide = FALSE, 
+               vjust=-0.7, aes( label=round(..y.., digits=1))) +
   scale_fill_manual(name = "Aspect",
                     values = c('1' = 'cornflowerblue', '3' = 'darkorange'),
                     labels = c('North Facing', 'South Facing'))+
@@ -121,37 +126,13 @@ fm <-ggplot(long_df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill 
 
 # test save
 ggsave(fm,
-       file = "./plots/fm_ez_ns_boxplot_test_v2.png",
-       width = 6, 
+       file = "./plots/fm_ez_ns_boxplot_test_v3.png",
+       width = 7, 
        height = 3,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/fm_ez_ns_boxplot_test_v2.png")
+system("open ./plots/fm_ez_ns_boxplot_test_v3.png")
 
 
-
-
-
-# stack plots
-plot_grid(fm, max,
-          labels = c("(a)","(b)","(c)","(d)"),
-          align = "v", 
-          nrow = 2, 
-          rel_heights = c(1/2, 1/2),
-          label_y = .92)
-
-ggsave("./plots/fm_max_boxplot_test.pdf",
-       width = 9, 
-       height = 6,
-       units = "in",
-       dpi = 500)
-
-ggsave("./plots/fm_boxplot_test_v2.png",
-       width = 9, 
-       height = 6,
-       units = "in",
-       dpi = 500)
-
-??ggplot2::geom_boxplot
 
