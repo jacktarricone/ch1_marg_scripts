@@ -1,4 +1,4 @@
-# fm box plot time series
+# scatter plot for each of the 6 elevation zones for FM
 # jack tarricone
 # june 8th, 2023
 
@@ -42,58 +42,11 @@ theme_set(theme_classic(12))
 # set working dir
 setwd("~/ch1_margulis")
 
-# read in stack american stack
-fm_list <-list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
-fm_stack <-rast(fm_list[33])
-fm_stack
-
-# bring in ns aspect
-dem_6b <-rast("./rasters/categorized/dem_6zb.tif")
-plot(dem_6b)
-
-# bring in ns aspect
-aspect_v1 <-rast("./rasters/categorized/aspect_thres_4_classes.tif")
-aspect_ns <-subst(aspect_v1,c(2,4),NA)
-plot(aspect_ns)
-
-# test plot
-plot(fm_stack[[6]])
-
-# stack with dem bins and aspect
-stack <-c(dem_6b,aspect_ns,fm_stack)
-
-# convert to df
-df <-as.data.frame(stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
-head(df)
-
-# years seq
-years <-seq(1985,2016,1)
-
-# rename columns, which are the annual rasters, with the correct year name
-colnames(df)[6:ncol(df)] <-years
-colnames(df)[4] <-"ele_bin"
-
-
-# pivot longer for test
-# creates "year" col and "fm_percent" col while preserving meta data info
-long_df <-as.data.frame((df) %>%
- pivot_longer(-c(cell,x,y,ele_bin,aspect), names_to = "year", values_to = "frac_melt"))
-
-head(long_df)
-# fwrite(long_df, "./csvs/fm_eb_ns_csv_v1.csv")
-
 # read back in using data.table
-long_df_v1 <-fread("./csvs/fm_eb_ns_csv_v1.csv")
+long_df_v1 <-fread("./csvs/fm_eb_ns_csv_v2.csv")
+
+# sample down to a milli
 long_df <-long_df_v1[sample(.N, 100000)]
-
-# rename
-long_df$bin_name <-ifelse(long_df$ele_bin == 1, "1500-1900 m", long_df$ele_bin)
-long_df$bin_name <-ifelse(long_df$ele_bin == 2, "1900-2300 m", long_df$bin_name)
-long_df$bin_name <-ifelse(long_df$ele_bin == 3, "2300-2700 m", long_df$bin_name)
-long_df$bin_name <-ifelse(long_df$ele_bin == 4, "2700-3100 m", long_df$bin_name)
-long_df$bin_name <-ifelse(long_df$ele_bin == 5, "3100-3500 m", long_df$bin_name)
-long_df$bin_name <-ifelse(long_df$ele_bin == 6, "3500-4361 m", long_df$bin_name)
-
 head(long_df)
 
 # test hists
