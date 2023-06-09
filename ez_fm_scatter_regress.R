@@ -2,11 +2,15 @@
 # jack tarricone
 # june 8th, 2023
 
-library(terra)
-library(lubridate)
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(hydroGOF)
 library(cowplot)
-library(data.table)
+library(viridis)
+library(ggpointdensity)
+library(plyr)
+library(ggpubr)
+
 
 theme_classic <- function(base_size = 11, base_family = "",
                           base_line_size = base_size / 22,
@@ -46,7 +50,7 @@ setwd("~/ch1_margulis")
 df_v1 <-fread("./csvs/fm_temp_eb_ns_csv_v6.csv")
 
 # sample down to a milli
-df <-df_v1[sample(.N, 100000)]
+df <-df_v1[sample(.N, 1000000)]
 head(df)
 
 # test hists
@@ -67,41 +71,48 @@ bin_stats <-as.data.frame((df) %>%
 # print
 bin_stats
 
+zone <-filter(df_v1, ele_bin == 6 & aspect == 3)
+mod <-lm(frac_melt ~ temp_c, zone)
+summary(mod)
+
+## set color
+scale <-c("grey",viridis(30, option = "H", direction = 1))
+
+lm_eqn = function(df){
+  m = lm(frac_melt ~ temp_c, df);
+  eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+                   list(a = round(coef(m)[1], digits = 2), 
+                        b = round(coef(m)[2], digits = 2), 
+                        r2 =round(summary(m)$r.squared, digits = 2)))
+  as.character(as.expression(eq));                 
+}
+
 # stat plot
-ggplot(data = df, aes(y = frac_melt, x = temp_c)) +
-  geom_point(color = "steelblue", size = .1, alpha = .1) +
-  scale_y_continuous(limits = c(0,1))+
+p1 <-ggplot(data = df, aes(y = frac_melt, x = temp_c)) +
+  # geom_point(color = "steelblue", size = .01, alpha = .05) +
+  # geom_pointdensity(adjust = 5, size = .1) +
+  geom_bin2d(bins = 40, aes(fill = ..density..)) +
+  scale_fill_gradientn(colors = scale) +
+  scale_y_continuous(limits = c(0,1),  expand = c(0,0))+
+  scale_x_continuous(limits = c(-10,10), expand = c(.1,.1))+
   geom_smooth(method = "lm", se = FALSE, color = "darkred") +
+  stat_cor(label.y = .92, size = 3, color = "darkred")+ 
+  stat_regline_equation(label.y = .82, size = 3, color = "darkred") +
+  labs(y = "FM", x = expression('ONDJFM ' ~T["Mean"] ~ '(°C)')) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1))+
   facet_wrap(~ aspect_name + bin_name, ncol = 6) 
 
-
-# starting plot
-fm <-ggplot(long_df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = as.factor(aspect))) +
-  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1) +
-  # geom_text(data = meds, aes(y = frac_med, label = round(frac_med, 2)),
-  #           size = 2, vjust = -0.5, hjust = -.5) +
-  scale_fill_manual(name = "Aspect",
-                    values = c('1' = 'cornflowerblue', '3' = 'darkorange'),
-                    labels = c('North Facing', 'South Facing'))+
-  xlab("Elevation Zone") + ylab("FM") +
-  scale_y_continuous(limits = c(0,1)) +
-  theme_classic(11) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1),
-        legend.position = c(.88,.86),
-        legend.title = element_blank(),
-        legend.margin=margin(-5,1,1,1),
-        legend.box.background = element_rect(colour = "black"))
+# # add lm statistics
+# eq <- ddply(df,.(bin_name, aspect_name),lm_eqn)
+# p2 <- p1 +  geom_text(data=eq,aes(x = -2, y = .92,label=V1), color = "darkred", size = 2, parse = TRUE, inherit.aes=FALSE) + 
+#   facet_wrap(~ aspect_name + bin_name, ncol = 6) 
+# p2
 
 # test save
-ggsave(fm,
-       file = "./plots/fm_ez_ns_boxplot_test_v4.png",
-       width = 7, 
-       height = 3,
+ggsave(file = "./plots/temp_fm_facet_v6.png",
+       width = 11, 
+       height = 5,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/fm_ez_ns_boxplot_test_v4.png")
-
-
-
+system("open ./plots/temp_fm_facet_v6.png")
