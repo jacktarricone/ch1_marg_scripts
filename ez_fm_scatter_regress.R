@@ -42,26 +42,49 @@ theme_set(theme_classic(12))
 # set working dir
 setwd("~/ch1_margulis")
 
+# # read back in using data.table
+# df_v1 <-fread("./csvs/fm_temp_eb_ns_csv_v4.csv")
+# 
+# # rename
+# df_v1$bin_name <-ifelse(df_v1$ele_bin == 1, "1500-1900 m", df_v1$ele_bin)
+# df_v1$bin_name <-ifelse(df_v1$ele_bin == 2, "1900-2300 m", df_v1$bin_name)
+# df_v1$bin_name <-ifelse(df_v1$ele_bin == 3, "2300-2700 m", df_v1$bin_name)
+# df_v1$bin_name <-ifelse(df_v1$ele_bin == 4, "2700-3100 m", df_v1$bin_name)
+# df_v1$bin_name <-ifelse(df_v1$ele_bin == 5, "3100-3500 m", df_v1$bin_name)
+# df_v1$bin_name <-ifelse(df_v1$ele_bin == 6, "3500-4361 m", df_v1$bin_name)
+# head(df_v1)
+# fwrite(df_v1, "./csvs/fm_temp_eb_ns_csv_v5.csv")
+
 # read back in using data.table
-long_df_v1 <-fread("./csvs/fm_eb_ns_csv_v2.csv")
+df_v1 <-fread("./csvs/fm_temp_eb_ns_csv_v5.csv")
+df_v1$aspect_name <-ifelse(df_v1$aspect == 1, "North", df_v1$aspect)
+df_v1$aspect_name <-ifelse(df_v1$aspect == 3, "South", df_v1$aspect_name)
+head(df_v1)
+fwrite(df_v1, "./csvs/fm_temp_eb_ns_csv_v6.csv")
+
+# read back in using data.table
+df_v1 <-fread("./csvs/fm_temp_eb_ns_csv_v6.csv")
 
 # sample down to a milli
-long_df <-long_df_v1[sample(.N, 100000)]
-head(long_df)
+df <-df_v1[sample(.N, 100000)]
+head(df)
 
 # test hists
-hist(long_df_v1$frac_melt, breaks = 50)
-hist(long_df$frac_melt, breaks = 50)
-mean(long_df_v1$frac_melt)
-mean(long_df$frac_melt)
+hist(df_v1$temp_c, breaks = 50)
+hist(df$temp_c, breaks = 50)
+mean(df_v1$temp_c)
+mean(df$temp_c)
 
 ##################################
 #### make time series box plot ###
 ##################################
 
-meds <-as.data.frame(long_df %>%
+bin_stats <-as.data.frame((df) %>%
   group_by(bin_name, aspect) %>%
-  summarise(frac_med = median(frac_melt)))
+  summarise(mean_frac_melt = round(mean(frac_melt),2),
+            mean_temp = round(mean(temp_c),2)))
+
+bin_stats
 
 meds
 
