@@ -42,26 +42,6 @@ theme_set(theme_classic(12))
 # set working dir
 setwd("~/ch1_margulis")
 
-# # read back in using data.table
-# df_v1 <-fread("./csvs/fm_temp_eb_ns_csv_v4.csv")
-# 
-# # rename
-# df_v1$bin_name <-ifelse(df_v1$ele_bin == 1, "1500-1900 m", df_v1$ele_bin)
-# df_v1$bin_name <-ifelse(df_v1$ele_bin == 2, "1900-2300 m", df_v1$bin_name)
-# df_v1$bin_name <-ifelse(df_v1$ele_bin == 3, "2300-2700 m", df_v1$bin_name)
-# df_v1$bin_name <-ifelse(df_v1$ele_bin == 4, "2700-3100 m", df_v1$bin_name)
-# df_v1$bin_name <-ifelse(df_v1$ele_bin == 5, "3100-3500 m", df_v1$bin_name)
-# df_v1$bin_name <-ifelse(df_v1$ele_bin == 6, "3500-4361 m", df_v1$bin_name)
-# head(df_v1)
-# fwrite(df_v1, "./csvs/fm_temp_eb_ns_csv_v5.csv")
-
-# read back in using data.table
-df_v1 <-fread("./csvs/fm_temp_eb_ns_csv_v5.csv")
-df_v1$aspect_name <-ifelse(df_v1$aspect == 1, "North", df_v1$aspect)
-df_v1$aspect_name <-ifelse(df_v1$aspect == 3, "South", df_v1$aspect_name)
-head(df_v1)
-fwrite(df_v1, "./csvs/fm_temp_eb_ns_csv_v6.csv")
-
 # read back in using data.table
 df_v1 <-fread("./csvs/fm_temp_eb_ns_csv_v6.csv")
 
@@ -80,13 +60,21 @@ mean(df$temp_c)
 ##################################
 
 bin_stats <-as.data.frame((df) %>%
-  group_by(bin_name, aspect) %>%
+  group_by(bin_name, aspect_name) %>%
   summarise(mean_frac_melt = round(mean(frac_melt),2),
             mean_temp = round(mean(temp_c),2)))
 
+# print
 bin_stats
 
-meds
+# stat plot
+ggplot(data = df, aes(y = frac_melt, x = temp_c)) +
+  geom_point(color = "steelblue", size = .1, alpha = .1) +
+  scale_y_continuous(limits = c(0,1))+
+  geom_smooth(method = "lm", se = FALSE, color = "darkred") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1))+
+  facet_wrap(~ aspect_name + bin_name, ncol = 6) 
+
 
 # starting plot
 fm <-ggplot(long_df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = as.factor(aspect))) +
