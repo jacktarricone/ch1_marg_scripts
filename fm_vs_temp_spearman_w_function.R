@@ -43,51 +43,47 @@ theme_classic <-function(base_size = 11, base_family = "",
 
 theme_set(theme_classic(14))
 
-# bring vectors
+# list of paths to shape files
 basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
-shp_list <-lapply(files, vect)
-shp_list
-shp <-shp_list[[6]]
-plot(shp)
-
-# single rasters: insol, temp normal, dem
-insol_shp <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"), ext(shp)), shp)
-names(insol_shp) <-"insol_watts"
-plot(insol_shp)
-
-# temp_mean
-temp_mean_shp <-mask(crop(rast("./rasters/daymet/tmean_normal_1985_2016.tif"),ext(shp)), shp)
-names(temp_mean_shp) <-"mean_temp_c"
-plot(temp_mean_shp)
-
-# fm_mean
-fm_mean_shp <-mask(crop(rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif"),ext(shp)), shp)
-names(fm_mean_shp) <-"mean_fm"
-plot(fm_mean_shp)
-
-# dem
-dem_shp <-mask(crop(rast("./rasters/static/SNSR_DEM.tif"),ext(shp)), shp)
-names(dem_shp) <-"elevation"
-plot(dem_shp)
-
-# elevation zone
-ez_shp <-mask(crop(rast("./rasters/categorized/dem_6zb.tif"),ext(shp)), shp)
-names(ez_shp) <-"ez"
-plot(ez_shp)
-
-# aspect
-aspect_shp <-mask(crop(rast("./rasters/categorized/aspect_thres_4_classes.tif"),ext(shp)), shp)
-names(aspect_shp) <-"aspect"
-plot(aspect_shp)
-
 
 generate_spearman_df <-function(basin_paths_list){
   
   # read in shape
-  shp <-vect(basin_paths[[6]])
-  basin_name_v1 <-basename(basin_paths[[6]])
+  shp <-vect(basin_paths_list)
+  basin_name_v1 <-basename(basin_paths_list)
   basin_name <-gsub(".gpkg","",basin_name_v1)
-  
+  print(basin_name)
+
+  # insol
+  insol_shp <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"), ext(shp)), shp)
+  names(insol_shp) <-"insol_watts"
+  plot(insol_shp)
+
+  # temp_mean
+  temp_mean_shp <-mask(crop(rast("./rasters/daymet/tmean_normal_1985_2016.tif"),ext(shp)), shp)
+  names(temp_mean_shp) <-"mean_temp_c"
+  plot(temp_mean_shp)
+
+  # fm_mean
+  fm_mean_shp <-mask(crop(rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif"),ext(shp)), shp)
+  names(fm_mean_shp) <-"mean_fm"
+  plot(fm_mean_shp)
+
+  # dem
+  dem_shp <-mask(crop(rast("./rasters/static/SNSR_DEM.tif"),ext(shp)), shp)
+  names(dem_shp) <-"elevation"
+  plot(dem_shp)
+
+  # elevation zone
+  ez_shp <-mask(crop(rast("./rasters/categorized/dem_6zb.tif"),ext(shp)), shp)
+  names(ez_shp) <-"ez"
+  plot(ez_shp)
+
+  # aspect
+  aspect_shp <-mask(crop(rast("./rasters/categorized/aspect_thres_4_classes.tif"),ext(shp)), shp)
+  names(aspect_shp) <-"aspect"
+  plot(aspect_shp)
+
   ### stacks
   # fm load and format
   fm_list <- list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
@@ -186,9 +182,17 @@ generate_spearman_df <-function(basin_paths_list){
   
   # save
   saving_name <-paste0(basin_name,"_spearman_results.csv")
-  fwrite(results_df, paste0("./csvs/spearman_fm_temp_results/",saving_name)
-
+  fwrite(results_df_v2, paste0("./csvs/spearman_fm_temp_results/",saving_name))
+  print(paste0(basin_name, " is done!"))
+  
 }
+
+# apply function to list of basin shape files
+lapply(basin_paths, generate_spearman_df)
+
+
+
+
 
 
 
