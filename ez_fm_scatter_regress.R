@@ -54,8 +54,18 @@ df <-df_v1[sample(.N, 1000000)]
 head(df)
 
 # test hists
-hist(df_v1$temp_c, breaks = 50)
 hist(df$temp_c, breaks = 50)
+hist(df$frac_melt, breaks = 30)
+hist((df$frac_melt)^(1/2), breaks = 20)
+shapiro.test((df$frac_melt)^(1/2))
+
+install.packages("LambertW")
+library(LambertW)
+
+skewness(df$frac_melt, na.rm = TRUE)
+test <-Gaussianize(df$frac_melt)
+hist(test, breaks = 50)
+
 mean(df_v1$temp_c)
 mean(df$temp_c)
 
@@ -72,12 +82,12 @@ bin_stats <-as.data.frame((df) %>%
 bin_stats
 
 zone <-filter(df, ele_bin == 6 & aspect == 3)
-mod <-lm(frac_melt ~ temp_c, zone)
+mod <-lm((frac_melt^.5) ~ temp_c, zone)
 summary(mod)
 plot(mod)
 
 ## set color
-scale <-c("grey",viridis(30, option = "H", direction = 1))
+scale <-c("white",viridis(15, option = "H", direction = 1))
 
 lm_eqn = function(df){
   m = lm(frac_melt ~ temp_c, df);
@@ -108,16 +118,15 @@ p1 <-ggplot(data = df, aes(y = frac_melt, x = temp_c)) +
 # p2 <- p1 +  geom_text(data=eq,aes(x = -2, y = .92,label=V1), color = "darkred", size = 2, parse = TRUE, inherit.aes=FALSE) + 
 #   facet_wrap(~ aspect_name + bin_name, ncol = 6) 
 # p2
-p1
 
 # test save
-ggsave(file = "./plots/temp_fm_facet_v7.png",
+ggsave(file = "./plots/temp_fm_facet_9.png",
        width = 11, 
        height = 5,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/temp_fm_facet_v7.png")
+system("open ./plots/temp_fm_facet_9.png")
 
 # test plotting just slopes
 slopes <-c(.069,.055,.036,.024,.012,.0043)

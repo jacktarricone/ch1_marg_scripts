@@ -49,7 +49,7 @@ shp_list <-lapply(files, vect)
 shp_list
 
 # single rasters: insol, temp normal, dem
-insol_american <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"),ext(american)), american)
+insol_american <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"), ext(american)), american)
 names(insol_american) <-"insol_watts"
 plot(insol_american)
 
