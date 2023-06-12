@@ -151,35 +151,42 @@ generate_spearman_df <-function(basin_paths_list){
   results_raw <-as.data.frame(unlist(results_v1$corr))
   head(results_raw)
 
-# extract results from unlist/unorganized df
-# p_val
-p_val <-as.data.frame(as.numeric(results_raw[seq(2, nrow(results_raw), 7), ]))
-names(p_val)[1] <-"p_val"
-head(p_val)
+  # extract results from unlist/unorganized df
+  # p_val
+  p_val <-as.data.frame(as.numeric(results_raw[seq(2, nrow(results_raw), 7), ]))
+  names(p_val)[1] <-"p_val"
+  head(p_val)
 
-# rho
-rho_val <-as.data.frame(as.numeric(results_raw[seq(3, nrow(results_raw), 7), ]))
-names(rho_val)[1] <-"rho_val"
-head(rho_val)
+  # rho
+  rho_val <-as.data.frame(as.numeric(results_raw[seq(3, nrow(results_raw), 7), ]))
+  names(rho_val)[1] <-"rho_val"
+  head(rho_val)
 
-# s_stat
-s_stat <-as.data.frame(as.numeric(results_raw[seq(1, nrow(results_raw), 7), ]))
-names(s_stat)[1] <-"s_stat"
-head(s_stat)
+  # s_stat
+  s_stat <-as.data.frame(as.numeric(results_raw[seq(1, nrow(results_raw), 7), ]))
+  names(s_stat)[1] <-"s_stat"
+  head(s_stat)
 
-# format static values for binding
-single_cell_df <-as.data.frame(analysis_df %>% group_by(cell) %>%
-  slice(which.min(x)) %>%
-  select(-c(frac_melt,ondjfm_temp_c,wy)))
+  # format static values for binding
+  single_cell_df <-as.data.frame(analysis_df %>% group_by(cell) %>%
+    slice(which.min(x)) %>%
+    select(-c(frac_melt,ondjfm_temp_c,wy)))
 
-# make spearman df
-cell <-unique(results_v1$cell)
-spearman_df <-data.frame(cell,p_val,rho_val,s_stat)
-head(spearman_df)
+  # make spearman df
+  cell <-unique(results_v1$cell)
+  spearman_df <-data.frame(cell,p_val,rho_val,s_stat)
+  # head(spearman_df)
 
-# combine both for full df
-results_df <-full_join(single_cell_df,spearman_df)
-tail(results_df)
+  # combine both for full df
+  results_df <-full_join(single_cell_df,spearman_df)
+  
+  # add basin name col
+  results_df_v2 <-cbind(results_df, rep(basin_name, nrow(results_df)))
+  colnames(results_df_v2)[13] <-"basin_name"
+  
+  # save
+  saving_name <-paste0(basin_name,"_spearman_results.csv")
+  fwrite(results_df, paste0("./csvs/spearman_fm_temp_results/",saving_name)
 
 }
 
