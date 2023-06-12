@@ -47,7 +47,7 @@ theme_set(theme_classic(14))
 files <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
 shp_list <-lapply(files, vect)
 shp_list
-shp <-shp_list[[13]]
+shp <-shp_list[[1]]
 plot(shp)
 
 # single rasters: insol, temp normal, dem
@@ -172,8 +172,13 @@ head(spearman_df)
 results_df <-full_join(single_cell_df,spearman_df)
 tail(results_df)
 
-sig <-filter(results_df, p_val < .05)
-not_sig <-filter(results_df, p_val > .05)
+# subset by sig
+sig_df <-filter(results_df, p_val < .05 & ez == 1)
+not_sig_df <-filter(results_df, p_val > .05 & ez == 1)
+rows <-rbind(sig_df,not_sig_df)
+
+percent_sig <-(nrow(sig_df)/nrow(rows))*100
+percent_no_sig <-(nrow(not_sig_df)/nrow(rows))*100
 
 # plot_test <-filter(analysis_df, cell == 233366 | cell == 233369 | cell == 233370 | cell == 233373)
 
@@ -183,11 +188,11 @@ topo_colors <-c(topo_table$colors)
 
 # test plot
 p1 <-ggplot() +
-  geom_point(sig, mapping = aes(y = mean_fm, x = mean_temp_c, color = elevation),
-             alpha = (70/100), size = (1.5), shape = 10)+
+  geom_point(sig_df, mapping = aes(y = mean_fm, x = mean_temp_c, color = elevation),
+             alpha = (40/100), size = (1.5), shape = 10)+
   scale_color_gradientn(colors = topo_colors, limits = c(1500,4000)) +
   scale_y_continuous(limits = c(0,1), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(-2,3),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(-7,7), expand = (c(0,0))) +
   labs(y = "Mean FM", x = expression('ONDJFM ' ~T["Mean"] ~ '(°C)')) +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
         aspect.ratio = 1,
@@ -202,11 +207,15 @@ p1 <-ggplot() +
                                barheight = 17,
                                frame.colour = "black", 
                                ticks.colour = "black"))
+p1
 
-p2 <-p1 + geom_point(not_sig, mapping = aes(y = mean_fm, x = mean_temp_c), 
-                     color = "black", alpha = (50/100), size = (1), shape = 4)
+p2 <-p1 + geom_point(not_sig_df, mapping = aes(y = mean_fm, x = mean_temp_c), 
+                     color = "black", alpha = (3/100), size = (1), shape = 4)
 
 p2
+
+
+
 
 
 
