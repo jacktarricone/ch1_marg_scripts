@@ -1,6 +1,6 @@
-# annual temp vs fm and short wave
+# generate spearman df by basin
 # jack tarricone
-# may 15th, 2023
+# june 11th, 2023
 
 library(terra)
 library(tidyverse)
@@ -44,10 +44,10 @@ theme_classic <-function(base_size = 11, base_family = "",
 theme_set(theme_classic(14))
 
 # bring vectors
-files <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
+basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
 shp_list <-lapply(files, vect)
 shp_list
-shp <-shp_list[[1]]
+shp <-shp_list[[6]]
 plot(shp)
 
 # single rasters: insol, temp normal, dem
@@ -80,67 +80,76 @@ aspect_shp <-mask(crop(rast("./rasters/categorized/aspect_thres_4_classes.tif"),
 names(aspect_shp) <-"aspect"
 plot(aspect_shp)
 
-### stacks
-# fm load and format
-fm_list <- list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
-fm_stack_shp <-mask(crop(rast(fm_list[1:32]),ext(shp)), shp)
-plot(fm_stack_shp[[1]])
 
-# temp load and format
-tmean_list <-list.files("./rasters/daymet/tmean", full.names = TRUE)
-tmean_stack_shp_v1 <-mask(crop(rast(tmean_list[1:32]),ext(shp)), shp)
-tmean_stack_shp <-mask(tmean_stack_shp_v1, fm_stack_shp, maskvalue = NA)
-plot(tmean_stack_shp[[1]])
+generate_spearman_df <-function(basin_paths_list){
+  
+  # read in shape
+  shp <-vect(basin_paths[[6]])
+  basin_name_v1 <-basename(basin_paths[[6]])
+  basin_name <-gsub(".gpkg","",basin_name_v1)
+  
+  ### stacks
+  # fm load and format
+  fm_list <- list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
+  fm_stack_shp <-mask(crop(rast(fm_list[1:32]),ext(shp)), shp)
+  # plot(fm_stack_shp[[1]])
 
-# rename layers
-wy_names <-seq(1985,2016,1)
-names(tmean_stack_shp) <-wy_names
-names(fm_stack_shp) <-wy_names
-tmean_stack_shp
+  # temp load and format
+  tmean_list <-list.files("./rasters/daymet/tmean", full.names = TRUE)
+  tmean_stack_shp_v1 <-mask(crop(rast(tmean_list[1:32]),ext(shp)), shp)
+  tmean_stack_shp <-mask(tmean_stack_shp_v1, fm_stack_shp, maskvalue = NA)
+  # plot(tmean_stack_shp[[1]])
 
-# calculate number of non na obs per pixel
-fm_n_obs <-app(fm_stack_shp, function(x) sum(!is.na(x)))
-n_obs_v2 <-subst(fm_n_obs, 0, NA)
-plot(n_obs_v2)
+  # rename layers
+  wy_names <-seq(1985,2016,1)
+  names(tmean_stack_shp) <-wy_names
+  names(fm_stack_shp) <-wy_names
 
-# convert all values below 10 to NA
-masking_value <-subst(n_obs_v2, 0:27, NA)
-plot(masking_value)
+  # calculate number of non na obs per pixel
+  fm_n_obs <-app(fm_stack_shp, function(x) sum(!is.na(x)))
+  n_obs_v2 <-subst(fm_n_obs, 0, NA)
+  # plot(n_obs_v2)
 
-# if there are less than 10 observations per pixel, make NA
-fm_v3 <-mask(fm_stack_shp, masking_value, maskvalues = NA)
-tmean_v3 <-mask(tmean_stack_shp, masking_value, maskvalues = NA)
+  # convert all values below 10 to NA
+  masking_value <-subst(n_obs_v2, 0:27, NA)
+  # plot(masking_value)
 
-# stack and join
-# fm
-fm_stack <-c(dem_shp, temp_mean_shp, insol_shp, ez_shp, aspect_shp, fm_mean_shp, fm_v3)
-fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
-fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,10:41, names_to = 'wy', values_to = 'frac_melt'))
-head(fm_df)
+  # if there are less than 10 observations per pixel, make NA
+  fm_v3 <-mask(fm_stack_shp, masking_value, maskvalues = NA)
+  tmean_v3 <-mask(tmean_stack_shp, masking_value, maskvalues = NA)
 
-# tmean
-tmean_stack <-c(dem_shp, temp_mean_shp, insol_shp, ez_shp, aspect_shp, fm_mean_shp, tmean_v3)
-tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
-tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,10:41, names_to = 'wy', values_to = 'ondjfm_temp_c'))
-head(tmean_df)
+  # stack and join
+  # fm
+  fm_stack <-c(dem_shp, temp_mean_shp, insol_shp, ez_shp, aspect_shp, fm_mean_shp, fm_v3)
+  fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
+  fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,10:41, 
+                                            names_to = 'wy', values_to = 'frac_melt'))
+  # head(fm_df)
 
-# full join
-analysis_df <-full_join(fm_df, tmean_df)
-analysis_df <-analysis_df %>% drop_na()
-tail(analysis_df)
-head(analysis_df)
+  # tmean
+  tmean_stack <-c(dem_shp, temp_mean_shp, insol_shp, ez_shp, aspect_shp, fm_mean_shp, tmean_v3)
+  tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
+  tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,10:41, 
+                                               names_to = 'wy', values_to = 'ondjfm_temp_c'))
+  # head(tmean_df)
 
-# covert to data table and set key
-DT <-as.data.table(analysis_df)
-setkey(DT, cell)
+  # full join
+  analysis_df <-full_join(fm_df, tmean_df)
+  analysis_df <-analysis_df %>% drop_na()
+  # tail(analysis_df)
+  # head(analysis_df)
 
-# run using data.table -- super fast
-results_v1 <-DT[,list(corr = cor.test(frac_melt,ondjfm_temp_c,
+  # covert to data table and set key
+  DT <-as.data.table(analysis_df)
+  setkey(DT, cell)
+
+  # run using data.table -- super fast
+  results_v1 <-DT[,list(corr = cor.test(frac_melt,ondjfm_temp_c,
                                       method = 'spearman', exact = FALSE)), by = cell]
 
-# convert back to data frame
-results_raw <-as.data.frame(unlist(results_v1$corr))
-head(results_raw)
+  # convert back to data frame
+  results_raw <-as.data.frame(unlist(results_v1$corr))
+  head(results_raw)
 
 # extract results from unlist/unorganized df
 # p_val
@@ -171,6 +180,11 @@ head(spearman_df)
 # combine both for full df
 results_df <-full_join(single_cell_df,spearman_df)
 tail(results_df)
+
+}
+
+
+
 
 # subset by sig
 sig_df <-filter(results_df, p_val < .05 & ez == 1)
