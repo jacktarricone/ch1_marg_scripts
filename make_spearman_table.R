@@ -6,6 +6,8 @@ library(tidyverse)
 library(cowplot)
 library(viridis)
 library(data.table)
+library(ztable)
+library(moonBook)
 
 # set wd
 setwd("~/ch1_margulis")
@@ -38,14 +40,17 @@ head(df)
 # write function which caluclates pertaage of bin that is significant
 results_v1 <-df %>%
   group_by(basin_name, zone_name) %>%
-  summarise(percent_sig     = round((length(which(p_val < .05))/length(p_val))*100, 0),
-            percent_not_sig = round((length(which(p_val > .05))/length(p_val))*100, 0))
+  summarise(percent_sig     = round((length(which(p_val < .05))/length(p_val))*100, 0))
 
 # results_ns <-filter(results_v1, aspect_name != "East" & aspect_name != "West")
 
 test <-results_v1 %>%
   pivot_wider(names_from = zone_name, values_from = percent_sig)
 
-test
+z <-ztable(as.data.frame(test))
+
+z %>% 
+  makeHeatmap(palette="Blues") %>%
+  print(caption="Table 5. Heatmap table with 'Blue' palette")
 
 
