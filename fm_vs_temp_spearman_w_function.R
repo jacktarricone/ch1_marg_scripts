@@ -172,10 +172,46 @@ head(spearman_df)
 results_df <-full_join(single_cell_df,spearman_df)
 tail(results_df)
 
-test <-filter(analysis_df, cell == 1307 | cell == 1316 | cell == 1312 | cell == 1308)
+sig <-filter(results_df, p_val < .05)
+not_sig <-filter(results_df, p_val > .05)
 
-ggplot(results_df, aes(y = frac_melt, x = ondjfm_temp_c, group = aspect)) +
-  geom_point()
+# plot_test <-filter(analysis_df, cell == 233366 | cell == 233369 | cell == 233370 | cell == 233373)
+
+# set scale
+topo_table <-read.csv("./gis/topo_colors.csv")
+topo_colors <-c(topo_table$colors)
+
+# test plot
+p1 <-ggplot() +
+  geom_point(sig, mapping = aes(y = mean_fm, x = mean_temp_c, color = elevation),
+             alpha = (70/100), size = (1.5), shape = 10)+
+  scale_color_gradientn(colors = topo_colors, limits = c(1500,4000)) +
+  scale_y_continuous(limits = c(0,1), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(-2,3),expand = (c(0,0))) +
+  labs(y = "Mean FM", x = expression('ONDJFM ' ~T["Mean"] ~ '(°C)')) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
+        aspect.ratio = 1,
+        legend.position  = 'right',
+        legend.title = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(color = guide_colorbar(direction = "vertical",
+                               label.position = 'right',
+                               title.hjust = .5,
+                               barwidth = 1,
+                               barheight = 17,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+
+p2 <-p1 + geom_point(not_sig, mapping = aes(y = mean_fm, x = mean_temp_c), 
+                     color = "black", alpha = (50/100), size = (1), shape = 4)
+
+p2
+
+
+
+
+
 
 fwrite(results_df, "./csvs/usj_spearman_results_v1.csv", row.names = FALSE)
 
