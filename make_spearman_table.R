@@ -36,9 +36,16 @@ df <-fread("./csvs/spearman_fm_temp_results/all_basins_spearman_results.csv")
 head(df)
 
 # write function which caluclates pertaage of bin that is significant
-results <-df %>%
+results_v1 <-df %>%
   group_by(basin_name, zone_name) %>%
   summarise(percent_sig     = round((length(which(p_val < .05))/length(p_val))*100, 0),
             percent_not_sig = round((length(which(p_val > .05))/length(p_val))*100, 0))
 
-results
+# results_ns <-filter(results_v1, aspect_name != "East" & aspect_name != "West")
+
+test <-results_v1 %>%
+  pivot_wider(names_from = zone_name, values_from = percent_sig)
+
+test
+
+
