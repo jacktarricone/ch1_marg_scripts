@@ -47,41 +47,54 @@ theme_set(theme_classic(14))
 files <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = ".gpkg")
 shp_list <-lapply(files, vect)
 shp_list
+shp <-shp_list[[6]]
+plot(shp)
 
 # single rasters: insol, temp normal, dem
-insol_american <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"), ext(american)), american)
-names(insol_american) <-"insol_watts"
-plot(insol_american)
+insol_shp <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"), ext(shp)), shp)
+names(insol_shp) <-"insol_watts"
+plot(insol_shp)
 
 # temp
-temp_american <-mask(crop(rast("./rasters/daymet/tmean_normal_1985_2016.tif"),ext(american)), american)
-names(temp_american) <-"mean_temp_c"
-plot(temp_american)
+temp_shp <-mask(crop(rast("./rasters/daymet/tmean_normal_1985_2016.tif"),ext(shp)), shp)
+names(temp_shp) <-"mean_temp_c"
+plot(temp_shp)
 
 # dem
-dem_american <-mask(crop(rast("./rasters/static/SNSR_DEM.tif"),ext(american)), american)
-names(dem_american) <-"elevation"
-plot(dem_american)
+dem_shp <-mask(crop(rast("./rasters/static/SNSR_DEM.tif"),ext(shp)), shp)
+names(dem_shp) <-"elevation"
+plot(dem_shp)
+
+# elevation zone
+ez_shp <-mask(crop(rast("./rasters/categorized/dem_6zb.tif"),ext(shp)), shp)
+names(ez_shp) <-"ez"
+plot(dem_shp)
+
+# aspect
+aspect_shp <-mask(crop(rast("./rasters/categorized/aspect_4deg_ns.tif"),ext(shp)), shp)
+names(aspect_shp) <-"aspect"
+plot(aspect_shp)
 
 ### stacks
 # fm load and format
 fm_list <- list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
-fm_stack_american <-mask(crop(rast(fm_list[1:32]),ext(american)), american)
-plot(fm_stack_american[[32]])
+fm_stack_shp <-mask(crop(rast(fm_list[1:32]),ext(shp)), shp)
+plot(fm_stack_shp[[31]])
 
 # temp load and format
 tmean_list <-list.files("./rasters/daymet/tmean", full.names = TRUE)
-tmean_stack_american <-mask(crop(rast(tmean_list[1:32]),ext(american)), american)
-plot(tmean_stack_american[[32]])
+tmean_stack_shp_v1 <-mask(crop(rast(tmean_list[1:32]),ext(shp)), shp)
+tmean_stack_shp <-mask(tmean_stack_shp_v1, fm_stack_shp, maskvalue = NA)
+plot(tmean_stack_shp[[31]])
 
 # rename layers
 wy_names <-seq(1985,2016,1)
-names(tmean_stack_american) <-wy_names
-names(fm_stack_american) <-wy_names
-tmean_stack_american
+names(tmean_stack_shp) <-wy_names
+names(fm_stack_shp) <-wy_names
+tmean_stack_shp
 
 # calculate number of non na obs per pixel
-fm_n_obs <-app(fm_stack_american, function(x) sum(!is.na(x)))
+fm_n_obs <-app(fm_stack_shp, function(x) sum(!is.na(x)))
 n_obs_v2 <-subst(fm_n_obs, 0, NA)
 plot(n_obs_v2)
 
@@ -90,19 +103,19 @@ masking_value <-subst(n_obs_v2, 0:27, NA)
 plot(masking_value)
 
 # if there are less than 10 observations per pixel, make NA
-fm_v3 <-mask(fm_stack_american, masking_value, maskvalues = NA)
+fm_v3 <-mask(fm_stack_shp, masking_value, maskvalues = NA)
 
 # stack and join
 # fm
-fm_stack <-c(dem_american, temp_american, insol_american, fm_v3)
+fm_stack <-c(dem_shp, temp_shp, insol_shp, ez_shp, fm_v3)
 fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
-fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,7:38, names_to = 'wy', values_to = 'frac_melt'))
+fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,8:39, names_to = 'wy', values_to = 'frac_melt'))
 head(fm_df)
 
 # tmean
-tmean_stack <-c(dem_american, temp_american, insol_american, tmean_stack_american)
+tmean_stack <-c(dem_shp, temp_shp, insol_shp, ez_shp, tmean_stack_shp)
 tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
-tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,7:38, names_to = 'wy', values_to = 'ondjfm_temp_c'))
+tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,8:39, names_to = 'wy', values_to = 'ondjfm_temp_c'))
 head(tmean_df)
 
 # full join
@@ -111,20 +124,15 @@ analysis_df <-analysis_df %>% drop_na()
 tail(analysis_df)
 head(analysis_df)
 
-# # quick test df with two cells
-# test_df <-filter(analysis_df, cell == 841193)
-# head(test_df)
-
-# # test ft
-# fit <-cor.test(test_df$frac_melt, test_df$ondjfm_temp_c, method = 'spearman', exact=FALSE)
-# fit
-
 # covert to data table and set key
 DT <- as.data.table(analysis_df)
 setkey(DT, cell)
 
-# run much faster, 
-results_v1 <-DT[,list(corr = cor.test(frac_melt,ondjfm_temp_c,method = 'spearman', exact = FALSE)), by = cell]
+# run using data.table -- super fast
+results_v1 <-DT[,list(corr = cor.test(frac_melt,ondjfm_temp_c,
+                                      method = 'spearman', exact = FALSE)), by = cell]
+
+# convert back to data frame
 results_raw <-as.data.frame(unlist(results_v1$corr))
 head(results_raw)
 
