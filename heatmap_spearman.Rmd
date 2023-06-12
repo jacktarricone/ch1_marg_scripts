@@ -1,0 +1,59 @@
+---
+title: "heat_map"
+author: "Jack Tarricone"
+date: "2023-06-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(viridis)
+library(data.table)
+library(ztable)
+library(moonBook)
+library(magrittr)
+library(RColorBrewer)
+options(ztable.type="html")
+```
+
+## R Markdown
+
+```{r results='asis'}
+# set wd
+setwd("~/ch1_margulis")
+
+# read in df
+df <-fread("./csvs/spearman_fm_temp_results/all_basins_spearman_results.csv")
+colnames(df)[13] <-"Basin"
+head(df)
+
+# write function which caluclates pertaage of bin that is significant
+results_v1 <-df %>%
+  group_by(Basin, zone_name) %>%
+  summarise(percent_sig     = round((length(which(p_val < .05))/length(p_val))*100, 0))
+
+# summarize
+test <-as.data.frame(results_v1 %>%
+  pivot_wider(names_from = zone_name, values_from = percent_sig), row.names = FALSE)
+
+head(test)
+```
+
+```{r results='asis'}
+z1 <-ztable(test, zebra.rownames=FALSE, digits = 0)
+z <-update_ztable(z1, include.rownames = FALSE, align = "lcccccc")
+print(z)
+```
+
+```{r results='asis'}
+ 
+z=spanCol(z,row=1,from=6,to=7,"grey20")
+z=spanCol(z,row=2,from=4,to=6,"grey20")
+
+mycolor <-brewer.pal(9, "Reds")
+
+z %>%
+  makeHeatmap(mycolor = mycolor) %>%
+  print(caption="Table 5. Heatmap table showing the percentage of pixels that have a signifcant (p < .05) Spearman correlation by basin and EZ. ")
+```
