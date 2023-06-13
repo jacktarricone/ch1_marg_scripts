@@ -5,6 +5,7 @@
 library(tidyverse)
 library(data.table)
 library(cowplot)
+library(viridisLite)
 
 # set wd
 setwd("~/ch1_margulis")
@@ -61,7 +62,8 @@ south_results <-filter(south_results_v1, Basin != "Feather" | zone_name != "2300
 diff <-north_results$percent_sig - south_results$percent_sig
 
 # make differnce df
-diff_results <-cbind(north_results, diff)
+diff_results <-as.data.frame(cbind(north_results, diff))
+colnames(diff_results)[5] <-"diff"
 
 # # pivot wider for plotting
 # test <-as.data.frame(results_v1 %>%
@@ -137,3 +139,63 @@ ggsave(south_p,
        dpi = 600)
 
 system("open ./plots/spearman_heat_south_v1.png")
+
+
+# set scale 
+diff_colors <-viridis(30, option = "D")
+
+#### difference
+diff_p <-ggplot(diff_results, aes(y=Basin, x=zone_name, fill= diff)) + 
+  geom_tile()+
+  geom_text(aes(label=diff)) +
+  scale_fill_gradientn(colors = diff_colors) +
+  labs(x = "EZ", fill = "Difference (%)", title = "North vs. South Difference") +
+  scale_x_discrete(expand = c(0, 0))+
+  scale_y_discrete(expand = c(0, 0))+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        panel.background = element_rect(fill = 'gray'),
+        aspect.ratio = 1,
+        legend.position  = 'bottom',
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position = 'bottom',
+                               title.hjust = .5,
+                               barwidth = 27,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+diff_p
+
+ggsave(diff_p,
+       file = "./plots/spearman_heat_diff_v1.png",
+       width = 8, 
+       height = 8,
+       dpi = 600)
+
+system("open ./plots/spearman_heat_diff_v1.png")
+
+### cowing
+# cowplot test
+full <-plot_grid(north_p, south_p, diff_p,
+                 labels = c("(a)", "(b)", "(c)"),
+                 ncol = 3, 
+                 align = "hv",
+                 label_size = 24,
+                 vjust =  3,
+                 hjust = -1,
+                 rel_widths = c(1/3, 1/3, 1/3))
+# test save
+# make tighter together
+ggsave(full,
+       file = "./plots/heatmap_all3_v1.png",
+       width = 23, 
+       height = 8,
+       dpi = 600)
+
+system("open ./plots/heatmap_all3_v1.png")
+
+
