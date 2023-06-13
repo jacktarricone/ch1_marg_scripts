@@ -8,6 +8,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(sf)
 library(cowplot)
+library(scales)
 
 theme_classic <- function(base_size = 11, base_family = "",
                           base_line_size = base_size / 22,

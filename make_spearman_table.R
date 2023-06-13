@@ -6,6 +6,7 @@ library(tidyverse)
 library(data.table)
 library(cowplot)
 library(viridisLite)
+library(scales)
 
 # set wd
 setwd("~/ch1_margulis")
@@ -59,6 +60,8 @@ south_results_v1 <-filter(results_v1, aspect_name == "South")
 
 # remove zone 4 feather, like 4 pixels
 south_results <-filter(south_results_v1, Basin != "Feather" | zone_name != "2300-2700 m")
+
+# calc difference
 diff <-north_results$percent_sig - south_results$percent_sig
 
 # make differnce df
@@ -142,14 +145,14 @@ system("open ./plots/spearman_heat_south_v1.png")
 
 
 # set scale 
-diff_colors <-viridis(30, option = "D")
+diff_colors <-brewer.pal(9, "RdBu")
 
 #### difference
 diff_p <-ggplot(diff_results, aes(y=Basin, x=zone_name, fill= diff)) + 
   geom_tile()+
   geom_text(aes(label=diff)) +
-  scale_fill_gradientn(colors = diff_colors) +
-  labs(x = "EZ", fill = "Difference (%)", title = "North vs. South Difference") +
+  scale_fill_gradientn(colors = diff_colors, limits = c(-50,50), oob = squish) +
+  labs(x = "EZ", fill = "Difference (%)", title = "North - South Difference") +
   scale_x_discrete(expand = c(0, 0))+
   scale_y_discrete(expand = c(0, 0))+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -171,12 +174,12 @@ diff_p <-ggplot(diff_results, aes(y=Basin, x=zone_name, fill= diff)) +
 diff_p
 
 ggsave(diff_p,
-       file = "./plots/spearman_heat_diff_v1.png",
+       file = "./plots/spearman_heat_diff_v2.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heat_diff_v1.png")
+system("open ./plots/spearman_heat_diff_v2.png")
 
 ### cowing
 # cowplot test
