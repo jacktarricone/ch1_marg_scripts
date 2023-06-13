@@ -45,21 +45,20 @@ theme_set(theme_classic(15))
 
 # read in df
 df <-fread("./csvs/spearman_fm_temp_results/all_basins_spearman_results.csv")
+colnames(df)[13] <-"Basin"
 head(df)
 
 # write function which calculates percentage of bin that is significant
 results_v1 <-df %>%
   group_by(Basin, zone_name, aspect_name) %>%
-  summarise(percent_sig     = round((length(which(p_val < .05))/length(p_val))*100, 0))
+  summarise(percent_sig     = round((length(which(p_val < .05))/length(p_val))*100, 0),
+            mean_ez_temp_c  = mean(mean_temp_c))
 
 head(results_v1)
 
 # filter for north and south facing
 north_results <-filter(results_v1, aspect_name == "North")
 colnames(north_results)[4] <-"north_percent_sig"
-
-
-
 
 # remove zone 4 feather, like 4 pixels
 south_results_v1 <-filter(results_v1, aspect_name == "South")
@@ -83,14 +82,14 @@ diff_results$diff <-diff_results$north_percent_sig - diff_results$south_percent_
 #   pivot_wider(names_from = zone_name, values_from = percent_sig))
 
 # plot
-mycolors <-brewer.pal(9, "YlOrRd")
+mycolors <-rev(brewer.pal(9, "Spectral"))
 
 #### north facing
-north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= north_percent_sig)) + 
+north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= mean_ez_temp_c)) + 
   geom_tile()+
   geom_text(aes(label=north_percent_sig)) +
-  scale_fill_gradientn(colors = mycolors) +
-  labs(x = "EZ", fill = "Percentage Significant (%)", title = "North Facing") +
+  scale_fill_gradientn(colors = mycolors, limits = c(-5,5), oob = squish) +
+  labs(x = "EZ", fill = "Mean ONDJFM Temp (C)", title = "North Facing") +
   scale_x_discrete(expand = c(0, 0))+
   scale_y_discrete(expand = c(0, 0))+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -112,19 +111,19 @@ north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= north_percent_si
 north_p
 
 ggsave(north_p,
-       file = "./plots/spearman_heat_north_v1.png",
+       file = "./plots/spearman_heat_north_v2.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heat_north_v1.png")
+system("open ./plots/spearman_heat_north_v2.png")
 
 #### south facing
-south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= south_percent_sig)) + 
+south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= mean_ez_temp_c)) + 
   geom_tile()+
   geom_text(aes(label=south_percent_sig)) +
-  scale_fill_gradientn(colors = mycolors) +
-  labs(x = "EZ", fill = "Percentage Significant (%)", title = "South Facing") +
+  scale_fill_gradientn(colors = mycolors, limits = c(-5,5), oob = squish) +
+  labs(fill = "Mean ONDJFM Temp (C)", title = "South Facing") +
   scale_x_discrete(expand = c(0, 0))+
   scale_y_discrete(expand = c(0, 0))+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -146,12 +145,12 @@ south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= south_percent_si
 south_p
 
 ggsave(south_p,
-       file = "./plots/spearman_heat_south_v1.png",
+       file = "./plots/spearman_heat_south_v2.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heat_south_v1.png")
+system("open ./plots/spearman_heat_south_v2.png")
 
 
 # set scale 
@@ -184,12 +183,12 @@ diff_p <-ggplot(diff_results, aes(y=Basin, x=zone_name, fill= diff)) +
 diff_p
 
 ggsave(diff_p,
-       file = "./plots/spearman_heat_diff_v2.png",
+       file = "./plots/spearman_heat_temp_diff_v3.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heat_diff_v2.png")
+system("open ./plots/spearman_heat_temp_diff_v2.png")
 
 ### cowing
 # cowplot test
