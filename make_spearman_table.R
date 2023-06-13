@@ -56,17 +56,27 @@ head(results_v1)
 
 # filter for north and south facing
 north_results <-filter(results_v1, aspect_name == "North")
-south_results_v1 <-filter(results_v1, aspect_name == "South")
+colnames(north_results)[4] <-"north_percent_sig"
+
+
+
 
 # remove zone 4 feather, like 4 pixels
-south_results <-filter(south_results_v1, Basin != "Feather" | zone_name != "2300-2700 m")
+south_results_v1 <-filter(results_v1, aspect_name == "South")
+south_results <-filter(south_results_v1, Basin != "Feather" | zone_name != "2700-3100 m")
+colnames(south_results)[4] <-"south_percent_sig"
+south_results
+identical(south_results$Basin, north_results$Basin)
 
 # calc difference
-diff <-north_results$percent_sig - south_results$percent_sig
+# diff <-north_results$percent_sig - south_results$percent_sig
+
 
 # make differnce df
-diff_results <-as.data.frame(cbind(north_results, diff))
-colnames(diff_results)[5] <-"diff"
+diff_results <-as.data.frame(full_join(north_results, south_results, 
+                                       by = c("Basin","zone_name")))
+diff_results
+diff_results$diff <-diff_results$north_percent_sig - diff_results$south_percent_sig 
 
 # # pivot wider for plotting
 # test <-as.data.frame(results_v1 %>%
@@ -76,9 +86,9 @@ colnames(diff_results)[5] <-"diff"
 mycolors <-brewer.pal(9, "YlOrRd")
 
 #### north facing
-north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= percent_sig)) + 
+north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= north_percent_sig)) + 
   geom_tile()+
-  geom_text(aes(label=percent_sig)) +
+  geom_text(aes(label=north_percent_sig)) +
   scale_fill_gradientn(colors = mycolors) +
   labs(x = "EZ", fill = "Percentage Significant (%)", title = "North Facing") +
   scale_x_discrete(expand = c(0, 0))+
@@ -110,9 +120,9 @@ ggsave(north_p,
 system("open ./plots/spearman_heat_north_v1.png")
 
 #### south facing
-south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= percent_sig)) + 
+south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= south_percent_sig)) + 
   geom_tile()+
-  geom_text(aes(label=percent_sig)) +
+  geom_text(aes(label=south_percent_sig)) +
   scale_fill_gradientn(colors = mycolors) +
   labs(x = "EZ", fill = "Percentage Significant (%)", title = "South Facing") +
   scale_x_discrete(expand = c(0, 0))+
@@ -194,11 +204,11 @@ full <-plot_grid(north_p, south_p, diff_p,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/heatmap_all3_v1.png",
+       file = "./plots/heatmap_all3_v3.png",
        width = 23, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/heatmap_all3_v1.png")
+system("open ./plots/heatmap_all3_v3.png")
 
 
