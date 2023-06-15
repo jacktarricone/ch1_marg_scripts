@@ -7,6 +7,7 @@ library(data.table)
 library(cowplot)
 library(viridisLite)
 library(scales)
+library(RColorBrewer)
 
 # set wd
 setwd("~/ch1_margulis")
@@ -85,11 +86,11 @@ diff_results$diff <-diff_results$north_percent_sig - diff_results$south_percent_
 mycolors <-rev(brewer.pal(9, "Spectral"))
 
 #### north facing
-north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= mean_ez_temp_c)) + 
+north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= north_percent_sig)) + 
   geom_tile()+
   geom_text(aes(label=north_percent_sig)) +
-  scale_fill_gradientn(colors = mycolors, limits = c(-5,5), oob = squish) +
-  labs(x = "EZ", fill = "Mean ONDJFM Temp (C)", title = "North Facing") +
+  scale_fill_gradientn(colors = mycolors, limits = c(0,100), oob = squish) +
+  labs(x = "EZ", fill = "Area Significant (%)", title = "North Facing") +
   scale_x_discrete(expand = c(0, 0))+
   scale_y_discrete(expand = c(0, 0))+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -119,11 +120,11 @@ ggsave(north_p,
 system("open ./plots/spearman_heat_north_v2.png")
 
 #### south facing
-south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= mean_ez_temp_c)) + 
+south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= south_percent_sig)) + 
   geom_tile()+
   geom_text(aes(label=south_percent_sig)) +
-  scale_fill_gradientn(colors = mycolors, limits = c(-5,5), oob = squish) +
-  labs(fill = "Mean ONDJFM Temp (C)", title = "South Facing") +
+  scale_fill_gradientn(colors = mycolors, limits = c(0,100), oob = squish) +
+  labs(fill = "Area Significant (%)", title = "South Facing") +
   scale_x_discrete(expand = c(0, 0))+
   scale_y_discrete(expand = c(0, 0))+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -155,6 +156,7 @@ system("open ./plots/spearman_heat_south_v2.png")
 
 # set scale 
 diff_colors <-brewer.pal(9, "RdBu")
+head(diff_results)
 
 #### difference
 diff_p <-ggplot(diff_results, aes(y=Basin, x=zone_name, fill= diff)) + 
@@ -183,12 +185,12 @@ diff_p <-ggplot(diff_results, aes(y=Basin, x=zone_name, fill= diff)) +
 diff_p
 
 ggsave(diff_p,
-       file = "./plots/spearman_heat_temp_diff_v3.png",
+       file = "./plots/spearman_heatmap_v3.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heat_temp_diff_v2.png")
+system("open ./plots/spearman_heatmap_v3.png")
 
 ### cowing
 # cowplot test
@@ -203,11 +205,11 @@ full <-plot_grid(north_p, south_p, diff_p,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/heatmap_all3_v3.png",
+       file = "./plots/heatmap_all3_v4.png",
        width = 23, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/heatmap_all3_v3.png")
+system("open ./plots/heatmap_all3_v4.png")
 
 
