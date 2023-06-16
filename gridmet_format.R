@@ -18,24 +18,29 @@ dem <-rast("./rasters/static/SNSR_DEM.tif")
 ## function for downloading gridmet data
 # and formatting to cold season values at 90 m
 
-x <-30
-var <-"rmax"
+x <-8
+var <-var_list[[1]]
 
 gridmet_to_snsr <-function(x,var){
   
   setwd("~/ch1_margulis")
   
   # pull out year
-  wy_list <-seq(1985,2016,1)
-  year <-wy_list[x]
-  start_date <-paste0(year - 1,"-10-01")
-  end_date <-paste0(year,"-03-30")
+  element <-as.numeric(x)
+  year <-wy_list[[element]]
+  start_date <-paste0(as.integer(year) - 1,"-10-01")
+  end_date <-paste0(as.integer(year),"-03-30")
+  
+  print(start_date)
+  print(end_date)
+  print(var)
+  print(year)
   
   # dl data from oct 1 - march 30
   data_list <-getGridMET(snsr_sf, 
-               varname = var,
-               startDate = start_date,
-               endDate = end_date)
+                         varname = var,
+                         startDate = start_date,
+                         endDate = end_date)
   
   # convert from list to rast stack
   var_stack <-data_list[[1]]
@@ -63,6 +68,7 @@ wy_list <-seq(1985,2016,1)
 seq_nums <-seq(1,32,1)
 
 # apply
-lapply(wy_list, gridmet_to_snsr(x = seq_nums, var = var_list[1]))
+lapply(seq_nums, 
+       function(x) gridmet_to_snsr(x, var = var_list[1]))
 
 
