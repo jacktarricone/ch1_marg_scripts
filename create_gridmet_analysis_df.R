@@ -178,25 +178,91 @@ generate_gridmet_df <-function(basin_paths_list){
   # tmean_v3 <-mask(tmean_stack_shp, masking_value, maskvalues = NA)
   
   # stack and join
+  #### snow
   # fm
   fm_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
-               temp_mean_shp, rmean_shp,
+               temp_mean_shp, rmean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
                fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
-               fm_v3)
+               fm_stack_shp) # fm
   fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
-  fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,10:41, 
-                                            names_to = 'wy', values_to = 'frac_melt'))
-  # head(fm_df)
   
+  fm_df <- tidyr::pivot_longer(fm_df_v1, cols = 15:46, 
+                               names_to = 'wy', values_to = 'frac_melt')
+  
+  # mswe
+  mswe_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
+               temp_mean_shp, rmean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
+               fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+               mswe_stack_shp) # fm
+  mswe_df_v1 <-as.data.frame(mswe_stack, xy = TRUE, cell = TRUE)
+  
+  mswe_df <- tidyr::pivot_longer(mswe_df_v1, cols = 15:46, 
+                               names_to = 'wy', values_to = 'mswe_mm')
+  
+  # dom
+  dom_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
+                 temp_mean_shp, rmean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
+                 fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+                 dom_stack_shp) # fm
+  dom_df_v1 <-as.data.frame(dom_stack, xy = TRUE, cell = TRUE)
+  
+  dom_df <- tidyr::pivot_longer(dom_df_v1, cols = 15:46, 
+                                 names_to = 'wy', values_to = 'dom_dowy')
+  
+  
+  # gridmet
   # tmean
-  tmean_stack <-c(dem_shp, temp_mean_shp, insol_shp, ez_shp, aspect_shp, fm_mean_shp, tmean_v3)
+  tmean_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
+                temp_mean_shp, rmean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
+                fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+                tmean_stack_shp) # fm
   tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
-  tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,10:41, 
-                                               names_to = 'wy', values_to = 'ondjfm_temp_c'))
-  # head(tmean_df)
+  
+  tmean_df <- tidyr::pivot_longer(tmean_df_v1, cols = 15:46, 
+                                names_to = 'wy', values_to = 'temp_mean_c')
+  
+  
+  # rmean
+  rmean_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
+                  temp_mean_shp, rmean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
+                  fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+                  rmean_stack_shp) # fm
+  rmean_df_v1 <-as.data.frame(rmean_stack, xy = TRUE, cell = TRUE)
+  
+  rmean_df <- tidyr::pivot_longer(rmean_df_v1, cols = 15:46, 
+                                  names_to = 'wy', values_to = 'rh_mean_%')
+  
+  # srad
+  srad_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
+                  temp_mean_shp, rmean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
+                  fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+                  srad_stack_shp) # fm
+  srad_df_v1 <-as.data.frame(srad_stack, xy = TRUE, cell = TRUE)
+  
+  srad_df <- tidyr::pivot_longer(srad_df_v1, cols = 15:46, 
+                                  names_to = 'wy', values_to = 'srad_wm2')
+  
+  # srad
+  sph_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
+                 temp_mean_shp, rmean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
+                 fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+                 sph_stack_shp) # fm
+  sph_df_v1 <-as.data.frame(sph_stack, xy = TRUE, cell = TRUE)
+  
+  sph_df <- tidyr::pivot_longer(sph_df_v1, cols = 15:46, 
+                                 names_to = 'wy', values_to = 'sph_kgkg')
   
   # full join
-  analysis_df <-full_join(fm_df, tmean_df)
-  analysis_df <-analysis_df %>% drop_na()
+  # srad_df, sph_df)
+  a_df1 <-full_join(fm_df, mswe_df)
+  a_df2 <-full_join(a_df1, dom_df)
+  a_df3 <-full_join(a_df2, tmean_df)
+  a_df4 <-full_join(a_df3, rmean_df)
+  a_df5 <-full_join(a_df4, srad_df)
+  a_df6 <-full_join(a_df5, sph_df)
   
+  # save
+  saving_name <-paste0(basin_name,"_gridmet_snsr_ts.csv")
+  fwrite(a_df6, paste0("./csvs/gridmet_dfs/",saving_name))
+  print(paste0(basin_name, " is done!"))
 }
