@@ -18,32 +18,25 @@ dem <-rast("./rasters/static/SNSR_DEM.tif")
 ## function for downloading gridmet data
 # and formatting to cold season values at 90 m
 
-x <-8
-var <-var_list[[1]]
+# for (year in 1985:2016) {
 
-gridmet_to_snsr <-function(x,var){
+for (year in 1985:2016) {
   
-  setwd("~/ch1_margulis")
+  # define variable
+  var <-"srad"
   
-  # pull out year
-  element <-as.numeric(x)
-  year <-wy_list[[element]]
-  start_date <-paste0(as.integer(year) - 1,"-10-01")
-  end_date <-paste0(as.integer(year),"-03-30")
-  
-  print(start_date)
-  print(end_date)
-  print(var)
-  print(year)
+  # Define start and end dates
+  start_date <- paste0(year - 1, "-10-01")
+  end_date <- paste0(year, "-03-31")
   
   # dl data from oct 1 - march 30
-  data_list <-getGridMET(snsr_sf, 
+  data_list <-getGridMET(AOI = snsr_sf, 
                          varname = var,
                          startDate = start_date,
                          endDate = end_date)
   
   # convert from list to rast stack
-  var_stack <-data_list[[1]]
+  var_stack <-rast(data_list)
   var_stack
 
   # calc mean values
@@ -54,21 +47,18 @@ gridmet_to_snsr <-function(x,var){
 
   # save
   saving_location2 <-paste0('./rasters/gridmet/',var,"/",var,"_ondjfm_",year,".tif")
-  print(saving_location2)
   writeRaster(vm_2, saving_location2)
   print(paste0(year, " ", var, " is done!"))
 }
 
-
-# apply to list
-var_list <-c("srad","tmmx","tmmn","rmax","rmin","sph")
-
-# create numers to loop through
-wy_list <-seq(1985,2016,1)
-seq_nums <-seq(1,32,1)
-
-# apply
-lapply(seq_nums, 
-       function(x) gridmet_to_snsr(x, var = var_list[1]))
+# 
+# # apply to list
+# var_list <-c("srad","tmmx","tmmn","rmax","rmin","sph")
+# 
+# # create numers to loop through
+# years_seq <-1985:2016
+# 
+# # apply
+# sapply(years_seq, function(year, var) gridmet_to_snsr(year, var = "srad"))
 
 
