@@ -101,75 +101,66 @@ generate_gridmet_df <-function(basin_paths_list){
   
   # static
   static_vars_stack <-c(gridmet_stack,pz_vars_stack,snow_stack)
-  plot(static_vars_stack)
+  # plot(static_vars_stack)
   
   ################### 
   ##### stacks ######
   ################### 
   
+  # rename layers
+  wy_names <-seq(1985,2016,1)
+  
   ########### snow metrics
   # fm load and format
   fm_list <- list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
   fm_stack_shp <-mask(crop(rast(fm_list[1:32]),ext(shp)), shp)
+  names(fm_stack_shp) <-wy_names
   
   # max_swe
   mswe_stack <- rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
   mswe_stack_shp <-mask(crop(mswe_stack,ext(shp)), shp)
-  ext(mswe_stack_shp) <-ext(static_vars_stack)
+  names(mswe_stack_shp) <-wy_names
   
   # dom
   dom_stack <- rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
   dom_stack_shp <-mask(crop(dom_stack,ext(shp)), shp)
-  
+  names(dom_stack_shp) <-wy_names
   
   ########## gridmet data
   # tmean
   tmean_stack_v1 <-rast("./rasters/gridmet/tmean/tmean_stack.tif")
   ext(tmean_stack_v1) <-ext(dem)
   tmean_stack_shp <-mask(crop(tmean_stack_v1,ext(shp)), shp)
+  names(tmean_stack_shp) <-wy_names
   
   # rmean  
   rmean_stack_v1 <- rast("./rasters/gridmet/rmean/rmean_stack.tif")
+  ext(rmean_stack_v1) <-ext(dem)
   rmean_stack_shp <-mask(crop(rmean_stack_v1,ext(shp)), shp)
+  names(rmean_stack_shp) <-wy_names
   
   # srad  
   srad_list <- list.files("./rasters/gridmet/srad/", full.names = TRUE)
-  srad_stack_shp <-mask(crop(rast(srad_list[1:32]),ext(shp)), shp)
+  srad_stack_v1 <-rast(srad_list[1:32])
+  ext(srad_stack_v1) <-ext(dem)
+  srad_stack_shp <-mask(crop(srad_stack_v1,ext(shp)), shp)
+  names(srad_stack_shp) <-wy_names
   
   # sph  
   sph_list <- list.files("./rasters/gridmet/sph/", full.names = TRUE)
-  sph_stack_shp_v1 <-mask(crop(rast(sph_list[1:32]),ext(shp)), shp)
-  sph_stack_shp <-resample
-  # plot(sph_stack_shp[[10]])
+  sph_stack_v1 <-rast(sph_list[1:32])
+  ext(sph_stack_v1) <-ext(dem)
+  sph_stack_shp <-mask(crop(sph_stack_v1,ext(shp)), shp)
+  names(sph_stack_shp) <-wy_names
   
   # rename layers
   wy_names <-seq(1985,2016,1)
   
-  # snow
-  names(fm_stack_shp) <-wy_names
-  names(mswe_stack_shp) <-wy_names
-  names(dom_stack_shp) <-wy_names
   
   # gridmet
-  names(tmean_stack_shp) <-wy_names
-  names(rmean_stack_shp) <-wy_names
   names(srad_stack_shp) <-wy_names
   names(sph_stack_shp) <-wy_names
 
-  # # calculate number of non na obs per pixel
-  # fm_n_obs <-app(fm_stack_shp, function(x) sum(!is.na(x)))
-  # n_obs_v2 <-subst(fm_n_obs, 0, NA)
-  # # plot(n_obs_v2)
-  # 
-  # # convert all values below 10 to NA
-  # masking_value <-subst(n_obs_v2, 0:27, NA)
-  # # plot(masking_value)
-  # 
-  # # if there are less than 10 observations per pixel, make NA
-  # fm_v3 <-mask(fm_stack_shp, masking_value, maskvalues = NA)
-  # tmean_v3 <-mask(tmean_stack_shp, masking_value, maskvalues = NA)
-  
-  # stack and join
   #### snow
   # fm
   fm_stack <-c(static_vars_stack,
@@ -181,9 +172,7 @@ generate_gridmet_df <-function(basin_paths_list){
                                names_to = 'wy', values_to = 'frac_melt')
   
   # mswe
-  mswe_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
-               temp_mean_shp, rmean_mean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
-               fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+  mswe_stack <-c(static_vars_stack,
                mswe_stack_shp) # fm
   mswe_df_v1 <-as.data.frame(mswe_stack, xy = TRUE, cell = TRUE)
   
@@ -191,9 +180,7 @@ generate_gridmet_df <-function(basin_paths_list){
                                names_to = 'wy', values_to = 'mswe_mm')
   
   # dom
-  dom_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
-                 temp_mean_shp, rmean_mean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
-                 fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+  dom_stack <-c(static_vars_stack,
                  dom_stack_shp) # fm
   dom_df_v1 <-as.data.frame(dom_stack, xy = TRUE, cell = TRUE)
   
@@ -203,9 +190,7 @@ generate_gridmet_df <-function(basin_paths_list){
   
   # gridmet
   # tmean
-  tmean_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
-                temp_mean_shp, rmean_mean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
-                fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+  tmean_stack <-c(static_vars_stack,
                 tmean_stack_shp) # fm
   tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
   
@@ -214,9 +199,7 @@ generate_gridmet_df <-function(basin_paths_list){
   
   
   # rmean
-  rmean_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
-                  temp_mean_shp, rmean_mean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
-                  fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+  rmean_stack <-c(static_vars_stack,
                   rmean_stack_shp) # fm
   rmean_df_v1 <-as.data.frame(rmean_stack, xy = TRUE, cell = TRUE)
   
@@ -224,9 +207,7 @@ generate_gridmet_df <-function(basin_paths_list){
                                   names_to = 'wy', values_to = 'rh_mean_%')
   
   # srad
-  srad_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
-                  temp_mean_shp, rmean_mean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
-                  fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+  srad_stack <-c(static_vars_stack,
                   srad_stack_shp) # fm
   srad_df_v1 <-as.data.frame(srad_stack, xy = TRUE, cell = TRUE)
   
@@ -234,9 +215,7 @@ generate_gridmet_df <-function(basin_paths_list){
                                   names_to = 'wy', values_to = 'srad_wm2')
   
   # srad
-  sph_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp, # dem, elevaiton zone, aspect, insol
-                 temp_mean_shp, rmean_mean_shp, srad_mean_shp, sph_mean_shp, # 4 gridmet vars
-                 fm_mean_shp, max_mean_shp, dom_mean_shp, # 3 snow metric means
+  sph_stack <-c(static_vars_stack,
                  sph_stack_shp) # fm
   sph_df_v1 <-as.data.frame(sph_stack, xy = TRUE, cell = TRUE)
   
@@ -253,7 +232,8 @@ generate_gridmet_df <-function(basin_paths_list){
   
   # add basin name col
   a_df7 <-cbind(rep(basin_name, nrow(a_df6)), a_df6)
-  colnames(a_df7)[11] <-"basin_name"
+  colnames(a_df7)[1] <-"basin_name"
+  head(a_df7)
   
   # save
   saving_name <-paste0(basin_name,"_gridmet_snsr_ts.csv")
