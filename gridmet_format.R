@@ -18,10 +18,10 @@ dem <-rast("./rasters/static/SNSR_DEM.tif")
 ## loop for downloading gridmet data
 # and formatting to cold season values at 90 m
 # not for temp vars
-for (year in 1985:2016) {
+for (year in 1985:2016){
   
   # define variable
-  var <-"tmmx"
+  var <-"rmax"
   
   # Define start and end dates
   start_date <- paste0(year - 1, "-10-01")
@@ -50,10 +50,10 @@ for (year in 1985:2016) {
 }
 
 ### for temp vars
-for (year in 1985:2016) {
+for (year in 1985:2016){
   
   # define variable
-  var <-"tmmx"
+  var <-"tmmn"
   
   # Define start and end dates
   start_date <- paste0(year - 1, "-10-01")
@@ -73,7 +73,7 @@ for (year in 1985:2016) {
   var_mean <-app(var_stack, 'mean')
   vm_1 <-project(resample(var_mean, dem, method = "bilinear", threads = TRUE), crs(dem))
   vm_2 <-mask(vm_1, snsr)
-  vm3 <- vm2 - 273.15
+  vm_3 <- vm_2 - 273.15
   plot(vm_3)
   
   # save
@@ -82,6 +82,62 @@ for (year in 1985:2016) {
   print(paste0(year, " ", var, " is done!"))
 }
 
+############### make tmean rasters
+tmmn_list <-list.files('./rasters/gridmet/tmmn', full.names = TRUE)
+tmmn_stack <-rast(tmmn_list)
 
+tmmx_list <-list.files('./rasters/gridmet/tmmx', full.names = TRUE)
+tmmx_stack <-rast(tmmx_list)
+
+# add and divide
+tmean_stack <-(tmmx_stack+tmmn_stack)/2
+tmean_mean_stack <-app(tmean_stack, mean)
+plot(tmean_mean_stack)
+hist(tmean_mean_stack, breaks = 100)
+
+# save
+writeRaster(tmean_stack, "./rasters/gridmet/tmean/tmean_stack.tif")
+writeRaster(tmean_mean_stack, "./rasters/gridmet/tmean/tmean_mean.tif")
+
+############## make rmean rasters
+rmin_list <-list.files('./rasters/gridmet/rmin', full.names = TRUE)
+rmin_stack <-rast(rmin_list)
+
+rmax_list <-list.files('./rasters/gridmet/rmax', full.names = TRUE)
+rmax_stack <-rast(rmax_list)
+
+# add and divide
+rmean_stack <-(rmax_stack+rmin_stack)/2
+rmean_mean <-app(rmean_stack, mean)
+plot(rmean_mean)
+hist(rmean_mean, breaks = 100)
+
+# save
+writeRaster(rmean_stack, "./rasters/gridmet/rmean/rmean_stack.tif")
+writeRaster(tmean_mean_stack, "./rasters/gridmet/rmean/rmean_mean.tif")
+
+############## make sph_mean
+sph_list <-list.files('./rasters/gridmet/sph', full.names = TRUE)
+sph_stack <-rast(sph_list)
+
+# add and divide
+sph_mean <-app(sph_stack, mean)
+plot(sph_mean)
+hist(sph_mean, breaks = 100)
+
+# save
+writeRaster(sph_mean, "./rasters/gridmet/sph/sph_mean.tif")
+
+############## make srad_mean
+srad_list <-list.files('./rasters/gridmet/srad', full.names = TRUE)
+srad_stack <-rast(srad_list)
+
+# add and divide
+srad_mean <-app(srad_stack, mean)
+plot(srad_mean)
+hist(srad_mean, breaks = 100)
+
+# save
+writeRaster(srad_mean, "./rasters/gridmet/srad/srad_mean.tif")
 
 
