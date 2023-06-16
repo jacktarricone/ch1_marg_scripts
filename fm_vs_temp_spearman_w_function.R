@@ -46,6 +46,8 @@ theme_set(theme_classic(14))
 # list of paths to shape files
 basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
 
+basin_paths_list <-basin_paths[7]
+
 generate_spearman_df <-function(basin_paths_list){
   
   # read in shape
