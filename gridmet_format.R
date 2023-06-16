@@ -12,52 +12,57 @@ setwd("~/ch1_margulis")
 # with sf
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
 snsr_sf <-st_geometry(snsr_v1)
+snsr <-vect("./vectors/snsr_shp.gpkg")
 dem <-rast("./rasters/static/SNSR_DEM.tif")
 
+## function for downloading gridmet data
+# and formatting to cold season values at 90 m
 
+x <-30
+var <-"rmax"
 
-# srad_stack <-data_list$daily_mean_shortwave_radiation_at_surface, srad
-# tmmx_stack <-data_list$daily_maximum_temperature, tmmx
-# tmmn_stack <-data_list$daily_minimum_temperature, tmmn
-# rmax_stack <-data_list$daily_maximum_relative_humidity, rmax
-# rmin_stack <-data_list$daily_minimum_relative_humidity, rmin
-# sph_stack  <-data_list$daily_mean_specific_humidity, sph
-
-
-
-## starting function for annual values
-
-var_full <-"daily_mean_shortwave_radiation_at_surface"
-var <-"srad"
+gridmet_to_snsr <-function(x,var){
   
-wy_list <-seq(1985,2016,1)
-year <-wy_list[[10]]
-start_date <-paste0(year - 1,"-10-01")
-end_date <-paste0(year,"-03-30")
-
-data_list <-getGridMET(snsr_sf, 
+  setwd("~/ch1_margulis")
+  
+  # pull out year
+  wy_list <-seq(1985,2016,1)
+  year <-wy_list[x]
+  start_date <-paste0(year - 1,"-10-01")
+  end_date <-paste0(year,"-03-30")
+  
+  # dl data from oct 1 - march 30
+  data_list <-getGridMET(snsr_sf, 
                varname = var,
                startDate = start_date,
                endDate = end_date)
+  
+  # convert from list to rast stack
+  var_stack <-data_list[[1]]
+  var_stack
 
-var_stack <-data_list[[1]]
-var_stack
+  # calc mean values
+  var_mean <-app(var_stack, 'mean')
+  vm_1 <-project(resample(var_mean, dem, method = "bilinear", threads = TRUE), crs(dem))
+  vm_2 <-mask(vm_1, snsr)
+  plot(vm_2)
 
-var_stack_v2 <-resample(var_stack, dem, method = "bilinear", threads = TRUE)
-
-
-
-# tmmx
-tmmx <-rast('./rasters/gridmet/tmmx/tmmx_1985.nc')
-
-# open file
-ncin <- nc_open('./rasters/gridmet/tmmx/tmmx_1985.nc')
-
-# bring swe variable into array
-lat_min <- ncvar_get(ncin,"global attritubes") # read in
-mean_swe_array <-swe_array[,,1,] # pull out first stat or "mean SWE"
-dowy200 <-mean_swe_array[,,200] # day of water year 200
+  # save
+  saving_location2 <-paste0('./rasters/gridmet/',var,"/",var,"_ondjfm_",year,".tif")
+  print(saving_location2)
+  writeRaster(vm_2, saving_location2)
+  print(paste0(year, " ", var, " is done!"))
+}
 
 
-test <-subst(tmmx[[180]], 32767, NA)
-plot(test)
+# apply to list
+var_list <-c("srad","tmmx","tmmn","rmax","rmin","sph")
+
+# create numers to loop through
+wy_list <-seq(1985,2016,1)
+seq_nums <-seq(1,32,1)
+
+# apply
+lapply(wy_list, gridmet_to_snsr(x = seq_nums, var = var_list[1]))
+
+
