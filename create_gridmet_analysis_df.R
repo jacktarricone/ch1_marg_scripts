@@ -14,7 +14,7 @@ setwd("~/ch1_margulis")
 # list of paths to shape files
 basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
 
-basin_paths_list <-basin_paths[7]
+# basin_paths_list <-basin_paths[7]
 
 generate_gridmet_df <-function(basin_paths_list){
   
@@ -152,14 +152,6 @@ generate_gridmet_df <-function(basin_paths_list){
   ext(sph_stack_v1) <-ext(dem)
   sph_stack_shp <-mask(crop(sph_stack_v1,ext(shp)), shp)
   names(sph_stack_shp) <-wy_names
-  
-  # rename layers
-  wy_names <-seq(1985,2016,1)
-  
-  
-  # gridmet
-  names(srad_stack_shp) <-wy_names
-  names(sph_stack_shp) <-wy_names
 
   #### snow
   # fm
@@ -233,13 +225,16 @@ generate_gridmet_df <-function(basin_paths_list){
   # add basin name col
   a_df7 <-cbind(rep(basin_name, nrow(a_df6)), a_df6)
   colnames(a_df7)[1] <-"basin_name"
-  head(a_df7)
   
   # save
   saving_name <-paste0(basin_name,"_gridmet_snsr_ts.csv")
-  fwrite(a_df6, paste0("./csvs/gridmet_dfs/",saving_name))
+  fwrite(a_df7, paste0("./csvs/gridmet_dfs/",saving_name))
   print(paste0(basin_name, " is done!"))
 }
 
 # apply to shape files list
 lapply(basin_paths, generate_gridmet_df)
+df_paths <-list.files("./csvs/gridmet_dfs/", full.names = TRUE)
+df_list <-lapply(df_paths, fread)
+full <-bind_rows(df_list, .id = "column_label")
+fwrite(full, "./csvs/gridmet_dfs/full_df.csv")
