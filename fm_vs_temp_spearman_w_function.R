@@ -52,25 +52,22 @@ head(head_df)
 
 # read in full df
 system.time(analysis_df <-fread("./csvs/gridmet_dfs/full_df.csv", nThread=14))
-basin_names <-unique(analysis_df$basin_name)
 
 # Assuming you have a data.table object called 'dt' with a grouping variable 'group_var'
 # Split the data.table by the grouping variable
 grouped_dts <- split(analysis_df, by = "basin_name")
+names(grouped_dts) <-basin_names
+# rm(analyis_df)
 
 setwd("~/ch1_margulis/csvs/gridmet_dfs/")
 
 # Save individual data.frames as separate files
 for (i in seq_along(grouped_dts)) {
-  fwrite(grouped_dts[[i]], file = paste0("group_", i, ".csv"))
+  name <-names(grouped_dts)[[i]]
+  fwrite(grouped_dts[[i]], file = paste0(name, "_full_stats.csv"))
 }
 
-
-# Save individual data.frames as separate files
-for (i in seq_along(grouped_data$data)) {
-  fwrite(grouped_data$data[[i]], file = paste0(i,"_full_stats.csv"))
-}
-
+# generate spearman results df by basin
 generate_spearman_df <-function(basin_paths_list){
 
   # full join
