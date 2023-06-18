@@ -46,103 +46,43 @@ theme_set(theme_classic(14))
 # list of paths to shape files
 basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
 
-basin_paths_list <-basin_paths[7]
+# head_df for col referencing
+head_df <-fread("./csvs/gridmet_dfs/head_df.csv")
+head(head_df)
+
+# read in full df
+system.time(analysis_df <-fread("./csvs/gridmet_dfs/full_df.csv", nThread=14))
+basin_names <-unique(analysis_df$basin_name)
+
+# Assuming you have a data.table object called 'dt' with a grouping variable 'group_var'
+# Split the data.table by the grouping variable
+grouped_dts <- split(analysis_df, by = "basin_name")
+
+setwd("~/ch1_margulis/csvs/gridmet_dfs/")
+
+# Save individual data.frames as separate files
+for (i in seq_along(grouped_dts)) {
+  fwrite(grouped_dts[[i]], file = paste0("group_", i, ".csv"))
+}
+
+
+# Save individual data.frames as separate files
+for (i in seq_along(grouped_data$data)) {
+  fwrite(grouped_data$data[[i]], file = paste0(i,"_full_stats.csv"))
+}
 
 generate_spearman_df <-function(basin_paths_list){
-  
-  # read in shape
-  shp <-vect(basin_paths_list)
-  basin_name_v1 <-basename(basin_paths_list)
-  basin_name <-gsub(".gpkg","",basin_name_v1)
-  print(basin_name)
-
-  # insol
-  insol_shp <-mask(crop(rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif"), ext(shp)), shp)
-  names(insol_shp) <-"insol_watts"
-  plot(insol_shp)
-
-  # temp_mean
-  temp_mean_shp <-mask(crop(rast("./rasters/daymet/tmean_normal_1985_2016.tif"),ext(shp)), shp)
-  names(temp_mean_shp) <-"mean_temp_c"
-  plot(temp_mean_shp)
-
-  # fm_mean
-  fm_mean_shp <-mask(crop(rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif"),ext(shp)), shp)
-  names(fm_mean_shp) <-"mean_fm"
-  plot(fm_mean_shp)
-
-  # dem
-  dem_shp <-mask(crop(rast("./rasters/static/SNSR_DEM.tif"),ext(shp)), shp)
-  names(dem_shp) <-"elevation"
-  plot(dem_shp)
-
-  # elevation zone
-  ez_shp <-mask(crop(rast("./rasters/categorized/dem_6zb.tif"),ext(shp)), shp)
-  names(ez_shp) <-"ez"
-  plot(ez_shp)
-
-  # aspect
-  aspect_shp <-mask(crop(rast("./rasters/categorized/aspect_thres_4_classes.tif"),ext(shp)), shp)
-  names(aspect_shp) <-"aspect"
-  plot(aspect_shp)
-
-  ### stacks
-  # fm load and format
-  fm_list <- list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
-  fm_stack_shp <-mask(crop(rast(fm_list[1:32]),ext(shp)), shp)
-  # plot(fm_stack_shp[[1]])
-
-  # temp load and format
-  tmean_list <-list.files("./rasters/daymet/tmean", full.names = TRUE)
-  tmean_stack_shp_v1 <-mask(crop(rast(tmean_list[1:32]),ext(shp)), shp)
-  tmean_stack_shp <-mask(tmean_stack_shp_v1, fm_stack_shp, maskvalue = NA)
-  # plot(tmean_stack_shp[[1]])
-
-  # rename layers
-  wy_names <-seq(1985,2016,1)
-  names(tmean_stack_shp) <-wy_names
-  names(fm_stack_shp) <-wy_names
-
-  # calculate number of non na obs per pixel
-  fm_n_obs <-app(fm_stack_shp, function(x) sum(!is.na(x)))
-  n_obs_v2 <-subst(fm_n_obs, 0, NA)
-  # plot(n_obs_v2)
-
-  # convert all values below 10 to NA
-  masking_value <-subst(n_obs_v2, 0:27, NA)
-  # plot(masking_value)
-
-  # if there are less than 10 observations per pixel, make NA
-  fm_v3 <-mask(fm_stack_shp, masking_value, maskvalues = NA)
-  tmean_v3 <-mask(tmean_stack_shp, masking_value, maskvalues = NA)
-
-  # stack and join
-  # fm
-  fm_stack <-c(dem_shp, temp_mean_shp, insol_shp, ez_shp, aspect_shp, fm_mean_shp, fm_v3)
-  fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
-  fm_df <-as.data.frame(tidyr::pivot_longer(fm_df_v1 ,10:41, 
-                                            names_to = 'wy', values_to = 'frac_melt'))
-  # head(fm_df)
-
-  # tmean
-  tmean_stack <-c(dem_shp, temp_mean_shp, insol_shp, ez_shp, aspect_shp, fm_mean_shp, tmean_v3)
-  tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
-  tmean_df <-as.data.frame(tidyr::pivot_longer(tmean_df_v1 ,10:41, 
-                                               names_to = 'wy', values_to = 'ondjfm_temp_c'))
-  # head(tmean_df)
 
   # full join
   analysis_df <-full_join(fm_df, tmean_df)
   analysis_df <-analysis_df %>% drop_na()
-  # tail(analysis_df)
-  # head(analysis_df)
 
   # covert to data table and set key
   DT <-as.data.table(analysis_df)
-  setkey(DT, cell)
+  setkey(analysis_df, cell)
 
   # run using data.table -- super fast
-  results_v1 <-DT[,list(corr = cor.test(frac_melt,ondjfm_temp_c,
+  results_v1 <-DT[,list(corr = cor.test(frac_melt,temp_mean_c,
                                       method = 'spearman', exact = FALSE)), by = cell]
 
   # convert back to data frame
@@ -191,12 +131,6 @@ generate_spearman_df <-function(basin_paths_list){
 
 # apply function to list of basin shape files
 lapply(basin_paths, generate_spearman_df)
-
-
-
-
-
-
 
 
 # subset by sig

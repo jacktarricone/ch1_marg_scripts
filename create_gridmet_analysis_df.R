@@ -14,7 +14,7 @@ setwd("~/ch1_margulis")
 # list of paths to shape files
 basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
 
-# basin_paths_list <-basin_paths[7]
+basin_paths_list <-basin_paths[5]
 
 generate_gridmet_df <-function(basin_paths_list){
   
@@ -225,6 +225,8 @@ generate_gridmet_df <-function(basin_paths_list){
   # add basin name col
   a_df7 <-cbind(rep(basin_name, nrow(a_df6)), a_df6)
   colnames(a_df7)[1] <-"basin_name"
+  head(a_df7)
+  # write.csv(head(a_df7), "./csvs/gridmet_dfs/head_df.csv")
   
   # save
   saving_name <-paste0(basin_name,"_gridmet_snsr_ts.csv")
