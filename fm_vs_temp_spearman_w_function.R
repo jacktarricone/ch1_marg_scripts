@@ -70,13 +70,13 @@ for (i in seq_along(grouped_dts)) {
 # generate spearman results df by basin
 generate_spearman_df <-function(basin_paths_list){
 
-  # full join
-  analysis_df <-full_join(fm_df, tmean_df)
-  analysis_df <-analysis_df %>% drop_na()
-
-  # covert to data table and set key
-  DT <-as.data.table(analysis_df)
-  setkey(analysis_df, cell)
+  # # full join
+  # analysis_df <-full_join(fm_df, tmean_df)
+  # analysis_df <-analysis_df %>% drop_na()
+  # 
+  # # covert to data table and set key
+  # DT <-as.data.table(analysis_df)
+  # setkey(analysis_df, cell)
 
   # run using data.table -- super fast
   results_v1 <-DT[,list(corr = cor.test(frac_melt,temp_mean_c,
