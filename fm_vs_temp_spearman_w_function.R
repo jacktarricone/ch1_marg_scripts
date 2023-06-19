@@ -4,6 +4,7 @@
 
 library(terra)
 library(tidyverse)
+library(dtplyr)
 library(scales)
 library(cowplot)
 library(viridis)
@@ -47,11 +48,12 @@ theme_set(theme_classic(14))
 df_paths <-list.files("./csvs/gridmet_dfs", full.names = TRUE, pattern = "full_stat")
 df_list <-lapply(df_paths, fread)
 
-basin_v1 <-df_list[[1]]
-basin <-na.omit(basin_v1) 
-setkey(basin, cell)
-
-generate_spearman_df <-function(basin_list){}
+# funciton to create basin results dataframes
+generate_spearman_df <-function(basin_list){
+  
+  # remove nans and set key
+  basin <-na.omit(basin_list) 
+  setkey(basin, cell)
   
   # extract name
   basin_name <-basin$basin_name[1]
@@ -95,27 +97,39 @@ generate_spearman_df <-function(basin_list){}
 
   # combine both for full df
   results_df <-full_join(single_cell_df,spearman_df)
-  
-  # add basin name col
-  results_df_v2 <-cbind(results_df, rep(basin_name, nrow(results_df)))
-  colnames(results_df_v2)[13] <-"basin_name"
+  head(results_df)
   
   # save
   saving_name <-paste0(basin_name,"_spearman_results.csv")
-  fwrite(results_df_v2, paste0("./csvs/spearman_fm_temp_results/",saving_name))
+  fwrite(results_df, paste0("./csvs/spearman_fm_temp_results/",saving_name))
   print(paste0(basin_name, " is done!"))
   
 }
 
 # apply function to list of basin shape files
-lapply(basin_paths, generate_spearman_df)
+lapply(df_list, generate_spearman_df)
 
+# # read back in and make on big df
+# spearman_paths <-list.files("./csvs/spearman_fm_temp_results/", full.names = TRUE, pattern = '.csv')
+# spearman_list <-lapply(spearman_paths, fread)
+# spearman_df <-as.data.table(bind_rows(results_list))
+# head(spearman_df)
+# 
+# # remove unneeded cols
+# cols <-colnames(spearman_df)
+# cols_remove <-cols[17:22]
+# spearman_df_v2 <- spearman_df %>%
+#   select(-c(cols_remove))
+# head(spearman_df_v2)
+# fwrite(spearman_df_v2, "./csvs/spearman_fm_temp_results/spearman_results_v2.csv")
+
+spearman_df <-fread("./csvs/spearman_fm_temp_results/spearman_results_v2.csv")
+hist(results_df$mean_temp_c)
 
 # subset by sig
-sig_df <-filter(results_df, p_val < .05 & ez == 1)
-not_sig_df <-filter(results_df, p_val > .05 & ez == 1)
+sig_df <-filter(results_df, p_val < .05 & basin_ == "kern")
+not_sig_df <-filter(results_df, p_val > .05 & basin == "kern")
 rows <-rbind(sig_df,not_sig_df)
-
 percent_sig <-(nrow(sig_df)/nrow(rows))*100
 percent_no_sig <-(nrow(not_sig_df)/nrow(rows))*100
 
@@ -131,7 +145,7 @@ p1 <-ggplot() +
              alpha = (40/100), size = (1.5), shape = 10)+
   scale_color_gradientn(colors = topo_colors, limits = c(1500,4000)) +
   scale_y_continuous(limits = c(0,1), expand = (c(0,0))) +
-  scale_x_continuous(limits = c(-7,7), expand = (c(0,0))) +
+  scale_x_continuous(limits = c(-8,8), expand = (c(0,0))) +
   labs(y = "Mean FM", x = expression('ONDJFM ' ~T["Mean"] ~ '(°C)')) +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
         aspect.ratio = 1,
@@ -148,10 +162,22 @@ p1 <-ggplot() +
                                ticks.colour = "black"))
 p1
 
+
 p2 <-p1 + geom_point(not_sig_df, mapping = aes(y = mean_fm, x = mean_temp_c), 
                      color = "black", alpha = (3/100), size = (1), shape = 4)
 
-p2
+# test save
+# make tighter together
+ggsave(p2,
+       file = "./plots/kern_spearman_temp_fm_ele_v1.png",
+       width = 6, 
+       height = 6,
+       dpi = 600)
+
+system("open ./plots/kern_spearman_temp_fm_ele_v1.png")
+
+
+
 
 
 
