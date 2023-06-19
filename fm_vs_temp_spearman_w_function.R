@@ -43,34 +43,21 @@ theme_classic <-function(base_size = 11, base_family = "",
 
 theme_set(theme_classic(14))
 
-# list of paths to shape files
-basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
-
 # head_df for col referencing
-head_df <-fread("./csvs/gridmet_dfs/head_df.csv")
-head(head_df)
+df_paths <-list.files("./csvs/gridmet_dfs", full.names = TRUE, pattern = "full_stat")
+df_list <-lapply(df_paths, fread)
 
-# read in full df
-system.time(analysis_df <-fread("./csvs/gridmet_dfs/full_df.csv", nThread=14))
+basin_v1 <-df_list[[1]]
+basin <-na.omit(basin_v1) 
+setkey(basin, cell)
 
-# Assuming you have a data.table object called 'dt' with a grouping variable 'group_var'
-# Split the data.table by the grouping variable
-grouped_dts <- split(analysis_df, by = "basin_name")
-names(grouped_dts) <-basin_names
-
-# generate spearman results df by basin
-generate_spearman_df <-function(basin_paths_list){
-
-  # # full join
-  # analysis_df <-full_join(fm_df, tmean_df)
-  # analysis_df <-analysis_df %>% drop_na()
-  # 
-  # # covert to data table and set key
-  # DT <-as.data.table(analysis_df)
-  # setkey(analysis_df, cell)
+generate_spearman_df <-function(basin_list){}
+  
+  # extract name
+  basin_name <-basin$basin_name[1]
 
   # run using data.table -- super fast
-  results_v1 <-DT[,list(corr = cor.test(frac_melt,temp_mean_c,
+  results_v1 <-basin[,list(corr = cor.test(frac_melt,temp_mean_c,
                                       method = 'spearman', exact = FALSE)), by = cell]
 
   # convert back to data frame
@@ -94,14 +81,17 @@ generate_spearman_df <-function(basin_paths_list){
   head(s_stat)
 
   # format static values for binding
-  single_cell_df <-as.data.frame(analysis_df %>% group_by(cell) %>%
+  single_cell_df <-as.data.frame(basin %>% group_by(cell) %>%
     slice(which.min(x)) %>%
-    select(-c(frac_melt,ondjfm_temp_c,wy)))
-
+    select(-c(frac_melt,temp_mean_c,wy)))
+  
   # make spearman df
-  cell <-unique(results_v1$cell)
+  cell <-as.vector(unique(results_v1$cell))
   spearman_df <-data.frame(cell,p_val,rho_val,s_stat)
-  # head(spearman_df)
+  head(spearman_df)
+  
+  # and check the cells are teh same
+  identical(cell, single_cell_df$cell)
 
   # combine both for full df
   results_df <-full_join(single_cell_df,spearman_df)
