@@ -49,38 +49,7 @@ theme_set(theme_classic(14))
 df_paths <-list.files("./csvs/gridmet_dfs", full.names = TRUE, pattern = "full_stat")
 df_list <-lapply(df_paths, fread)
 
-# basin_list <-df_list[[18]]
-# samp_v1 <-basin_list[sample(.N, 100000)]
-# samp <-filter(basin_list, cell == 227348 | cell == 414820 | cell == 488227)
-# head(samp)
-# 
-# ggplot(samp, aes(x = temp_mean_c, y = mswe_mm, color = temp_mean_c))+
-#   geom_text(aes(label = wy), vjust = 2.5, color = 'black', size = 2, alpha = .3)+
-#   geom_point(size = 2, alpha = 1) +
-#   scale_color_gradientn(colors = rev(RColorBrewer::brewer.pal(9, "Spectral"))) +
-#   ylim(c(0,2000))+ xlim(c(-5,5)) +
-#   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
-#         aspect.ratio = 1,
-#         legend.position  = 'top',
-#         plot.margin = unit(c(.25,.1,.1,.1), "cm"),
-#         legend.box.spacing = unit(0, "pt")) +
-#   guides(color = guide_colorbar(direction = "horizontal",
-#                                 label.position = 'bottom',
-#                                 title.position = 'top',
-#                                 title.hjust = .5,
-#                                 barwidth = 15,
-#                                 barheight = 1,
-#                                 frame.colour = "black", 
-#                                 ticks.colour = "black"))
-
-# test save
-ggsave(file = "./plots/temp_vs_max_scatter_test_v2.png",
-       width = 5, 
-       height = 5,
-       units = "in",
-       dpi = 300) 
-
-system("open ./plots/temp_vs_max_scatter_test_v2.png")
+basin_list <-df_list[[18]]
 
 # funciton to create basin results dataframes
 generate_spearman_df <-function(basin_list){
@@ -119,7 +88,7 @@ generate_spearman_df <-function(basin_list){
   # format static values for binding
   single_cell_df <-as.data.frame(basin %>% group_by(cell) %>%
     slice(which.min(x)) %>%
-    select(-c(max_swe_mm,temp_mean_c,wy)))
+    select(-c(frac_melt,temp_mean_c,wy)))
   
   # make spearman df
   cell <-as.vector(unique(results_v1$cell))
@@ -134,8 +103,8 @@ generate_spearman_df <-function(basin_list){
   head(results_df)
   
   # save
-  saving_name <-paste0(basin_name,"_spearman_results.csv")
-  fwrite(results_df, paste0("./csvs/spearman_max_temp_results/",saving_name))
+  saving_name <-paste0(basin_name,"_max_temp_spearman_results.csv")
+  fwrite(results_df, paste0("./csvs/spearman_fm_temp_results/max_temp/",saving_name))
   print(paste0(basin_name, " is done!"))
   
 }
@@ -338,6 +307,39 @@ hist(results_df$rho_val, breaks = 100)
 mean(results_df$p_val)
 
 
+
+# basin_list <-df_list[[18]]
+# samp_v1 <-basin_list[sample(.N, 100000)]
+# samp <-filter(basin_list, cell == 227348 | cell == 414820 | cell == 488227)
+# head(samp)
+# 
+# ggplot(samp, aes(x = temp_mean_c, y = mswe_mm, color = temp_mean_c))+
+#   geom_text(aes(label = wy), vjust = 2.5, color = 'black', size = 2, alpha = .3)+
+#   geom_point(size = 2, alpha = 1) +
+#   scale_color_gradientn(colors = rev(RColorBrewer::brewer.pal(9, "Spectral"))) +
+#   ylim(c(0,2000))+ xlim(c(-5,5)) +
+#   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+#         aspect.ratio = 1,
+#         legend.position  = 'top',
+#         plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+#         legend.box.spacing = unit(0, "pt")) +
+#   guides(color = guide_colorbar(direction = "horizontal",
+#                                 label.position = 'bottom',
+#                                 title.position = 'top',
+#                                 title.hjust = .5,
+#                                 barwidth = 15,
+#                                 barheight = 1,
+#                                 frame.colour = "black", 
+#                                 ticks.colour = "black"))
+
+# # test save
+# ggsave(file = "./plots/temp_vs_max_scatter_test_v2.png",
+#        width = 5, 
+#        height = 5,
+#        units = "in",
+#        dpi = 300) 
+# 
+# system("open ./plots/temp_vs_max_scatter_test_v2.png")
 
 
 
