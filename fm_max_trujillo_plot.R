@@ -64,7 +64,8 @@ colnames(dom_mean_df)[4] <-"dom_dowy"
 head(dom_mean_df)
 
 # aspect
-ez <-rast("./rasters/categorized/dem_ez3_ns.tif")
+ez <-rast("./rasters/categorized/dem_6zb.tif")
+plot(ez)
 ez_df <-as.data.frame(ez, xy = TRUE, cells = TRUE)
 colnames(ez_df)[4] <-"ez"
 head(ez_df)
