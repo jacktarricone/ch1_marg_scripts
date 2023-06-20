@@ -45,38 +45,57 @@ theme_classic <-function(base_size = 11, base_family = "",
 theme_set(theme_classic(15))
 
 # read in df
-df <-fread("./csvs/spearman_fm_temp_results/all_basins_spearman_results.csv")
-colnames(df)[13] <-"Basin"
+df <-fread("./csvs/spearman_fm_temp_results/spearman_results_v2.csv")
 head(df)
+
+# elevations zones
+df$zone_name <-ifelse(df$ez== 1, "1500-1900 m", df$ez)
+df$zone_name <-ifelse(df$ez == 2, "1900-2300 m", df$zone_name)
+df$zone_name <-ifelse(df$ez == 3, "2300-2700 m", df$zone_name)
+df$zone_name <-ifelse(df$ez == 4, "2700-3100 m", df$zone_name)
+df$zone_name <-ifelse(df$ez == 5, "3100-3500 m", df$zone_name)
+df$zone_name <-ifelse(df$ez == 6, "3500-4361 m", df$zone_name)
+
+# elevations zones
+df$aspect_name <-ifelse(df$aspect == 1, "North", df$aspect)
+df$aspect_name <-ifelse(df$aspect == 2, "East", df$aspect_name)
+df$aspect_name <-ifelse(df$aspect == 3, "South", df$aspect_name)
+df$aspect_name <-ifelse(df$aspect == 4, "West", df$aspect_name)
+
+# remane basin col
+colnames(df)[2] <-"Basin"
+colnames(df)[7] <-"mean_rh"
+
+hist(df$mean_fm, breaks = 100)
 
 # write function which calculates percentage of bin that is significant
 results_v1 <-df %>%
   group_by(Basin, zone_name, aspect_name) %>%
   summarise(percent_sig     = round((length(which(p_val < .05))/length(p_val))*100, 0),
-            mean_ez_temp_c  = mean(mean_temp_c))
+            mean_ez_temp_c  = mean(mean_temp_c),
+            mean_ez_fm      = mean(mean_fm),
+            mean_ez_rh      = mean(mean_rh))
 
-head(results_v1)
+results_v1
 
 # filter for north and south facing
 north_results <-filter(results_v1, aspect_name == "North")
 colnames(north_results)[4] <-"north_percent_sig"
+north_results
 
 # remove zone 4 feather, like 4 pixels
 south_results_v1 <-filter(results_v1, aspect_name == "South")
-south_results <-filter(south_results_v1, Basin != "Feather" | zone_name != "2700-3100 m")
+south_results <-filter(south_results_v1, Basin != "feather" | zone_name != "2700-3100 m")
 colnames(south_results)[4] <-"south_percent_sig"
 south_results
 identical(south_results$Basin, north_results$Basin)
 
-# calc difference
-# diff <-north_results$percent_sig - south_results$percent_sig
-
-
 # make differnce df
 diff_results <-as.data.frame(full_join(north_results, south_results, 
                                        by = c("Basin","zone_name")))
-diff_results
+
 diff_results$diff <-diff_results$north_percent_sig - diff_results$south_percent_sig 
+diff_results
 
 # # pivot wider for plotting
 # test <-as.data.frame(results_v1 %>%
@@ -112,12 +131,12 @@ north_p <-ggplot(north_results, aes(y=Basin, x=zone_name, fill= north_percent_si
 north_p
 
 ggsave(north_p,
-       file = "./plots/spearman_heat_north_v2.png",
+       file = "./plots/spearman_heat_north_new_v1.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heat_north_v2.png")
+system("open ./plots/spearman_heat_north_new_v1.png")
 
 #### south facing
 south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= south_percent_sig)) + 
@@ -146,12 +165,12 @@ south_p <-ggplot(south_results, aes(y=Basin, x=zone_name, fill= south_percent_si
 south_p
 
 ggsave(south_p,
-       file = "./plots/spearman_heat_south_v2.png",
+       file = "./plots/spearman_heat_south_new_v2.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heat_south_v2.png")
+system("open ./plots/spearman_heat_south_new_v2.png")
 
 
 # set scale 
@@ -185,12 +204,12 @@ diff_p <-ggplot(diff_results, aes(y=Basin, x=zone_name, fill= diff)) +
 diff_p
 
 ggsave(diff_p,
-       file = "./plots/spearman_heatmap_v3.png",
+       file = "./plots/spearman_heatmap_new_v1.png",
        width = 8, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/spearman_heatmap_v3.png")
+system("open ./plots/spearman_heatmap_new_v1.png")
 
 ### cowing
 # cowplot test
@@ -205,11 +224,37 @@ full <-plot_grid(north_p, south_p, diff_p,
 # test save
 # make tighter together
 ggsave(full,
-       file = "./plots/heatmap_all3_v4.png",
+       file = "./plots/heatmap_all3_new_v1.png",
        width = 23, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/heatmap_all3_v4.png")
+system("open ./plots/heatmap_all3_new_v1.png")
 
 
+# 
+test <-filter(df, Basin == "american")
+
+ggplot(test, aes(y=mean_fm, x=mean_temp_c, fill= elevation, alpha = .01)) + 
+  geom_point() +
+  # geom_text(aes(label=north_percent_sig)) +
+  scale_fill_gradientn(colors = mycolors, limits = c(1500,4000), oob = squish) +
+  labs(x = "EZ", fill = "Area Significant (%)", title = "North Facing") +
+  scale_x_discrete(expand = c(0, 0))+
+  scale_y_discrete(expand = c(0, 0))+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        panel.background = element_rect(fill = 'gray'),
+        aspect.ratio = 1,
+        legend.position  = 'bottom',
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position = 'bottom',
+                               title.hjust = .5,
+                               barwidth = 27,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))

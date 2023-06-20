@@ -123,12 +123,19 @@ lapply(df_list, generate_spearman_df)
 # head(spearman_df_v2)
 # fwrite(spearman_df_v2, "./csvs/spearman_fm_temp_results/spearman_results_v2.csv")
 
-spearman_df <-fread("./csvs/spearman_fm_temp_results/spearman_results_v2.csv")
-hist(results_df$mean_temp_c)
+spearman_df <-fread("./csvs/spearman_fm_temp_spearman/spearman_results_v2.csv")
+hist(spearman_df$mean_temp_c, breaks = 100)
+hist(spearman_df$mean_fm, breaks = 100)
 
 # subset by sig
-sig_df <-filter(results_df, p_val < .05 & basin_ == "kern")
-not_sig_df <-filter(results_df, p_val > .05 & basin == "kern")
+# pull out sig and sample for plotting
+sig_df <-filter(spearman_df, p_val < .05)
+samp_sig <- sig_df[sample(.N, nrow(sig_df)*.1), ]
+
+# 
+not_sig_df <-filter(spearman_df, p_val > .05)
+samp_not_sig <- sig_df[sample(.N, nrow(not_sig_df)*.1), ]
+
 rows <-rbind(sig_df,not_sig_df)
 percent_sig <-(nrow(sig_df)/nrow(rows))*100
 percent_no_sig <-(nrow(not_sig_df)/nrow(rows))*100
@@ -164,14 +171,14 @@ p1
 
 
 p2 <-p1 + geom_point(not_sig_df, mapping = aes(y = mean_fm, x = mean_temp_c), 
-                     color = "black", alpha = (3/100), size = (1), shape = 4)
+                     color = "black", alpha = (5/100), size = (2), shape = 4)
 
 # test save
 # make tighter together
 ggsave(p2,
        file = "./plots/kern_spearman_temp_fm_ele_v1.png",
        width = 6, 
-       height = 6,
+       height = 5,
        dpi = 600)
 
 system("open ./plots/kern_spearman_temp_fm_ele_v1.png")
@@ -187,7 +194,7 @@ system("open ./plots/kern_spearman_temp_fm_ele_v1.png")
 
 
 
-fwrite(results_df, "./csvs/usj_spearman_results_v1.csv", row.names = FALSE)
+# fwrite(results_df, "./csvs/usj_spearman_results_v1.csv", row.names = FALSE)
 
 # test hists
 hist(results_df$rho_val, breaks = 100)

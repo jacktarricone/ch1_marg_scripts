@@ -8,6 +8,7 @@ library(tidyverse)
 library(cowplot)
 library(data.table)
 
+
 theme_classic <- function(base_size = 11, base_family = "",
                           base_line_size = base_size / 22,
                           base_rect_size = base_size / 22) {
@@ -47,6 +48,11 @@ fm_list <-list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
 fm_stack <-rast(fm_list[33])
 fm_stack
 
+# read in stack american stack
+max_list <-list.files("./rasters/snow_metrics/max_swe", full.names = TRUE)
+max_stack <-rast(max_list[2])
+max_stack
+
 # bring in ns aspect
 dem_6b <-rast("./rasters/categorized/dem_6zb.tif")
 plot(dem_6b)
@@ -56,31 +62,41 @@ aspect_v1 <-rast("./rasters/categorized/aspect_thres_4_classes.tif")
 aspect_ns <-subst(aspect_v1,c(2,4),NA)
 plot(aspect_ns)
 
-# test plot
-plot(fm_stack[[6]])
-
 # stack with dem bins and aspect
-stack <-c(dem_6b,aspect_ns,fm_stack)
+fm_stack <-c(dem_6b,aspect_ns,fm_stack)
+max_stack <-c(dem_6b,aspect_ns,max_stack)
 
 # convert to df
-df <-as.data.frame(stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
-head(df)
+fm_df <-as.data.frame(fm_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
+max_df <-as.data.frame(max_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
 
 # years seq
 years <-seq(1985,2016,1)
 
 # rename columns, which are the annual rasters, with the correct year name
-colnames(df)[6:ncol(df)] <-years
-colnames(df)[4] <-"ele_bin"
+colnames(max_df)[6:ncol(max_df)] <-years
+colnames(max_df)[3:5] <-c("y","ez","aspect")
 
+colnames(fm_df)[6:ncol(fm_df)] <-years
+colnames(fm_df)[3:5] <-c("y","ez","aspect")
 
 # pivot longer for test
 # creates "year" col and "fm_percent" col while preserving meta data info
-long_df <-as.data.frame((df) %>%
- pivot_longer(-c(cell,x,y,ele_bin,aspect), names_to = "year", values_to = "frac_melt"))
+fm_long_df <-as.data.frame((fm_df) %>%
+ pivot_longer(-c(cell,x,y,ez,aspect), names_to = "year", values_to = "frac_melt"))
 
-head(long_df)
-# fwrite(long_df, "./csvs/fm_eb_ns_csv_v1.csv")
+head(fm_long_df)
+
+max_long_df <-as.data.frame((max_df) %>%
+                             pivot_longer(-c(cell,x,y,ez,aspect), names_to = "year", values_to = "max_swe"))
+head(max_long_df)
+
+fwrite(fm_long_df, "./csvs/fm_boxplot_df_v2.csv")
+fwrite(max_long_df, "./csvs/max_boxplot_df_v2.csv")
+
+##############################################
+fm_long_df <-fread("./csvs/fm_boxplot_df_v2.csv")
+max_long_df <-fread("./csvs/max_boxplot_df_v2.csv")
 
 # read back in using data.table
 long_df_v1 <-fread("./csvs/fm_eb_ns_csv_v1.csv")
@@ -105,12 +121,6 @@ mean(long_df$frac_melt)
 ##################################
 #### make time series box plot ###
 ##################################
-
-meds <-as.data.frame(long_df %>%
-  group_by(bin_name, aspect) %>%
-  summarise(frac_med = median(frac_melt)))
-
-meds
 
 # starting plot
 fm <-ggplot(long_df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = as.factor(aspect))) +
