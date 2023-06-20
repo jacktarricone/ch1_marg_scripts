@@ -1,5 +1,5 @@
 # fm vs max
-# april 6, 2023
+# june 20th, 2023
 
 library(terra)
 library(tidyr)
@@ -129,13 +129,13 @@ ez6_s_df <-subset(mean_ez_df, ez == 6 & aspect == 3)
 plot_max_fm <-function(df, bins, scale, title){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df, aes(y = frac_melt, x = max_swe_m), color = 'grey', fill = 'grey', width = 3/70, height = 1/70) +
+    geom_tile(data = mean_ez_df, aes(y = frac_melt, x = max_swe_m), color = 'grey', fill = 'grey', width = 3/60, height = 1/60) +
     geom_bin2d(data = df, bins = bins, aes(y = frac_melt, x = max_swe_m, fill = after_stat(density))) +
     scale_fill_gradientn(colors = scale) +
     scale_y_continuous(limits = c(0,1), expand = (c(0,0))) +
     scale_x_continuous(limits = c(0,3),breaks = c(seq(0,3,1)), expand = (c(0,0))) +
     labs(x = "MSWE (m)", y = "FM")+
-    annotate(geom="text", y=.92, x=2.7, label= title, size = 8, fontface = "bold")+
+    annotate(geom="text", y=.95, x=2.5, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
           aspect.ratio = 1,
           legend.position  = 'right',
@@ -157,29 +157,29 @@ scale1 <-c("grey",viridis(30, option = "D", direction = 1))
 
 # plot
 ### north
-ez1_n_plot <-plot_max_fm(df = ez1_n_df, bins = 70, scale = scale1, title = "EZ1_N")
-ez2_n_plot <-plot_max_fm(df = ez2_n_df, bins = 70, scale = scale1, title = "EZ2_N")
-ez3_n_plot <-plot_max_fm(df = ez3_n_df, bins = 70, scale = scale1, title = "EZ3_N")
-ez4_n_plot <-plot_max_fm(df = ez4_n_df, bins = 70, scale = scale1, title = "EZ4_N")
-ez5_n_plot <-plot_max_fm(df = ez5_n_df, bins = 70, scale = scale1, title = "EZ5_N")
-ez6_n_plot <-plot_max_fm(df = ez6_n_df, bins = 70, scale = scale1, title = "EZ6_N")
+ez1_n_plot <-plot_max_fm(df = ez1_n_df, bins = 60, scale = scale1, title = "EZ1_N")
+ez2_n_plot <-plot_max_fm(df = ez2_n_df, bins = 60, scale = scale1, title = "EZ2_N")
+ez3_n_plot <-plot_max_fm(df = ez3_n_df, bins = 60, scale = scale1, title = "EZ3_N")
+ez4_n_plot <-plot_max_fm(df = ez4_n_df, bins = 60, scale = scale1, title = "EZ4_N")
+ez5_n_plot <-plot_max_fm(df = ez5_n_df, bins = 60, scale = scale1, title = "EZ5_N")
+ez6_n_plot <-plot_max_fm(df = ez6_n_df, bins = 60, scale = scale1, title = "EZ6_N")
 
 # south
-ez1_s_plot <-plot_max_fm(df = ez1_s_df, bins = 70, scale = scale1, title = "EZ1_S")
-ez2_s_plot <-plot_max_fm(df = ez2_s_df, bins = 70, scale = scale1, title = "EZ2_S")
-ez3_s_plot <-plot_max_fm(df = ez3_s_df, bins = 70, scale = scale1, title = "EZ3_S")
-ez4_s_plot <-plot_max_fm(df = ez4_s_df, bins = 70, scale = scale1, title = "EZ4_S")
-ez5_s_plot <-plot_max_fm(df = ez5_s_df, bins = 70, scale = scale1, title = "EZ5_S")
-ez6_s_plot <-plot_max_fm(df = ez6_s_df, bins = 70, scale = scale1, title = "EZ6_S")
+ez1_s_plot <-plot_max_fm(df = ez1_s_df, bins = 60, scale = scale1, title = "EZ1_S")
+ez2_s_plot <-plot_max_fm(df = ez2_s_df, bins = 60, scale = scale1, title = "EZ2_S")
+ez3_s_plot <-plot_max_fm(df = ez3_s_df, bins = 60, scale = scale1, title = "EZ3_S")
+ez4_s_plot <-plot_max_fm(df = ez4_s_df, bins = 60, scale = scale1, title = "EZ4_S")
+ez5_s_plot <-plot_max_fm(df = ez5_s_df, bins = 60, scale = scale1, title = "EZ5_S")
+ez6_s_plot <-plot_max_fm(df = ez6_s_df, bins = 60, scale = scale1, title = "EZ6_S")
 
 # # save
 # ggsave(ez1_n_plot,
-#        file = "./plots/fm_max_ez1_n_plot_v5.png",
+#        file = "./plots/fm_max_ez1_n_plot_v6.png",
 #        width = 6,
 #        height = 5,
 #        dpi = 600)
 # 
-# system("open ./plots/fm_max_ez1_n_plot_v5.png")
+# system("open ./plots/fm_max_ez1_n_plot_v6.png")
 
 # cowplot test
 cow <-plot_grid(ez1_n_plot, ez2_n_plot, ez3_n_plot,

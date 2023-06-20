@@ -1,5 +1,5 @@
-### create average snow metric rasters
-# january 22nd 2022
+### create average SNSR and gridMET metrics
+# june 20th, 2023
 # jack tarricone
 
 library(terra)
@@ -24,12 +24,18 @@ max_stack_v1 <-rast(max_paths)
 
 # make values less than 1 inch (25.4 mm) = NA
 max_stack_v2 <-subst(max_stack_v1, 0:25.4, NA)
+plot(max_stack_v2[[8]])
+plot(snsr_basins, add = TRUE, lwd = .1)
 
 # calculate number of non na obs per pixel
 max_stack_n_obs <-app(max_stack_v2, function(x) sum(!is.na(x)))
+plot(max_stack_n_obs)
+plot(snsr_basins, add = TRUE, lwd = .1)
 
-# max all time series pixels that don't have 90% of obs (29 years)
+# max all time series pixels that don't have 85% of obs (27 years)
 max_stack_n_obs_27 <-subst(max_stack_n_obs, 0:27, NA)
+plot(max_stack_n_obs_27)
+plot(snsr_basins, add = TRUE, lwd = .1)
 
 # mask max stack for pixels that only have 29 obs
 max_stack <-mask(max_stack_v2, max_stack_n_obs_27)
@@ -38,6 +44,7 @@ max_stack <-mask(max_stack_v2, max_stack_n_obs_27)
 # calculate average
 max_mean <-app(max_stack, fun = metric_mean, cores=14)
 plot(max_mean)
+plot(snsr_basins, add = TRUE, lwd = .1)
 
 # save
 #writeRaster(max_mean, "./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
