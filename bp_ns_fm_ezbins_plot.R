@@ -131,7 +131,7 @@ mean(df$frac_melt, na.rm = TRUE)
 grouped_box_plot_top <-function(variable, min,max, ylab){
   
 p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+  geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
   scale_fill_manual(name = "Basin and Aspect",
                     values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -157,7 +157,7 @@ p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = inter
 grouped_box_plot_mid <-function(variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+    geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -181,7 +181,7 @@ grouped_box_plot_mid <-function(variable, min,max, ylab){
 grouped_box_plot_bot <-function(variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+    geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -230,13 +230,13 @@ snow_cow <-plot_grid(max_p, dom_p, fm_p,
 plot(snow_cow)
 
 ggsave(snow_cow,
-       file = "./plots/snow3_boxplot_v1.png",
+       file = "./plots/snow3_boxplot_v2.png",
        width = 9, 
        height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/snow3_boxplot_v1.png")
+system("open ./plots/snow3_boxplot_v2.png")
 
 ####################################
 ######## plot 4 met  variables #####
@@ -271,13 +271,13 @@ met_cow <-plot_grid(temp_p, ah_p, srad_p, insol_p,
 # plot(met_cow)
 
 ggsave(met_cow,
-       file = "./plots/met4_boxplot_v1.png",
+       file = "./plots/met4_boxplot_v2.png",
        width = 9, 
-       height = 10,
+       height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/met4_boxplot_v1.png")
+system("open ./plots/met4_boxplot_v2.png")
 
 
 

@@ -1,20 +1,18 @@
-# max vs dem
-# may 2nd, 2023
+# plot temp vs. fm
+# color by insol and aspect
+# june 20th, 2023
 
 library(terra)
-library(tidyr)
+library(tidyverse)
 library(ggplot2)
 library(scales)
 library(cowplot)
 library(viridis)
 library(data.table)
 
-setwd("~/ch1_margulis")
-
-# set custom plot theme
-theme_classic <-function(base_size = 11, base_family = "",
-                         base_line_size = base_size / 22,
-                         base_rect_size = base_size / 22) {
+theme_classic <- function(base_size = 11, base_family = "",
+                          base_line_size = base_size / 22,
+                          base_rect_size = base_size / 22) {
   theme_bw(
     base_size = base_size,
     base_family = base_family,
@@ -41,110 +39,32 @@ theme_classic <-function(base_size = 11, base_family = "",
     )
 }
 
-theme_set(theme_classic(14))
+theme_set(theme_classic(16))
 
+# set working dir
+setwd("~/ch1_margulis")
 
-# read in
-mean_ez_df <-fread("./csvs/full_plotting_df_v1.csv")
-mean_ez_df$insol_watts <-(mean_ez_df$insol_kwh*1000)/24
-max(mean_ez_df$insol_watts)
+##############################################
+yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats.csv_v2.csv")
+usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats.csv_v2.csv")
+kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats.csv_v2.csv")
 
-# pull out north
-ez_n_df <-subset(mean_ez_df, ez %in% c(1,3,5))
-ez_s_df <-subset(mean_ez_df, ez %in% c(2,4,6))
+# join
+joined_df <-as.data.table(bind_rows(yuba_df, usj_df, kern_df))
 
+# read back in using data.table
+df <-joined_df[sample(.N, 50000)]
+head(df)
 
-hist(ez_n_df$insol_watts, breaks = 100)
-mean(ez_n_df$insol_watts)
-mean(ez_s_df$insol_watts)
+# rename
+df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
+df$bin_name <-ifelse(df$ez == 2, "1900-2300 m", df$bin_name)
+df$bin_name <-ifelse(df$ez == 3, "2300-2700 m", df$bin_name)
+df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
+df$bin_name <-ifelse(df$ez == 5, "3100-3500 m", df$bin_name)
+df$bin_name <-ifelse(df$ez == 6, "3500-4361 m", df$bin_name)
+head(df)
 
-##############################
-##############################
-#########  insol  ############
-##############################
-##############################
-
-
-# create plotting function
-plot_insol_vs_fm <-function(df, bins, scale, title, low_lim, high_lim){
-  
-  plot <-ggplot() +
-    geom_tile(data = mean_ez_df, aes(x = frac_melt, y = insol_watts), color = 'grey', fill = 'grey', width = 1800/100, height = 250/100) +
-    geom_bin2d(data = df, bins = bins, aes(x = frac_melt, y= insol_watts, fill = ..density..)) +
-    scale_fill_gradientn(colors = scale) +
-    scale_x_continuous(limits = c(0,1), expand = (c(0,0))) +
-    scale_y_continuous(limits = c(low_lim,high_lim),expand = (c(0,0))) +
-    labs(y = expression(Insolation ~ '(W m'^{"-2"} ~ ')'), x = "FM")+
-    annotate(geom="text", y=50, x=.7, label= title, size = 8, fontface = "bold")+
-    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1), 
-          aspect.ratio = 1,
-          legend.position  = 'right',
-          legend.title = element_blank(),
-          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
-          legend.box.spacing = unit(0, "pt")) +
-    guides(fill = guide_colorbar(direction = "vertical",
-                                 label.position = 'right',
-                                 title.hjust = .5,
-                                 barwidth = 1,
-                                 barheight = 17,
-                                 frame.colour = "black", 
-                                 ticks.colour = "black"))
-  return(plot)
-}
-
-## set color
-scale1 <-c("grey",viridis(30, option = "D", direction = 1))
-
-# plot
-insol_ez_n_plot <-plot_insol_vs_fm(df = ez_n_df,
-                             bins = 100,
-                             scale = scale1,
-                             low_lim = 30,
-                             high_lim = 250,
-                             title = "North Facing") 
-# save
-ggsave(insol_ez_n_plot,
-       file = "./plots/insol_vs_fm_north_plot_v3.png",
-       width = 6,
-       height = 5,
-       dpi = 600)
-
-system("open ./plots/insol_vs_fm_north_plot_v3.png")
-
-# plot
-insol_ez_s_plot <-plot_insol_vs_fm(df = ez_s_df,
-                            bins = 80,
-                            scale = scale1,
-                            low_lim = 30,
-                            high_lim = 250,
-                            title = "South Facing") 
-
-# save
-ggsave(insol_ez_s_plot,
-       file = "./plots/insol_vs_fm_south_plot_v2.png",
-       width = 6,
-       height = 5,
-       dpi = 600)
-
-system("open ./plots/insol_vs_fm_south_plot_v2.png")
-
-# cowplot test
-n_v_s <-plot_grid(insol_ez_n_plot, insol_ez_s_plot,
-                  labels = c("(a)", "(b)"),
-                  ncol = 2,
-                  align = "hv",
-                  label_size = 22,
-                  vjust =  2.4,
-                  hjust = 0,
-                  rel_widths = c(1/2, 1/2))
-# save
-ggsave(n_v_s,
-       file = "./plots/insol_fm_ns_v2.png",
-       width = 12.5, 
-       height = 5,
-       dpi = 600)
-
-system("open ./plots/insol_fm_ns_v2.png")
 
 ##############################
 ##############################
@@ -152,15 +72,13 @@ system("open ./plots/insol_fm_ns_v2.png")
 ##############################
 ##############################
 
-
 # create plotting function
-plot_temp_vs_dem <-function(df, bins, scale, title){
+plot_fm_vs_temp <-function(df, scale, title){
   
   plot <-ggplot() +
-    geom_tile(data = mean_ez_df, aes(x = frac_melt, y = temp_c), color = 'grey', fill = 'grey', width = 1/100, height = 14/100) +
-    geom_bin2d(data = df, bins = bins, aes(x = frac_melt, y= temp_c, fill = ..density..)) +
+    geom_point(data = df, aes(x = frac_melt, y = temp_mean_c, fill = insol_watts)) +
     geom_hline(yintercept = 0, linetype = 2, color = 'darkred', alpha = .5)+
-    scale_fill_gradientn(colors = scale) +
+    scale_fill_gradientn(colors = scale1) +
     scale_x_continuous(limits = c(0,1), expand = (c(0,0))) +
     scale_y_continuous(limits = c(-7,7),expand = (c(0,0))) +
     labs(y = "Temperature (°C)", x = "FM")+
@@ -185,10 +103,9 @@ plot_temp_vs_dem <-function(df, bins, scale, title){
 scale2 <-c("grey",viridis(30, option = "B", direction = 1))
 
 # plot
-temp_ez_n_plot <-plot_temp_vs_dem(df = ez_n_df,
-                                   bins = 100,
-                                   scale = scale2,
-                                   title = "North Facing") 
+temp_ez_n_plot <-plot_fm_vs_temp(df = df, scale = scale2, title = "test") 
+temp_ez_n_plot
+
 # save
 ggsave(temp_ez_n_plot,
        file = "./plots/temp_vs_fm_north_plot_v1.png",

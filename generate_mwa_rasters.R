@@ -36,17 +36,17 @@ devtools::source_url(url)
 ###########################
 
 # metric creating with this script
-snow_metric_name <-"mwa_djfm_total"
+snow_metric_name <-"mwa_ondjfm_mm"
 snow_metric_name
 
 # mcapply function 
 # set number of cores to use
-ncores <-2
+ncores <-3
 
 # check list, looks good
 swe_list
 
-mwa_djfm_total_v1 <-function(x, swe_thres = 25.4){
+mwa_ondjfm_mm_v1 <-function(x, swe_thres = 25.4){
   
   # set threshold
   if (max(x) < swe_thres){
@@ -55,7 +55,7 @@ mwa_djfm_total_v1 <-function(x, swe_thres = 25.4){
   if (length(x) == 365){ # non leap year
     
     # trim vector to dec 1 - march 31
-    djfm <-x[61:181]
+    djfm <-x[1:182]
     
     # find difference between values
     val_diff <-diff(djfm)
@@ -68,7 +68,7 @@ mwa_djfm_total_v1 <-function(x, swe_thres = 25.4){
   }
   else{ # leap year
     # trim vector to dec 1 - march 31
-    djfm <-x[61:182]
+    djfm <-x[1:183]
     
     # find difference between values
     val_diff <-diff(djfm)
@@ -83,10 +83,10 @@ mwa_djfm_total_v1 <-function(x, swe_thres = 25.4){
 
 
 # run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list[3:32], 
+system.time(raster_list <-pbmclapply(swe_list[1:32], 
                                      function(x)
                                      generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = mwa_djfm_total_v1, 
+                                                                  snow_metric_function = mwa_ondjfm_mm_v1, 
                                                                   snow_metric_name = snow_metric_name),
                                      mc.cores = ncores, 
                                      mc.cleanup = TRUE))
