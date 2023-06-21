@@ -56,36 +56,41 @@ kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats.csv_v2.csv")
 # join
 joined_df <-as.data.table(dplyr::bind_rows(yuba_df, usj_df, kern_df))
 
-# read back in using data.table
-df <-joined_df[sample(.N, 50000)]
-head(df)
+# # read back in using data.table
+# df <-joined_df[sample(.N, 50000)]
+# df <-dt <- head(joined_df, 50000)
+# head(df)
 
 # remove unneed annual data
-df_v1 <-dplyr::select(df, 1:13)
+df_v1 <-dplyr::select(joined_df, 1:16)
 head(df_v1)
 
 # mean df for plotting
-mean_df <-df_v1[, .SD[cell == mean(cell)], by = cell]
-head(mean_df)
+mean_df <-unique(df_v1)
 
+# split up by basin
 usj_df <-filter(mean_df, basin_name == "usj")
 yuba_df <-filter(mean_df, basin_name == "yuba")
 kern_df <-filter(mean_df, basin_name == "kern")
+head(yuba_df)
+
+hist(yuba_df$mean_temp_c, breaks = 100)
 
 # create plotting function
-plot_temp_vs_fm <-function(df, scale, title){
+plot_temp_vs_fm_top <-function(df, scale, title){
   
   plot <-ggplot() +
-    geom_point(data = df, aes(y = frac_melt, x= temp_mean_c, color = insol_watts), alpha = .2, size = .5) +
+    geom_point(data = df, aes(y = mean_fm, x= mean_temp_c, color = insol_watts), alpha = .2, size = .5) +
     scale_color_gradientn(colors = scale, name = expression('CS Insolation' ~ '(W m'^{"-2"} ~ ')')) +
-    scale_x_continuous(limits = c(-6,8), expand = (c(0,0))) +
+    scale_x_continuous(limits = c(-10,10), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
-    annotate(geom="text", x = -3, y = .93, label= title, size = 8, fontface = "bold")+
+    labs(x = "none", y = "FM")+
+    annotate(geom="text", x = -7, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'top',
-          plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+          axis.text.x = element_blank(),
+          plot.margin = unit(c(.1,.3,.1,.1), "cm"),
           legend.box.spacing = unit(0, "pt")) +
     guides(color = guide_colorbar(direction = "horizontal",
                                   label.position = 'bottom',
@@ -97,24 +102,81 @@ plot_temp_vs_fm <-function(df, scale, title){
                                   ticks.colour = "black"))
   return(plot)
 }
+plot_temp_vs_fm_mid <-function(df, scale, title){
+  
+  plot <-ggplot() +
+    geom_point(data = df, aes(y = mean_fm, x= mean_temp_c, color = insol_watts), alpha = .2, size = .5) +
+    scale_color_gradientn(colors = scale, name = expression('CS Insolation' ~ '(W m'^{"-2"} ~ ')')) +
+    scale_x_continuous(limits = c(-10,10), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
+    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
+    annotate(geom="text", x = -7, y = .93, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+          aspect.ratio = 1,
+          legend.position  = 'none',
+          plot.margin = unit(c(.1,.3,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) 
+    # guides(color = guide_colorbar(direction = "horizontal",
+    #                               label.position = 'bottom',
+    #                               title.position = 'top',
+    #                               title.hjust = .5,
+    #                               barwidth = 20,
+    #                               barheight = 1,
+    #                               frame.colour = "black", 
+    #                               ticks.colour = "black"))
+  return(plot)
+}
+plot_temp_vs_fm_bot <-function(df, scale, title){
+  
+  plot <-ggplot() +
+    geom_point(data = df, aes(y = mean_fm, x= mean_temp_c, color = insol_watts), alpha = .2, size = .5) +
+    scale_color_gradientn(colors = scale, name = expression('CS Insolation' ~ '(W m'^{"-2"} ~ ')')) +
+    scale_x_continuous(limits = c(-10,10), expand = (c(0,0))) +
+    scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
+    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
+    annotate(geom="text", x = -7, y = .93, label= title, size = 8, fontface = "bold")+
+    theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+          aspect.ratio = 1,
+          legend.position  = 'none',
+          plot.margin = unit(c(.1,.3,.1,.1), "cm"),
+          legend.box.spacing = unit(0, "pt")) 
+    # guides(color = guide_colorbar(direction = "horizontal",
+    #                               label.position = 'bottom',
+    #                               title.position = 'top',
+    #                               title.hjust = .5,
+    #                               barwidth = 20,
+    #                               barheight = 1,
+    #                               frame.colour = "black", 
+    #                               ticks.colour = "black"))
+  return(plot)
+}
 
 ## set color
 scale2 <-c(viridis(30, option = "D", direction = 1))
 
 # plot
-usj_temp_fm_plot <-plot_temp_vs_fm(df = mean_df,
-                                scale = scale2,
-                                title = "USJ") 
+yuba_insol <-plot_temp_vs_fm_top(df = yuba_df, scale = scale2, title = "Yuba") 
+usj_insol <-plot_temp_vs_fm_mid(df = usj_df, scale = scale2, title = "USJ") 
+kern_insol <-plot_temp_vs_fm_bot(df = kern_df, scale = scale2, title = "Kern") 
 
 # save
-ggsave(usj_temp_fm_plot,
-       file = "./plots/usj_temp_fm_watts_v7.png",
+ggsave(yuba_insol,
+       file = "./plots/yuba_fm_temp_insol_v1.png",
        width = 5, 
-       height = 5.8,
+       height = 5,
        dpi = 600)
 
-system("open ./plots/usj_temp_fm_watts_v7.png")
+system("open ./plots/kern_fm_temp_insol_v1.png")
 
+
+insol_cow <-plot_grid(yuba_insol, usj_insol, kern_insol,
+                       labels = c("(a)", "(b)", "(c)"),
+                       nrow = 3,
+                       align = "v",
+                       label_size = 22,
+                       vjust =  2.4,
+                       hjust = 0,
+                       rel_heights = c(, 1/2))
 
 # create plotting function
 plot_dem_fm_temp <-function(df, scale, title){
