@@ -127,26 +127,48 @@ mean(df$frac_melt, na.rm = TRUE)
 #### make time series box plot ###
 ##################################
 
+# define plotting funciton
 # starting plot
-fm <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = as.factor(aspect))) +
-  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1) +
-  # geom_text(data = meds, aes(y = frac_med, label = round(frac_med, 2)),
-  #           size = 2, vjust = -0.5, hjust = -.5) +
-  scale_fill_manual(name = "Aspect",
-                    values = c('1' = 'cornflowerblue', '3' = 'darkorange'),
-                    labels = c('North Facing', 'South Facing'))+
-  xlab(NULL) + ylab("FM") +
+grouped_box_plot <-function(y, limits, ylab){
+  
+p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = interaction(as.factor(basin_name),aspect))) +
+  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+  scale_fill_manual(name = "Aspect and Basin Name",
+                    values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
+                               'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
+                    labels = c('Kern N', 'USJ N', 'Yuba N',
+                               'Kern S', 'USJ S', 'Yuba S')) +
+  guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
+  xlab("Elevation Zone") + ylab("FM") +
   scale_y_continuous(limits = c(0,1)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        plot.margin = unit(c(.25,.25,0,.25), "cm"),
-        legend.position = c(.88,.86),
-        legend.title = element_blank(),
-        axis.text.x = element_blank(),
-        legend.margin=margin(-5,1,1,1),
-        legend.box.background = element_rect(colour = "black"))
+        legend.position = c(.85,.85),
+        legend.background = element_rect(colour = "black", fill = 'white', size = .2),
+        plot.margin = unit(c(.25,.25,.25,.25), "cm"))
+  
+  return(p)
+}
+fm_p <-grouped_box_plot(y = df$frac_melt, limits = c(0,1), ylab = "FM")
+fm_p
 
-fm
+fm_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = interaction(as.factor(basin_name),aspect))) +
+  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+  scale_fill_manual(name = "Aspect and Basin Name",
+                    values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
+                               'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
+                    labels = c('Kern N', 'USJ N', 'Yuba N',
+                               'Kern S', 'USJ S', 'Yuba S')) +
+  guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
+  xlab("Elevation Zone") + ylab("FM") +
+  scale_y_continuous(limits = c(0,1)) +
+  theme_classic(11) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+        legend.position = c(.85,.80),
+        legend.background = element_rect(colour = "black", fill = 'white', size = .2),
+        plot.margin = unit(c(.25,.25,.25,.25), "cm"))
+
+fm_p
 
 # test save
 ggsave(fm,
@@ -159,35 +181,33 @@ ggsave(fm,
 system("open ./plots/fm_ez_ns_boxplot_test_v4.png")
 
 # starting plot
-max_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = mswe_mm/10, fill = interaction(basin_name,aspect))) +
+max_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = mswe_mm/10, fill = interaction(as.factor(basin_name),aspect))) +
   geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-  # geom_text(data = meds, aes(y = frac_med, label = round(frac_med, 2)),
-  #           size = 2, vjust = -0.5, hjust = -.5) +
-  # scale_fill_manual(name = "Aspect and Basin Name",
-  #                   values = c('kern.1' = 'cornflowerblue', 'kern.3' = 'red',
-  #                              'yuba.1' = 'firebrick','yuba.3' = 'green',
-  #                              'usj.1' = 'darkorange', 'usj.3' = 'violet'),
-  #                   labels = c('Kern N', 'Kern S', 
-  #                              'Yuba N', 'Yuba S',
-  #                              'USJ N',  'USJ S')) +
-  xlab("Elevation Zone") + ylab("MSWE (cm)") +
+  scale_fill_manual(name = "Aspect and Basin Name",
+                    values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
+                               'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
+                    labels = c('Kern N', 'USJ N', 'Yuba N',
+                               'Kern S', 'USJ S', 'Yuba S')) +
+  guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
+  xlab("Elevation Zone") + ylab("Max SWE (cm)") +
   scale_y_continuous(limits = c(0,300)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = c(.15,.8),
+        legend.position = c(.12,.80),
+        legend.background = element_rect(colour = "black", fill = 'white', size = .2),
         plot.margin = unit(c(.25,.25,.25,.25), "cm"))
 
 max_p
 
 # test save
 ggsave(max_p,
-       file = "./plots/max_boxplot_v1.png",
-       width = 6, 
-       height = 3,
+       file = "./plots/basins_max_boxplot_v1.png",
+       width = 9, 
+       height = 4,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/max_boxplot_v1.png")
+system("open ./plots/basins_max_boxplot_v1.png")
 
 # cowplot test
 cow <-plot_grid(fm, max_p,
