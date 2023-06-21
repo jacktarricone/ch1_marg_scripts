@@ -64,7 +64,8 @@ df_v1 <-dplyr::select(joined_df, 1:16)
 head(df_v1)
 
 # mean df for plotting
-mean_df <-unique(df_v1)
+mean_df_v1 <-unique(df_v1)
+mean_df <-mean_df_v1 %>% na.omit()
 
 # split up by basin
 usj_df <-filter(mean_df, basin_name == "usj")
@@ -148,12 +149,12 @@ kern_insol <-plot_temp_vs_fm_bot(df = kern_df, scale = scale2, title = "(c)  Ker
 
 # save
 ggsave(yuba_insol,
-       file = "./plots/yuba_fm_temp_insol_v1.png",
+       file = "./plots/yuba_fm_temp_insol_v2.png",
        width = 4.5, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/yuba_fm_temp_insol_v1.png")
+system("open ./plots/yuba_fm_temp_insol_v2.png")
 
 ## for shared legend, this is it
 insol_cow <-grid.arrange(yuba_insol, usj_insol,kern_insol,
@@ -162,12 +163,12 @@ insol_cow <-grid.arrange(yuba_insol, usj_insol,kern_insol,
 
 # save
 ggsave(insol_cow,
-       file = "./plots/insol_cow_temp_fm_v3.png",
+       file = "./plots/insol_cow_temp_fm_v4.png",
        width = 4.5, 
        height = 13,
        dpi = 300)
 
-system("open ./plots/insol_cow_temp_fm_v3.png")
+system("open ./plots/insol_cow_temp_fm_v4.png")
 
 
 ########################################
@@ -185,14 +186,15 @@ plot_temp_vs_fm_top_v2 <-function(df, title){
                        labels = c('North', 'East', 'South', 'West')) +
     scale_x_continuous(limits = c(-10,10), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    xlab(NULL) + ylab("FM")+
+    xlab(NULL) + ylab(NULL)+
     annotate(geom="text", x = -6, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
           aspect.ratio = 1,
           legend.position = 'top',
           legend.direction = 'horizontal',
-          legend.spacing.x = unit(.2, 'cm'),
+          legend.spacing.x = unit(.1, 'cm'),
           axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
           plot.margin = unit(c(.25,.25, 0,.25), "cm"))+
     guides(color = guide_legend(override.aes = list(alpha = 1, size = 4, hjust = 0.5, nrow = 1)))
   return(plot)
@@ -207,12 +209,13 @@ plot_temp_vs_fm_mid_v2 <-function(df, title){
                        labels = c('North', 'East', 'South', 'West')) +
     scale_x_continuous(limits = c(-10,10), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    xlab(NULL) + ylab("FM")+
+    xlab(NULL) + ylab(NULL)+
     annotate(geom="text", x = -6, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'none',
           axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
           plot.margin = unit(c(0.33, 0.33, 0.33, 0.33), "cm"),
           legend.box.spacing = unit(0, "pt")) 
   return(plot)
@@ -227,11 +230,12 @@ plot_temp_vs_fm_bot_v2 <-function(df, title){
                        labels = c('North', 'East', 'South', 'West')) +
     scale_x_continuous(limits = c(-10,10), expand = (c(0,0))) +
     scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-    labs(x = "Mean ONDJFM Temperature (°C)", y = "FM")+
+    labs(x = "Mean ONDJFM Temperature (°C)")+ ylab(NULL)+
     annotate(geom="text", x = -6, y = .93, label= title, size = 8, fontface = "bold")+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
           aspect.ratio = 1,
           legend.position  = 'none',
+          axis.text.y = element_blank(),
           plot.margin = unit(c(0.33, 0.33, 0.33, 0.33), "cm"),
           legend.box.spacing = unit(0, "pt")) 
   return(plot)
@@ -244,26 +248,40 @@ kern_aspect <-plot_temp_vs_fm_bot_v2(df = kern_df, title = "(c)  Kern")
 
 # save
 ggsave(yuba_aspect,
-       file = "./plots/yuba_fm_temp_aspect_v1.png",
+       file = "./plots/yuba_fm_temp_aspect_v2.png",
        width = 4.5, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/yuba_fm_temp_aspect_v1.png")
+system("open ./plots/yuba_fm_temp_aspect_v2.png")
 
 ## for shared legend, this is it
 aspect_cow <-grid.arrange(yuba_aspect, usj_aspect, kern_aspect,
                          nrow = 3,
-                         heights = c(1.3, 1, 1.12)) 
+                         heights = c(1.14, 1, 1.11)) 
 
 # save
 ggsave(aspect_cow,
-       file = "./plots/aspect_cow_temp_fm_v1.png",
-       width = 4.5, 
+       file = "./plots/aspect_cow_temp_fm_v3.png",
+       width = 4, 
        height = 13,
        dpi = 300)
 
-system("open ./plots/aspect_cow_temp_fm_v1.png")
+system("open ./plots/aspect_cow_temp_fm_v3.png")
 
+
+## for shared legend, this is it
+full_cow <-grid.arrange(insol_cow, aspect_cow,
+                        ncol = 2, 
+                        widths = c(1, 1)) 
+
+# save
+ggsave(full_cow,
+       file = "./plots/insol_aspect_cow_v2.png",
+       width = 9, 
+       height = 13,
+       dpi = 300)
+
+system("open ./plots/insol_aspect_cow_v2.png")
 
 

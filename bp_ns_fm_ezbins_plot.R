@@ -38,7 +38,7 @@ theme_classic <- function(base_size = 11, base_family = "",
     )
 }
 
-theme_set(theme_classic(16))
+theme_set(theme_classic(14))
 
 # set working dir
 setwd("~/ch1_margulis")
@@ -95,16 +95,14 @@ setwd("~/ch1_margulis")
 # fwrite(max_long_df, "./csvs/max_boxplot_df_v2.csv")
 
 ##############################################
-yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats.csv_v2.csv")
-usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats.csv_v2.csv")
-kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats.csv_v2.csv")
+fm_long_df <-fread("./csvs/fm_boxplot_df_v2.csv")
+max_long_df <-fread("./csvs/max_boxplot_df_v2.csv")
 
 # join
-joined_df_v1 <-as.data.table(bind_rows(yuba_df, usj_df, kern_df))
-joined_df <-dplyr::filter(joined_df_v1, aspect != 2 & aspect != 4)
+joined_df <-as.data.table(full_join(fm_long_df, max_long_df))
 
 # read back in using data.table
-df <-joined_df[sample(.N, 500000)]
+df <-joined_df[sample(.N, 100000)]
 head(df)
 
 # rename
@@ -127,157 +125,85 @@ mean(df$frac_melt, na.rm = TRUE)
 #### make time series box plot ###
 ##################################
 
-# define 3 plotting functions
-grouped_box_plot_top <-function(variable, min,max, ylab){
-  
-p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-  geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-  scale_fill_manual(name = "Basin and Aspect",
-                    values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
-                               '1.usj' = 'tomato4', '3.usj' = 'tomato1',
-                               '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
-                    labels = c('Kern N','Kern S',  
-                               'USJ N', 'USJ S',
-                               'Yuba N','Yuba S')) +
-  guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
-  xlab(NULL) + ylab(ylab) +
-  scale_y_continuous(limits = c(min,max)) +
+# starting plot
+fm <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = as.factor(aspect))) +
+  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1) +
+  # geom_text(data = meds, aes(y = frac_med, label = round(frac_med, 2)),
+  #           size = 2, vjust = -0.5, hjust = -.5) +
+  scale_fill_manual(name = "Aspect",
+                    values = c('1' = 'cornflowerblue', '3' = 'darkorange'),
+                    labels = c('North Facing', 'South Facing'))+
+  xlab(NULL) + ylab("FM") +
+  scale_y_continuous(limits = c(0,1)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = 'top',
-        legend.direction = 'horizontal',
-        legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+        plot.margin = unit(c(.25,.25,0,.25), "cm"),
+        legend.position = c(.88,.86),
+        legend.title = element_blank(),
         axis.text.x = element_blank(),
-        # legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-        plot.margin = unit(c(.25,.25, 0,.25), "cm"))
-  
-  return(p)
-}
+        legend.margin=margin(-5,1,1,1),
+        legend.box.background = element_rect(colour = "black"))
 
-grouped_box_plot_mid <-function(variable, min,max, ylab){
-  
-  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-    scale_fill_manual(name = "Basin and Aspect",
-                      values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
-                                 '1.usj' = 'tomato4', '3.usj' = 'tomato1',
-                                 '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
-                      labels = c('Kern N','Kern S',  
-                                 'USJ N', 'USJ S',
-                                 'Yuba N','Yuba S')) +
-    guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
-    xlab(NULL) + ylab(ylab) +
-    scale_y_continuous(limits = c(min,max)) +
-    theme_classic(11) +
-    theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-          legend.position = 'none',
-          axis.text.x = element_blank(),
-          legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-          plot.margin = unit(c(.25,0, 0,.25), "cm"))
-  
-  return(p)
-}
+fm
 
-grouped_box_plot_bot <-function(variable, min,max, ylab){
-  
-  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-    scale_fill_manual(name = "Basin and Aspect",
-                      values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
-                                 '1.usj' = 'tomato4', '3.usj' = 'tomato1',
-                                 '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
-                      labels = c('Kern N','Kern S',  
-                                 'USJ N', 'USJ S',
-                                 'Yuba N','Yuba S')) +
-    guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
-    xlab("Elevation Zone") + ylab(ylab) +
-    scale_y_continuous(limits = c(min,max)) +
-    theme_classic(11) +
-    theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-          legend.position = 'none',
-          # axis.text.x = element_blank(),
-          legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-          plot.margin = unit(c(.25,0, 0,.25), "cm"))
-  
-  return(p)
-}
+# test save
+ggsave(fm,
+       file = "./plots/fm_ez_ns_boxplot_test_v4.png",
+       width = 7, 
+       height = 3,
+       units = "in",
+       dpi = 300) 
 
-####################################
-######## plot 3 snow variables #####
-####################################
+system("open ./plots/fm_ez_ns_boxplot_test_v4.png")
 
-max_p <-grouped_box_plot_top(variable = df$mswe_mm/10, 
-                             min = 0, max = 300, ylab = "Max SWE (cm)")
-
-dom_p <-grouped_box_plot_mid(variable = df$dom_dowy, 
-                             min = 50, max = 250, ylab = "DOM (DOWY)")
-
-fm_p <-grouped_box_plot_bot(variable = df$frac_melt, min = 0, max = 1, ylab = "FM")
+# starting plot
+max_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = max_swe/1000, fill = as.factor(aspect))) +
+  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1) +
+  # geom_text(data = meds, aes(y = frac_med, label = round(frac_med, 2)),
+  #           size = 2, vjust = -0.5, hjust = -.5) +
+  scale_fill_manual(name = "Aspect",
+                    values = c('1' = 'cornflowerblue', '3' = 'darkorange'),
+                    labels = c('North Facing', 'South Facing'))+
+  xlab("Elevation Zone") + ylab("MSWE (m)") +
+  scale_y_continuous(limits = c(0,3)) +
+  theme_classic(11) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+        legend.position = "none",
+        plot.margin = unit(c(.25,.25,.25,.25), "cm"))
 
 max_p
 
-# cowplot
-snow_cow <-plot_grid(max_p, dom_p, fm_p,
-                labels = c("(a)", "(b)", "(c)"),
-                nrow = 3, 
+# test save
+ggsave(max_p,
+       file = "./plots/max_boxplot_v1.png",
+       width = 6, 
+       height = 3,
+       units = "in",
+       dpi = 300) 
+
+system("open ./plots/max_boxplot_v1.png")
+
+# cowplot test
+cow <-plot_grid(fm, max_p,
+                labels = c("(a)", "(b)"),
+                nrow = 2, 
                 align = "v",
                 axis = "b",
                 label_size = 14,
-                vjust =  2.4,
+                vjust =  2.2,
                 hjust = -2.8,
-                rel_heights = c(.35, .3,.35))
+                rel_heights = c(.47, .53))
 
-plot(snow_cow)
+plot(cow)
 
-ggsave(snow_cow,
-       file = "./plots/snow3_boxplot_v2.png",
-       width = 9, 
-       height = 7,
+ggsave(cow,
+       file = "./plots/fm_max_boxplot_v2.png",
+       width = 6, 
+       height = 5,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/snow3_boxplot_v2.png")
-
-####################################
-######## plot 4 met  variables #####
-####################################
-temp_p <-grouped_box_plot_top(variable = df$temp_mean_c, 
-                             min = -7, max = 10, ylab = expression('ONDJFM ' ~T["Mean"] ~ '(°C)'))
-temp_p
-
-ah_p <-grouped_box_plot_mid(variable = df$abs_hum_gcm3, 
-                             min = 1.5, max = 5, ylab = expression("AH (g cm"^-3*")"))
-ah_p
-
-srad_p <-grouped_box_plot_mid(variable = df$srad_wm2, 
-                              min = 120, max = 170, ylab = expression("Insolation"~paste("(W m"^{-2},")")))
-
-insol_p <-grouped_box_plot_bot(variable = df$insol_watts, 
-                              min = 30, max = 270, ylab = expression("CS Insolation"~paste("(W m"^{-2},")")))
-
-insol_p
-
-# cowplot test
-met_cow <-plot_grid(temp_p, ah_p, srad_p, insol_p,
-                     labels = c("(a)", "(b)", "(c)","(d)"),
-                     nrow = 4, 
-                     align = "v",
-                     axis = "b",
-                     label_size = 14,
-                     vjust =  2.4,
-                     hjust = -2.8,
-                     rel_heights = c(.28,.22,.22,.28))
-
-# plot(met_cow)
-
-ggsave(met_cow,
-       file = "./plots/met4_boxplot_v2.png",
-       width = 9, 
-       height = 7,
-       units = "in",
-       dpi = 300) 
-
-system("open ./plots/met4_boxplot_v2.png")
+system("open ./plots/fm_max_boxplot_v2.png")
 
 
 
