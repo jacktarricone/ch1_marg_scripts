@@ -127,11 +127,11 @@ mean(df$frac_melt, na.rm = TRUE)
 #### make time series box plot ###
 ##################################
 
-# define plotting funciton
-# starting plot
-grouped_box_plot <-function(y, limits, ylab){
+# define 3 plotting functions
+# top
+grouped_box_plot_top <-function(variable, min,max, ylab, lx, ly){
   
-p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = interaction(as.factor(basin_name),aspect))) +
+p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(as.factor(basin_name),aspect))) +
   geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
   scale_fill_manual(name = "Aspect and Basin Name",
                     values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
@@ -139,36 +139,95 @@ p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = inte
                     labels = c('Kern N', 'USJ N', 'Yuba N',
                                'Kern S', 'USJ S', 'Yuba S')) +
   guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
-  xlab("Elevation Zone") + ylab("FM") +
-  scale_y_continuous(limits = c(0,1)) +
+  xlab(NULL) + ylab(ylab) +
+  scale_y_continuous(limits = c(min,max)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = c(.85,.85),
+        legend.position = c(lx,ly),
+        axis.text.x = element_blank(),
         legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-        plot.margin = unit(c(.25,.25,.25,.25), "cm"))
+        plot.margin = unit(c(.25,.25, 0,.25), "cm"))
   
   return(p)
 }
-fm_p <-grouped_box_plot(y = df$frac_melt, limits = c(0,1), ylab = "FM")
-fm_p
 
-fm_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = frac_melt, fill = interaction(as.factor(basin_name),aspect))) +
-  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-  scale_fill_manual(name = "Aspect and Basin Name",
-                    values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
-                               'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
-                    labels = c('Kern N', 'USJ N', 'Yuba N',
-                               'Kern S', 'USJ S', 'Yuba S')) +
-  guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
-  xlab("Elevation Zone") + ylab("FM") +
-  scale_y_continuous(limits = c(0,1)) +
-  theme_classic(11) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = c(.85,.80),
-        legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-        plot.margin = unit(c(.25,.25,.25,.25), "cm"))
+grouped_box_plot_mid <-function(variable, min,max, ylab, lx, ly){
+  
+  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(as.factor(basin_name),aspect))) +
+    geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+    scale_fill_manual(name = "Aspect and Basin Name",
+                      values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
+                                 'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
+                      labels = c('Kern N', 'USJ N', 'Yuba N',
+                                 'Kern S', 'USJ S', 'Yuba S')) +
+    guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
+    xlab(NULL) + ylab(ylab) +
+    scale_y_continuous(limits = c(min,max)) +
+    theme_classic(11) +
+    theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+          legend.position = 'none',
+          axis.text.x = element_blank(),
+          legend.background = element_rect(colour = "black", fill = 'white', size = .2),
+          plot.margin = unit(c(.25,0, 0,.25), "cm"))
+  
+  return(p)
+}
 
-fm_p
+grouped_box_plot_bot <-function(variable, min,max, ylab, lx, ly){
+  
+  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(as.factor(basin_name),aspect))) +
+    geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+    scale_fill_manual(name = "Aspect and Basin Name",
+                      values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
+                                 'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
+                      labels = c('Kern N', 'USJ N', 'Yuba N',
+                                 'Kern S', 'USJ S', 'Yuba S')) +
+    guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
+    xlab("Elevation Zone") + ylab(ylab) +
+    scale_y_continuous(limits = c(min,max)) +
+    theme_classic(11) +
+    theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+          legend.position = 'none',
+          axis.text.x = element_blank(),
+          legend.background = element_rect(colour = "black", fill = 'white', size = .2),
+          plot.margin = unit(c(.25,0, 0,.25), "cm"))
+  
+  return(p)
+}
+
+
+# plot 3 snow variables 
+max_p <-grouped_box_plot_top(variable = df$mswe_mm/10, 
+                             min = 0, max = 300, ylab = "Max SWE (cm)",lx = .85, ly = .85)
+
+dom_p <-grouped_box_plot_mid(variable = df$dom_dowy, 
+                             min = 50, max = 250, ylab = "DOM (DOWY)", lx = .85, ly = .85)
+
+max_p <-grouped_box_plot_bot(variable = df$frac_melt, min = 0, max = 1, ylab = "FM",
+                             lx = .85, ly = .85)
+
+max_p
+
+
+
+
+
+
+# met variables
+temp_p <-grouped_box_plot(variable = df$temp_mean_c, min = -7, max = 10, ylab = "Temp Mean (C)",
+                                  lx = .85, ly = .85)
+
+ah_p <-grouped_box_plot(variable = df$abs_hum_gcm3, min = 1, max = 5, ylab = "abs_hum",
+                          lx = .85, ly = .85)
+ah_p
+
+insol_p <-grouped_box_plot(variable = df$insol_watts, min = 0, max = 270, ylab = "insol",
+                        lx = .85, ly = .85)
+insol_p 
+
+srad_p <-grouped_box_plot(variable = df$srad_wm2, min = 120, max = 165, ylab = "srad",
+                           lx = .85, ly = .25)
+srad_p 
 
 # test save
 ggsave(fm,
