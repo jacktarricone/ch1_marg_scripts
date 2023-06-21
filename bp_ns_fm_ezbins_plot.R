@@ -129,37 +129,65 @@ mean(df$frac_melt, na.rm = TRUE)
 
 # define 3 plotting functions
 # top
-grouped_box_plot_top <-function(variable, min,max, ylab, lx, ly){
-  
-p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(as.factor(basin_name),aspect))) +
+ggplot(df, mapping = aes(x = as.factor(bin_name), y = mswe_mm/10, fill = interaction(aspect, as.factor(basin_name)))) +
   geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
   scale_fill_manual(name = "Aspect and Basin Name",
-                    values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
-                               'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
-                    labels = c('Kern N', 'USJ N', 'Yuba N',
-                               'Kern S', 'USJ S', 'Yuba S')) +
-  guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
+                    values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
+                               '1.usj' = 'tomato4', '3.usj' = 'tomato1',
+                               '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
+                    labels = c('Kern N','Kern S',  
+                               'USJ N', 'USJ S',
+                               'Yuba N','Yuba S')) +
+  guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
+  xlab('none') + ylab(ylab) +
+  scale_y_continuous(limits = c(0,300)) +
+  theme_classic(11) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+        legend.position = 'top',
+        legend.direction = 'horizontal',
+        legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+        axis.text.x = element_blank(),
+        # legend.background = element_rect(colour = "black", fill = 'white', size = .2),
+        plot.margin = unit(c(.25,.25, 0,.25), "cm"))
+
+
+grouped_box_plot_top <-function(variable, min,max, ylab){
+  
+p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
+  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+  scale_fill_manual(name = "Basin and Aspect",
+                    values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
+                               '1.usj' = 'tomato4', '3.usj' = 'tomato1',
+                               '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
+                    labels = c('Kern N','Kern S',  
+                               'USJ N', 'USJ S',
+                               'Yuba N','Yuba S')) +
+  guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
   xlab(NULL) + ylab(ylab) +
   scale_y_continuous(limits = c(min,max)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = c(lx,ly),
+        legend.position = 'top',
+        legend.direction = 'horizontal',
+        legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         axis.text.x = element_blank(),
-        legend.background = element_rect(colour = "black", fill = 'white', size = .2),
+        # legend.background = element_rect(colour = "black", fill = 'white', size = .2),
         plot.margin = unit(c(.25,.25, 0,.25), "cm"))
   
   return(p)
 }
 
-grouped_box_plot_mid <-function(variable, min,max, ylab, lx, ly){
+grouped_box_plot_mid <-function(variable, min,max, ylab){
   
-  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(as.factor(basin_name),aspect))) +
+  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
     geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-    scale_fill_manual(name = "Aspect and Basin Name",
-                      values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
-                                 'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
-                      labels = c('Kern N', 'USJ N', 'Yuba N',
-                                 'Kern S', 'USJ S', 'Yuba S')) +
+    scale_fill_manual(name = "Basin and Aspect",
+                      values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
+                                 '1.usj' = 'tomato4', '3.usj' = 'tomato1',
+                                 '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
+                      labels = c('Kern N','Kern S',  
+                                 'USJ N', 'USJ S',
+                                 'Yuba N','Yuba S')) +
     guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
     xlab(NULL) + ylab(ylab) +
     scale_y_continuous(limits = c(min,max)) +
@@ -173,22 +201,24 @@ grouped_box_plot_mid <-function(variable, min,max, ylab, lx, ly){
   return(p)
 }
 
-grouped_box_plot_bot <-function(variable, min,max, ylab, lx, ly){
+grouped_box_plot_bot <-function(variable, min,max, ylab){
   
-  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(as.factor(basin_name),aspect))) +
+  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
     geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-    scale_fill_manual(name = "Aspect and Basin Name",
-                      values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
-                                 'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
-                      labels = c('Kern N', 'USJ N', 'Yuba N',
-                                 'Kern S', 'USJ S', 'Yuba S')) +
+    scale_fill_manual(name = "Basin and Aspect",
+                      values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
+                                 '1.usj' = 'tomato4', '3.usj' = 'tomato1',
+                                 '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
+                      labels = c('Kern N','Kern S',  
+                                 'USJ N', 'USJ S',
+                                 'Yuba N','Yuba S')) +
     guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
     xlab("Elevation Zone") + ylab(ylab) +
     scale_y_continuous(limits = c(min,max)) +
     theme_classic(11) +
     theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
           legend.position = 'none',
-          axis.text.x = element_blank(),
+          # axis.text.x = element_blank(),
           legend.background = element_rect(colour = "black", fill = 'white', size = .2),
           plot.margin = unit(c(.25,0, 0,.25), "cm"))
   
@@ -198,20 +228,36 @@ grouped_box_plot_bot <-function(variable, min,max, ylab, lx, ly){
 
 # plot 3 snow variables 
 max_p <-grouped_box_plot_top(variable = df$mswe_mm/10, 
-                             min = 0, max = 300, ylab = "Max SWE (cm)",lx = .85, ly = .85)
+                             min = 0, max = 300, ylab = "Max SWE (cm)")
 
 dom_p <-grouped_box_plot_mid(variable = df$dom_dowy, 
-                             min = 50, max = 250, ylab = "DOM (DOWY)", lx = .85, ly = .85)
+                             min = 50, max = 250, ylab = "DOM (DOWY)")
 
-max_p <-grouped_box_plot_bot(variable = df$frac_melt, min = 0, max = 1, ylab = "FM",
-                             lx = .85, ly = .85)
+fm_p <-grouped_box_plot_bot(variable = df$frac_melt, min = 0, max = 1, ylab = "FM")
 
 max_p
 
+# cowplot test
+snow_cow <-plot_grid(max_p, dom_p, fm_p,
+                labels = c("(a)", "(b)", "(c)"),
+                nrow = 3, 
+                align = "v",
+                axis = "b",
+                label_size = 14,
+                vjust =  2.2,
+                hjust = -2.8,
+                rel_heights = c(.4, .35,.35))
 
+plot(snow_cow)
 
+ggsave(snow_cow,
+       file = "./plots/snow3_boxplot_v1.png",
+       width = 9, 
+       height = 7,
+       units = "in",
+       dpi = 300) 
 
-
+system("open ./plots/snow3_boxplot_v1.png")
 
 # met variables
 temp_p <-grouped_box_plot(variable = df$temp_mean_c, min = -7, max = 10, ylab = "Temp Mean (C)",
@@ -239,24 +285,6 @@ ggsave(fm,
 
 system("open ./plots/fm_ez_ns_boxplot_test_v4.png")
 
-# starting plot
-max_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = mswe_mm/10, fill = interaction(as.factor(basin_name),aspect))) +
-  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-  scale_fill_manual(name = "Aspect and Basin Name",
-                    values = c('kern.1' = 'azure4', 'usj.1' = 'tomato4', 'yuba.1' = 'chartreuse4',
-                               'kern.3' = 'azure2',  'usj.3' = 'tomato1' ,'yuba.3' = 'lightgreen'),
-                    labels = c('Kern N', 'USJ N', 'Yuba N',
-                               'Kern S', 'USJ S', 'Yuba S')) +
-  guides(fill = guide_legend(ncol = 2, override.aes = list(order = c(1,2,3,4,5,6)))) +
-  xlab("Elevation Zone") + ylab("Max SWE (cm)") +
-  scale_y_continuous(limits = c(0,300)) +
-  theme_classic(11) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = c(.12,.80),
-        legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-        plot.margin = unit(c(.25,.25,.25,.25), "cm"))
-
-max_p
 
 # test save
 ggsave(max_p,
