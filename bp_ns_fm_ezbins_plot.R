@@ -38,7 +38,7 @@ theme_classic <- function(base_size = 11, base_family = "",
     )
 }
 
-theme_set(theme_classic(14))
+theme_set(theme_classic(16))
 
 # set working dir
 setwd("~/ch1_margulis")
@@ -128,29 +128,6 @@ mean(df$frac_melt, na.rm = TRUE)
 ##################################
 
 # define 3 plotting functions
-# top
-ggplot(df, mapping = aes(x = as.factor(bin_name), y = mswe_mm/10, fill = interaction(aspect, as.factor(basin_name)))) +
-  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
-  scale_fill_manual(name = "Aspect and Basin Name",
-                    values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
-                               '1.usj' = 'tomato4', '3.usj' = 'tomato1',
-                               '1.yuba' = 'chartreuse4', '3.yuba' = 'lightgreen'),
-                    labels = c('Kern N','Kern S',  
-                               'USJ N', 'USJ S',
-                               'Yuba N','Yuba S')) +
-  guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
-  xlab('none') + ylab(ylab) +
-  scale_y_continuous(limits = c(0,300)) +
-  theme_classic(11) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = 'top',
-        legend.direction = 'horizontal',
-        legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
-        axis.text.x = element_blank(),
-        # legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-        plot.margin = unit(c(.25,.25, 0,.25), "cm"))
-
-
 grouped_box_plot_top <-function(variable, min,max, ylab){
   
 p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
@@ -225,8 +202,10 @@ grouped_box_plot_bot <-function(variable, min,max, ylab){
   return(p)
 }
 
+####################################
+######## plot 3 snow variables #####
+####################################
 
-# plot 3 snow variables 
 max_p <-grouped_box_plot_top(variable = df$mswe_mm/10, 
                              min = 0, max = 300, ylab = "Max SWE (cm)")
 
@@ -237,16 +216,16 @@ fm_p <-grouped_box_plot_bot(variable = df$frac_melt, min = 0, max = 1, ylab = "F
 
 max_p
 
-# cowplot test
+# cowplot
 snow_cow <-plot_grid(max_p, dom_p, fm_p,
                 labels = c("(a)", "(b)", "(c)"),
                 nrow = 3, 
                 align = "v",
                 axis = "b",
                 label_size = 14,
-                vjust =  2.2,
+                vjust =  2.4,
                 hjust = -2.8,
-                rel_heights = c(.4, .35,.35))
+                rel_heights = c(.35, .3,.35))
 
 plot(snow_cow)
 
@@ -259,64 +238,46 @@ ggsave(snow_cow,
 
 system("open ./plots/snow3_boxplot_v1.png")
 
-# met variables
-temp_p <-grouped_box_plot(variable = df$temp_mean_c, min = -7, max = 10, ylab = "Temp Mean (C)",
-                                  lx = .85, ly = .85)
+####################################
+######## plot 4 met  variables #####
+####################################
+temp_p <-grouped_box_plot_top(variable = df$temp_mean_c, 
+                             min = -7, max = 10, ylab = expression('ONDJFM ' ~T["Mean"] ~ '(°C)'))
+temp_p
 
-ah_p <-grouped_box_plot(variable = df$abs_hum_gcm3, min = 1, max = 5, ylab = "abs_hum",
-                          lx = .85, ly = .85)
+ah_p <-grouped_box_plot_mid(variable = df$abs_hum_gcm3, 
+                             min = 1.5, max = 5, ylab = expression("AH (g cm"^-3*")"))
 ah_p
 
-insol_p <-grouped_box_plot(variable = df$insol_watts, min = 0, max = 270, ylab = "insol",
-                        lx = .85, ly = .85)
-insol_p 
+srad_p <-grouped_box_plot_mid(variable = df$srad_wm2, 
+                              min = 120, max = 170, ylab = expression("Insolation"~paste("(W m"^{-2},")")))
 
-srad_p <-grouped_box_plot(variable = df$srad_wm2, min = 120, max = 165, ylab = "srad",
-                           lx = .85, ly = .25)
-srad_p 
+insol_p <-grouped_box_plot_bot(variable = df$insol_watts, 
+                              min = 30, max = 270, ylab = expression("CS Insolation"~paste("(W m"^{-2},")")))
 
-# test save
-ggsave(fm,
-       file = "./plots/fm_ez_ns_boxplot_test_v4.png",
-       width = 7, 
-       height = 3,
-       units = "in",
-       dpi = 300) 
-
-system("open ./plots/fm_ez_ns_boxplot_test_v4.png")
-
-
-# test save
-ggsave(max_p,
-       file = "./plots/basins_max_boxplot_v1.png",
-       width = 9, 
-       height = 4,
-       units = "in",
-       dpi = 300) 
-
-system("open ./plots/basins_max_boxplot_v1.png")
+insol_p
 
 # cowplot test
-cow <-plot_grid(fm, max_p,
-                labels = c("(a)", "(b)"),
-                nrow = 2, 
-                align = "v",
-                axis = "b",
-                label_size = 14,
-                vjust =  2.2,
-                hjust = -2.8,
-                rel_heights = c(.47, .53))
+met_cow <-plot_grid(temp_p, ah_p, srad_p, insol_p,
+                     labels = c("(a)", "(b)", "(c)","(d)"),
+                     nrow = 4, 
+                     align = "v",
+                     axis = "b",
+                     label_size = 14,
+                     vjust =  2.4,
+                     hjust = -2.8,
+                     rel_heights = c(.28,.22,.22,.28))
 
-plot(cow)
+# plot(met_cow)
 
-ggsave(cow,
-       file = "./plots/fm_max_boxplot_v2.png",
-       width = 6, 
-       height = 5,
+ggsave(met_cow,
+       file = "./plots/met4_boxplot_v1.png",
+       width = 9, 
+       height = 10,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/fm_max_boxplot_v2.png")
+system("open ./plots/met4_boxplot_v1.png")
 
 
 
