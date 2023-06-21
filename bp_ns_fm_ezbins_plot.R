@@ -95,14 +95,16 @@ setwd("~/ch1_margulis")
 # fwrite(max_long_df, "./csvs/max_boxplot_df_v2.csv")
 
 ##############################################
-fm_long_df <-fread("./csvs/fm_boxplot_df_v2.csv")
-max_long_df <-fread("./csvs/max_boxplot_df_v2.csv")
+yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats.csv_v2.csv")
+usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats.csv_v2.csv")
+kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats.csv_v2.csv")
 
 # join
-joined_df <-as.data.table(full_join(fm_long_df, max_long_df))
+joined_df_v1 <-as.data.table(bind_rows(yuba_df, usj_df, kern_df))
+joined_df <-dplyr::filter(joined_df_v1, aspect != 2 & aspect != 4)
 
 # read back in using data.table
-df <-joined_df[sample(.N, 100000)]
+df <-joined_df[sample(.N, 500000)]
 head(df)
 
 # rename
@@ -157,18 +159,22 @@ ggsave(fm,
 system("open ./plots/fm_ez_ns_boxplot_test_v4.png")
 
 # starting plot
-max_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = max_swe/1000, fill = as.factor(aspect))) +
-  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1) +
+max_p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = mswe_mm/10, fill = interaction(basin_name,aspect))) +
+  geom_boxplot(linewidth = .3, width = .4, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
   # geom_text(data = meds, aes(y = frac_med, label = round(frac_med, 2)),
   #           size = 2, vjust = -0.5, hjust = -.5) +
-  scale_fill_manual(name = "Aspect",
-                    values = c('1' = 'cornflowerblue', '3' = 'darkorange'),
-                    labels = c('North Facing', 'South Facing'))+
-  xlab("Elevation Zone") + ylab("MSWE (m)") +
-  scale_y_continuous(limits = c(0,3)) +
+  # scale_fill_manual(name = "Aspect and Basin Name",
+  #                   values = c('kern.1' = 'cornflowerblue', 'kern.3' = 'red',
+  #                              'yuba.1' = 'firebrick','yuba.3' = 'green',
+  #                              'usj.1' = 'darkorange', 'usj.3' = 'violet'),
+  #                   labels = c('Kern N', 'Kern S', 
+  #                              'Yuba N', 'Yuba S',
+  #                              'USJ N',  'USJ S')) +
+  xlab("Elevation Zone") + ylab("MSWE (cm)") +
+  scale_y_continuous(limits = c(0,300)) +
   theme_classic(11) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = "none",
+        legend.position = c(.15,.8),
         plot.margin = unit(c(.25,.25,.25,.25), "cm"))
 
 max_p
