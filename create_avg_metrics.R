@@ -51,6 +51,25 @@ plot(snsr_basins, add = TRUE, lwd = .1)
 
 max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
 
+
+####################
+####### fm #########
+####################
+
+# load in stack
+mwa_paths <-list.files("./rasters/snow_metrics/mwa_ondjfm_mm", pattern = ".tif", full.names = TRUE)
+mwa_stack_v1 <-rast(mwa_paths)
+
+# mask with max
+mwa_stack_v2 <-mask(mwa_stack_v1, max_mean)
+# writeRaster(mwa_stack_v2, "./rasters/snow_metrics/mwa_ondjfm_mm/mwa_stack_f_25mm_27obs.tif")
+
+# calculate average
+mwa_mean <-app(mwa_stack_v2, fun = metric_mean, cores = 14)
+plot(mwa_mean)
+writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_mean_f_25mm_27obs.tif")
+
+
 ####################
 ####### fm #########
 ####################

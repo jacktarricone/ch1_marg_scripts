@@ -94,6 +94,23 @@ setwd("~/ch1_margulis")
 # fwrite(fm_long_df, "./csvs/fm_boxplot_df_v2.csv")
 # fwrite(max_long_df, "./csvs/max_boxplot_df_v2.csv")
 
+## add mwa_mm
+mwa_list <-list.files("./rasters/snow_metrics/mwa_ondjfm_mm", pattern = "tif", full.names = TRUE)
+mwa_stack <-rast(mwa_list)
+mwa_df <-as.data.frame(mwa_stack, cells = TRUE)
+
+# years seq
+years <-seq(1985,2016,1)
+
+# rename columns, which are the annual rasters, with the correct year name
+colnames(mwa_df)[2:ncol(mwa_df)] <-years
+
+# pivot longer for test
+# creates "year" col and "fm_percent" col while preserving meta data info
+mwa_long_df <-as.data.frame((mwa_df) %>%
+ pivot_longer(cols=2:33, names_to = "year", values_to = "mwa_mm"))
+head(mwa_long_df)
+
 ##############################################
 yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats.csv_v2.csv")
 usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats.csv_v2.csv")
@@ -103,9 +120,14 @@ kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats.csv_v2.csv")
 joined_df_v1 <-as.data.table(bind_rows(yuba_df, usj_df, kern_df))
 joined_df <-dplyr::filter(joined_df_v1, aspect != 2 & aspect != 4)
 
+# add mwa
+mwa_filt <-subset(mwa_long_df, cell %in% joined_df$cell)
+
+
 # read back in using data.table
 df <-joined_df[sample(.N, 500000)]
 head(df)
+
 
 # rename
 df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
