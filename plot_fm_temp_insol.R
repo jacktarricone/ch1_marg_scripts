@@ -193,6 +193,7 @@ plot_temp_vs_fm_top_v2 <-function(df, title){
           legend.position = 'top',
           legend.direction = 'horizontal',
           legend.spacing.x = unit(.1, 'cm'),
+          legend.margin = margin(t =20, b = 27),
           axis.text.x = element_blank(),
           axis.text.y = element_blank(),
           plot.margin = unit(c(.25,.25, 0,.25), "cm"))+
@@ -242,32 +243,32 @@ plot_temp_vs_fm_bot_v2 <-function(df, title){
 }
 
 # plot
-yuba_aspect <-plot_temp_vs_fm_top_v2(df = yuba_df, title = "(a)  Yuba") 
-usj_aspect <-plot_temp_vs_fm_mid_v2(df = usj_df, title = "(b)  USJ") 
-kern_aspect <-plot_temp_vs_fm_bot_v2(df = kern_df, title = "(c)  Kern") 
+yuba_aspect <-plot_temp_vs_fm_top_v2(df = yuba_df, title = "") 
+usj_aspect <-plot_temp_vs_fm_mid_v2(df = usj_df, title = "") 
+kern_aspect <-plot_temp_vs_fm_bot_v2(df = kern_df, title = "" )
 
 # save
 ggsave(yuba_aspect,
-       file = "./plots/yuba_fm_temp_aspect_v2.png",
+       file = "./plots/yuba_fm_temp_aspect_v3.png",
        width = 4.5, 
        height = 5,
        dpi = 600)
 
-system("open ./plots/yuba_fm_temp_aspect_v2.png")
+system("open ./plots/yuba_fm_temp_aspect_v3.png")
 
 ## for shared legend, this is it
 aspect_cow <-grid.arrange(yuba_aspect, usj_aspect, kern_aspect,
                          nrow = 3,
-                         heights = c(1.14, 1, 1.11)) 
+                         heights = c(1.2, 1, 1.12)) 
 
 # save
 ggsave(aspect_cow,
-       file = "./plots/aspect_cow_temp_fm_v3.png",
+       file = "./plots/aspect_cow_temp_fm_v4.png",
        width = 4, 
        height = 13,
        dpi = 300)
 
-system("open ./plots/aspect_cow_temp_fm_v3.png")
+system("open ./plots/aspect_cow_temp_fm_v4.png")
 
 
 ## for shared legend, this is it
@@ -277,11 +278,11 @@ full_cow <-grid.arrange(insol_cow, aspect_cow,
 
 # save
 ggsave(full_cow,
-       file = "./plots/insol_aspect_cow_v2.png",
+       file = "./plots/insol_aspect_cow_v3.png",
        width = 9, 
        height = 13,
        dpi = 300)
 
-system("open ./plots/insol_aspect_cow_v2.png")
+system("open ./plots/insol_aspect_cow_v3.png")
 
 
