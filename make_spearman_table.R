@@ -45,14 +45,15 @@ theme_classic <-function(base_size = 11, base_family = "",
 theme_set(theme_classic(14))
 
 # read in df
-temp_df <-fread("./csvs/spearman_results/KUY_temp_mean_c_vs_fm_spearman_results_v2.csv")
-mswe_df <-fread("./csvs/spearman_results/KUY_mswe_mm_vs_fm_spearman_results_v2.csv")
-head(df)
 
-df <-mswe_df
+df_list <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = "KUY")
 
-make_3panel_heatmap <-function(df){
+make_3panel_heatmap <-function(df_path, twovars){
   
+  df <-fread(df_path)
+  name_v1 <-basename(df_path)
+  name_v2 <- substr(name_v1, 1, nchar(name_v1) - 30)
+
   # elevations zones
   df$zone_name <-ifelse(df$ez== 1, "1500-1900 m", df$ez)
   df$zone_name <-ifelse(df$ez == 2, "1900-2300 m", df$zone_name)
@@ -81,14 +82,13 @@ make_3panel_heatmap <-function(df){
               mean_ez_rh      = mean(mean_rh))
   
   results_v1
-
+  
   # filter for north and south facing
-  north_results <-filter(temp_results_v1, aspect_name == "North")
+  north_results <-filter(results_v1, aspect_name == "North")
   colnames(north_results)[4] <-"north_percent_sig"
-  north_results
   
   # remove zone 4 feather, like 4 pixels
-  south_temp_results_v1 <-filter(temp_results_v1, aspect_name == "South")
+  south_results <-filter(results_v1, aspect_name == "South")
   colnames(south_results)[4] <-"south_percent_sig"
   south_results
   identical(south_results$Basin, north_results$Basin)
@@ -108,7 +108,7 @@ make_3panel_heatmap <-function(df){
     geom_tile()+
     geom_text(aes(label=north_percent_sig)) +
     scale_fill_gradientn(colors = mycolors, limits = c(0,100), oob = squish) +
-    labs(x = "EZ", fill = "Area Significant (%)", title = "North Facing") +
+    labs(x = "EZ", fill = "Area Significant (%)", title = paste0(twovars, " North Facing")) +
     scale_x_discrete(expand = c(0, 0))+
     scale_y_discrete(expand = c(0, 0))+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -133,7 +133,7 @@ make_3panel_heatmap <-function(df){
     geom_tile()+
     geom_text(aes(label=south_percent_sig)) +
     scale_fill_gradientn(colors = mycolors, limits = c(0,100), oob = squish) +
-    labs(fill = "Area Significant (%)", title = "South Facing") +
+    labs(fill = "Area Significant (%)", title = paste0(twovars, " South Facing")) +
     scale_x_discrete(expand = c(0, 0))+
     scale_y_discrete(expand = c(0, 0))+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -164,7 +164,7 @@ make_3panel_heatmap <-function(df){
     geom_tile()+
     geom_text(aes(label=diff)) +
     scale_fill_gradientn(colors = diff_colors, limits = c(-50,50), oob = squish) +
-    labs(x = "EZ", fill = "Difference (%)", title = "North - South Difference") +
+    labs(x = "EZ", fill = "Difference (%)", title = paste0(twovars, " North - South Difference")) +
     scale_x_discrete(expand = c(0, 0))+
     scale_y_discrete(expand = c(0, 0))+
     theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
@@ -188,25 +188,29 @@ make_3panel_heatmap <-function(df){
   ### cowing
   # cowplot test
   full <-plot_grid(north_p, south_p, diff_p,
-                   labels = c("(a)", "(b)", "(c)"),
+                   # labels = c("(a)", "(b)", "(c)"),
                    ncol = 3, 
                    align = "hv",
-                   label_size = 24,
-                   vjust =  3,
-                   hjust = -1,
+                   # label_size = 24,
+                   # vjust =  3,
+                  #  hjust = -1,
                    rel_widths = c(1/3, 1/3, 1/3))
 
   # test save
   # make tighter together
 
-  saving_path <-paste0("./plots/kuy_",df,"_heatmap_v1.png")
+  saving_path <-paste0("./plots/kuy_",name_v2,"_heatmap_v1.png")
   
   ggsave(full,
-         file = "./plots/kuy_temp_heatmap_v1.png",
+         file = saving_path,
          width = 16, 
          height = 3,
          dpi = 600)
   
-  system("open ./plots/kuy_temp_heatmap_v1.png")
+  return(full)
 }
 
+ah_test <-make_3panel_heatmap(df = df_list[[1]], twovars = "AH vs. FM")
+mswe_test <-make_3panel_heatmap(df = df_list[[2]], twovars = "MSWE vs. FM")
+srad_test <-make_3panel_heatmap(df = df_list[[3]], twovars = "Srad vs. FM")
+tmean_test <-make_3panel_heatmap(df = df_list[[4]], twovars = "Tmean vs. FM")

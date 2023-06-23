@@ -52,9 +52,17 @@ snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
 snsr_sf <-st_geometry(snsr_v1)
 
-# with sf
-snsr_basins_v1 <-st_read("./vectors/ca_basins/snsr_all_basins.shp")
-snsr_basins_sf <-st_geometry(snsr_basins_v1)
+# kern
+kern_sf <-st_geometry(st_read("./vectors/ca_basins/kern.gpkg"))
+kern_v <-vect(kern)
+
+# usj
+usj_sf <-st_geometry(st_read("./vectors/ca_basins/usj.gpkg"))
+usj_v <-vect(usj_sf)
+
+# yuba
+yuba_sf <-st_geometry(st_read("./vectors/ca_basins/yuba.gpkg"))
+yuba_v <-vect(yuba_sf)
 
 ##############
 ##### dem ####
@@ -63,24 +71,39 @@ snsr_basins_sf <-st_geometry(snsr_basins_v1)
 #### read in metrics
 dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 cc_v1 <-rast("./rasters/nlcd_cc/cc_w0.tif")
-ez_bins <-rast("./rasters/categorized/dem_ez3_ns.tif")
-prism_temp <-rast("./rasters/prism/prism_tmean_snsr_ondjfm.tif")
-insol <-rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
+ez_bins_v1 <-rast("./rasters/categorized/dem_6zb.tif")
+ez_bins <-ifel(6 == ez_bins_v1, 5, ez_bins_v1)
+aspect <-rast("./rasters/categorized/aspect_thres_4_classes.tif")
+
+# stack
+stack <-c(dem_v1,cc_v1,ez_bins,aspect)
+
+# crop and mask
+kern_stack <-mask(crop(stack,ext(kern_v)), kern_v)
+usj_stack <-mask(crop(stack,ext(usj_v)), usj_v)
+yuba_stack <-mask(crop(stack,ext(yuba_v)), yuba_v)
 
 # convert to df for geom_raster
-dem_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
-cc_df <-as.data.frame(cc_v1, xy = TRUE, cells = TRUE)
-ez_df <-as.data.frame(ez_bins, xy = TRUE, cells = TRUE)
-temp_df <-as.data.frame(prism_temp, xy = TRUE, cells = TRUE)
-insol_df <-as.data.frame(insol, xy = TRUE, cells = TRUE)
+kern_df <-as.data.frame(kern_stack, xy = TRUE, cells = TRUE)
+usj_df <-as.data.frame(usj_stack, xy = TRUE, cells = TRUE)
+yuba_df <-as.data.frame(yuba_stack, xy = TRUE, cells = TRUE)
+
 
 # make cat variables
-ez_df$cat <-ifelse(ez_df$SNSR_DEM == 1, "EZ1_N", ez_df$SNSR_DEM)
-ez_df$cat <-ifelse(ez_df$SNSR_DEM == 2, "EZ1_S", ez_df$cat)
-ez_df$cat <-ifelse(ez_df$SNSR_DEM == 3, "EZ2_N", ez_df$ca)
-ez_df$cat <-ifelse(ez_df$SNSR_DEM == 4, "EZ2_S", ez_df$cat)
-ez_df$cat <-ifelse(ez_df$SNSR_DEM == 5, "EZ3_N", ez_df$ca)
-ez_df$cat <-ifelse(ez_df$SNSR_DEM == 6, "EZ3_S", ez_df$cat)
+ez_df$bin_name <-ifelse(ez_df$SNSR_DEM == 1, "1500-1900 m", ez_df$SNSR_DEM)
+ez_df$bin_name <-ifelse(ez_df$SNSR_DEM == 2, "1900-2300 m", ez_df$bin_name)
+ez_df$bin_name <-ifelse(ez_df$SNSR_DEM == 3, "2300-2700 m", ez_df$bin_name)
+ez_df$bin_name <-ifelse(ez_df$SNSR_DEM == 4, "2700-3100 m", ez_df$bin_name)
+ez_df$bin_name <-ifelse(ez_df$SNSR_DEM == 5, "3100-4361 m", ez_df$bin_name)
+ez_df$bin_name <-ifelse(ez_df$SNSR_DEM == 6, "3100-4361 m", ez_df$bin_name)
+
+aspect_df$aspect_name <-ifelse(aspect_df$aspect == 1, "North", aspect_df$aspect)
+aspect_df$aspect_name <-ifelse(aspect_df$aspect == 2, "East", aspect_df$aspect_name)
+aspect_df$aspect_name <-ifelse(aspect_df$aspect == 3, "South", aspect_df$aspect_name)
+aspect_df$aspect_name <-ifelse(aspect_df$aspect == 4, "West", aspect_df$aspect_name)
+
+
+
 head(ez_df)
 unique(ez_df$cat)
 

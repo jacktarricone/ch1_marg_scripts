@@ -113,4 +113,4 @@ ah_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE
 ah_list <-lapply(ah_paths, fread)
 ah_df <-as.data.table(bind_rows(ah_list))
 head(ah_df)
-# fwrite(ah_df,"./csvs/spearman_results/KUY_abs_hum_gcm3_vs_fm_spearman_results_v2.csv")
+fwrite(ah_df,"./csvs/spearman_results/KUY_abs_hum_gcm3_vs_fm_spearman_results_v2.csv")
