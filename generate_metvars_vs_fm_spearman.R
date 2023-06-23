@@ -81,8 +81,36 @@ generate_spearman_df <-function(basin_list, variable){
 # testing
 var_list <-c("mswe_mm","abs_hum_gcm3","temp_mean_c", "abs_hum_gcm3")
 
-# apply function to list of basin shape files
-lapply(df_list[[1]], function(x) generate_spearman_df(x, variable = "temp_mean_c"))
-lapply(df_list[[1]], function(x) generate_spearman_df(x, variable = "mswe_mm"))
-lapply(df_list[[1]], function(x) generate_spearman_df(x, variable = "srad_wm2"))
-lapply(df_list[[1]], function(x) generate_spearman_df(x, variable = "abs_hum_gcm3"))
+# apply function to four variables
+# temp_mean_c
+lapply(df_list, function(x) generate_spearman_df(x, variable = "temp_mean_c"))
+temp_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'temp')
+temp_list <-lapply(temp_paths, fread)
+temp_df <-as.data.table(bind_rows(temp_list))
+head(temp_df)
+fwrite(temp_df,"./csvs/spearman_results/KUY_temp_mean_c_vs_fm_spearman_results_v2.csv")
+
+# mswe_mm
+lapply(df_list, function(x) generate_spearman_df(x, variable = "mswe_mm"))
+mswe_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'mswe')
+mswe_list <-lapply(mswe_paths, fread)
+mswe_df <-as.data.table(bind_rows(mswe_list))
+head(mswe_df)
+fwrite(mswe_df,"./csvs/spearman_results/KUY_mswe_mm_vs_fm_spearman_results_v2.csv")
+
+
+# srad
+lapply(df_list, function(x) generate_spearman_df(x, variable = "srad_wm2"))
+srad_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'srad')
+srad_list <-lapply(srad_paths, fread)
+srad_df <-as.data.table(bind_rows(srad_list))
+head(srad_df)
+fwrite(srad_df,"./csvs/spearman_results/KUY_srad_wm2_vs_fm_spearman_results_v2.csv")
+
+
+lapply(df_list, function(x) generate_spearman_df(x, variable = "abs_hum_gcm3"))
+ah_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'srad')
+ah_list <-lapply(ah_paths, fread)
+ah_df <-as.data.table(bind_rows(ah_list))
+head(ah_df)
+# fwrite(ah_df,"./csvs/spearman_results/KUY_abs_hum_gcm3_vs_fm_spearman_results_v2.csv")
