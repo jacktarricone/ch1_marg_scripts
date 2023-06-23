@@ -12,9 +12,10 @@ library(data.table)
 setwd("~/ch1_margulis")
 
 # list of paths to shape files
-basin_paths <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
+basin_paths_v1 <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
+basin_paths <-basin_paths_v1[c(18,20)]
 
-# basin_paths_list <-basin_paths[5]
+# basin_paths_list <-basin_paths[1]
 
 generate_gridmet_df <-function(basin_paths_list){
   
@@ -62,6 +63,13 @@ generate_gridmet_df <-function(basin_paths_list){
   rmean_mean_shp <-mask(crop(rmean_mean,ext(shp)), shp)
   names(rmean_mean_shp) <-"mean_rh_%"
   
+  # ah
+  ah_mean <-rast("./rasters/gridmet/var_means/ah_mean_f_25mm_27obs.tif")
+  ext(ah_mean) <-ext(dem)
+  ah_mean_shp <-mask(crop(ah_mean,ext(shp)), shp)
+  names(ah_mean_shp) <-"mean_ah"
+  plot(ah_mean_shp)
+  
   # srad
   srad_mean <-rast("./rasters/gridmet/var_means/srad_mean.tif")
   ext(srad_mean) <-ext(dem)
@@ -100,7 +108,7 @@ generate_gridmet_df <-function(basin_paths_list){
   plot(dom_mean_shp)
   
   # stack em
-  gridmet_stack <-c(temp_mean_shp, rmean_mean_shp, srad_mean_shp, sph_mean_shp)
+  gridmet_stack <-c(temp_mean_shp, rmean_mean_shp, ah_mean_shp, srad_mean_shp, sph_mean_shp)
   pz_vars_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp)
   snow_stack <-c(fm_mean_shp, max_mean_shp, dom_mean_shp, mwa_mean_shp)
   
@@ -149,6 +157,12 @@ generate_gridmet_df <-function(basin_paths_list){
   rmean_stack_shp <-mask(crop(rmean_stack_v1,ext(shp)), shp)
   names(rmean_stack_shp) <-wy_names
   
+  # rmean  
+  ah_stack_v1 <- rast("./rasters/gridmet/ah/ah_stack.tif")
+  ext(ah_stack_v1) <-ext(dem)
+  ah_stack_shp <-mask(crop(ah_stack_v1,ext(shp)), shp)
+  names(ah_stack_shp) <-wy_names
+  
   # srad  
   srad_list <- list.files("./rasters/gridmet/srad/", full.names = TRUE)
   srad_stack_v1 <-rast(srad_list[1:32])
@@ -170,16 +184,16 @@ generate_gridmet_df <-function(basin_paths_list){
   
   fm_df_v1 <-as.data.frame(fm_stack, xy = TRUE, cell = TRUE)
   
-  fm_df <- tidyr::pivot_longer(fm_df_v1, cols = 16:47, 
+  fm_df <- tidyr::pivot_longer(fm_df_v1, cols = 17:48, 
                                names_to = 'wy', values_to = 'frac_melt')
   
-  # fm
+  # mwa
   mwa_stack <-c(static_vars_stack,
                mwa_stack_shp) # mwa
   
   mwa_df_v1 <-as.data.frame(mwa_stack, xy = TRUE, cell = TRUE)
   
-  mwa_df <- tidyr::pivot_longer(mwa_df_v1, cols = 16:47, 
+  mwa_df <- tidyr::pivot_longer(mwa_df_v1, cols = 17:48, 
                                names_to = 'wy', values_to = 'mwa_mm')
   
   # mswe
@@ -187,7 +201,7 @@ generate_gridmet_df <-function(basin_paths_list){
                mswe_stack_shp) # fm
   mswe_df_v1 <-as.data.frame(mswe_stack, xy = TRUE, cell = TRUE)
   
-  mswe_df <- tidyr::pivot_longer(mswe_df_v1, cols = 16:47, 
+  mswe_df <- tidyr::pivot_longer(mswe_df_v1, cols = 17:48, 
                                names_to = 'wy', values_to = 'mswe_mm')
   
   # dom
@@ -195,7 +209,7 @@ generate_gridmet_df <-function(basin_paths_list){
                  dom_stack_shp) # fm
   dom_df_v1 <-as.data.frame(dom_stack, xy = TRUE, cell = TRUE)
   
-  dom_df <- tidyr::pivot_longer(dom_df_v1, cols = 16:47, 
+  dom_df <- tidyr::pivot_longer(dom_df_v1, cols = 17:48, 
                                  names_to = 'wy', values_to = 'dom_dowy')
   
   
@@ -205,7 +219,7 @@ generate_gridmet_df <-function(basin_paths_list){
                 tmean_stack_shp) # fm
   tmean_df_v1 <-as.data.frame(tmean_stack, xy = TRUE, cell = TRUE)
   
-  tmean_df <- tidyr::pivot_longer(tmean_df_v1, cols = 16:47, 
+  tmean_df <- tidyr::pivot_longer(tmean_df_v1, cols = 17:48, 
                                 names_to = 'wy', values_to = 'temp_mean_c')
   
   
@@ -214,15 +228,24 @@ generate_gridmet_df <-function(basin_paths_list){
                   rmean_stack_shp) # fm
   rmean_df_v1 <-as.data.frame(rmean_stack, xy = TRUE, cell = TRUE)
   
-  rmean_df <- tidyr::pivot_longer(rmean_df_v1, cols = 16:47, 
+  rmean_df <- tidyr::pivot_longer(rmean_df_v1, cols = 17:48, 
                                   names_to = 'wy', values_to = 'rh_mean_%')
+  
+  # ah
+  ah_stack <-c(static_vars_stack,
+                  ah_stack_shp) # fm
+  
+  ah_df_v1 <-as.data.frame(ah_stack, xy = TRUE, cell = TRUE)
+  
+  ah_df <- tidyr::pivot_longer(ah_df_v1, cols = 17:48, 
+                                  names_to = 'wy', values_to = 'abs_hum_gcm3')
   
   # srad
   srad_stack <-c(static_vars_stack,
                   srad_stack_shp) # fm
   srad_df_v1 <-as.data.frame(srad_stack, xy = TRUE, cell = TRUE)
   
-  srad_df <- tidyr::pivot_longer(srad_df_v1, cols = 16:47, 
+  srad_df <- tidyr::pivot_longer(srad_df_v1, cols = 17:48, 
                                   names_to = 'wy', values_to = 'srad_wm2')
   
   # srad
@@ -230,7 +253,7 @@ generate_gridmet_df <-function(basin_paths_list){
                  sph_stack_shp) # fm
   sph_df_v1 <-as.data.frame(sph_stack, xy = TRUE, cell = TRUE)
   
-  sph_df <- tidyr::pivot_longer(sph_df_v1, cols = 16:47, 
+  sph_df <- tidyr::pivot_longer(sph_df_v1, cols = 17:48, 
                                  names_to = 'wy', values_to = 'sph_kgkg')
   
   # full join all 7 data frames
@@ -239,19 +262,20 @@ generate_gridmet_df <-function(basin_paths_list){
   a_df3 <-full_join(a_df2, dom_df)
   a_df4 <-full_join(a_df3, tmean_df)
   a_df5 <-full_join(a_df4, rmean_df)
-  a_df6 <-full_join(a_df5, srad_df)
-  a_df7 <-full_join(a_df6, sph_df)
+  a_df6 <-full_join(a_df5, ah_df)
+  a_df7 <-full_join(a_df6, srad_df)
+  a_df8 <-full_join(a_df7, sph_df)
   
   # add basin name col
-  a_df8 <-cbind(rep(basin_name, nrow(a_df7)), a_df7)
-  colnames(a_df8)[1] <-"basin_name"
-  head(a_df8)
-  a_df9 <-a_df8 %>% na.omit()
-  #write.csv(head(a_df9), "./csvs/gridmet_dfs/head_df.csv")
+  a_df9 <-cbind(rep(basin_name, nrow(a_df8)), a_df8)
+  colnames(a_df9)[1] <-"basin_name"
+  a_df10 <-a_df9 %>% na.omit()
+  head(a_df10)
+  # write.csv(head(a_df10), "./csvs/gridmet_dfs/head_df_v4.csv")
   
   # save
-  saving_name <-paste0(basin_name,"_full_stats_v3.csv")
-  fwrite(a_df9, paste0("./csvs/gridmet_dfs/",saving_name))
+  saving_name <-paste0(basin_name,"_full_stats_v4.csv")
+  fwrite(a_df10, paste0("./csvs/gridmet_dfs/",saving_name))
   print(paste0(basin_name, " is done!"))
 }
 

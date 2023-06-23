@@ -43,107 +43,33 @@ theme_set(theme_classic(16))
 # set working dir
 setwd("~/ch1_margulis")
 
-# # read in stack american stack
-# fm_list <-list.files("./rasters/snow_metrics/fm_apr1", full.names = TRUE)
-# fm_stack <-rast(fm_list[33])
-# fm_stack
-# 
-# # read in stack american stack
-# max_list <-list.files("./rasters/snow_metrics/max_swe", full.names = TRUE)
-# max_stack <-rast(max_list[2])
-# max_stack
-# 
-# # bring in ns aspect
-# dem_6b <-rast("./rasters/categorized/dem_6zb.tif")
-# plot(dem_6b)
-# 
-# # bring in ns aspect
-# aspect_v1 <-rast("./rasters/categorized/aspect_thres_4_classes.tif")
-# aspect_ns <-subst(aspect_v1,c(2,4),NA)
-# plot(aspect_ns)
-# 
-# # stack with dem bins and aspect
-# fm_stack <-c(dem_6b,aspect_ns,fm_stack)
-# max_stack <-c(dem_6b,aspect_ns,max_stack)
-# 
-# # convert to df
-# fm_df <-as.data.frame(fm_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
-# max_df <-as.data.frame(max_stack, xy = TRUE, cells = TRUE, na.rm = TRUE)
-# 
-# # years seq
-# years <-seq(1985,2016,1)
-# 
-# # rename columns, which are the annual rasters, with the correct year name
-# colnames(max_df)[6:ncol(max_df)] <-years
-# colnames(max_df)[3:5] <-c("y","ez","aspect")
-# 
-# colnames(fm_df)[6:ncol(fm_df)] <-years
-# colnames(fm_df)[3:5] <-c("y","ez","aspect")
-# 
-# # pivot longer for test
-# # creates "year" col and "fm_percent" col while preserving meta data info
-# fm_long_df <-as.data.frame((fm_df) %>%
-#  pivot_longer(-c(cell,x,y,ez,aspect), names_to = "year", values_to = "frac_melt"))
-# 
-# head(fm_long_df)
-# 
-# max_long_df <-as.data.frame((max_df) %>%
-#                              pivot_longer(-c(cell,x,y,ez,aspect), names_to = "year", values_to = "max_swe"))
-# head(max_long_df)
-# 
-# fwrite(fm_long_df, "./csvs/fm_boxplot_df_v2.csv")
-# fwrite(max_long_df, "./csvs/max_boxplot_df_v2.csv")
 
-## add mwa_mm
-mwa_list <-list.files("./rasters/snow_metrics/mwa_ondjfm_mm", pattern = "tif", full.names = TRUE)
-mwa_stack <-rast(mwa_list)
-mwa_df <-as.data.frame(mwa_stack, cells = TRUE)
-
-# years seq
-years <-seq(1985,2016,1)
-
-# rename columns, which are the annual rasters, with the correct year name
-colnames(mwa_df)[2:ncol(mwa_df)] <-years
-
-# pivot longer for test
-# creates "year" col and "fm_percent" col while preserving meta data info
-mwa_long_df <-as.data.frame((mwa_df) %>%
- pivot_longer(cols=2:33, names_to = "year", values_to = "mwa_mm"))
-head(mwa_long_df)
 
 ##############################################
-yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats.csv_v2.csv")
-usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats.csv_v2.csv")
-kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats.csv_v2.csv")
+yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats_v4.csv")
+usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats_v4.csv")
+kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats_v4.csv")
 
 # join
 joined_df_v1 <-as.data.table(bind_rows(yuba_df, usj_df, kern_df))
 joined_df <-dplyr::filter(joined_df_v1, aspect != 2 & aspect != 4)
 
-# add mwa
-mwa_filt <-subset(mwa_long_df, cell %in% joined_df$cell)
-
-
 # read back in using data.table
-df <-joined_df[sample(.N, 500000)]
-head(df)
-
+df <-joined_df
 
 # rename
 df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
 df$bin_name <-ifelse(df$ez == 2, "1900-2300 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 3, "2300-2700 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
-df$bin_name <-ifelse(df$ez == 5, "3100-3500 m", df$bin_name)
-df$bin_name <-ifelse(df$ez == 6, "3500-4361 m", df$bin_name)
+df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
+df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
 
 head(df)
 
 # test hists
-hist(joined_df$frac_melt, breaks = 50)
 hist(df$frac_melt, breaks = 50)
-mean(joined_df$frac_melt, na.rm = TRUE)
-mean(df$frac_melt, na.rm = TRUE)
+hist(df$mwa_mm, breaks = 50)
 
 ##################################
 #### make time series box plot ###
@@ -153,7 +79,8 @@ mean(df$frac_melt, na.rm = TRUE)
 grouped_box_plot_top <-function(variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+    geom_boxplot(linewidth = .3, width = .7,  position = 'dodge',
+                 outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01) +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -175,11 +102,12 @@ grouped_box_plot_top <-function(variable, min,max, ylab){
   
   return(p)
 }
-
 grouped_box_plot_mid <-function(variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+    geom_boxplot(linewidth = .3, width = .7, 
+                 outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01,
+                 position = 'dodge') +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -199,11 +127,12 @@ grouped_box_plot_mid <-function(variable, min,max, ylab){
   
   return(p)
 }
-
 grouped_box_plot_bot <-function(variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .7, outlier.size = .01, outlier.shape = 1, position = 'dodge') +
+    geom_boxplot(linewidth = .3, width = .7, 
+                 outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01,
+                 position = 'dodge') +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -225,59 +154,57 @@ grouped_box_plot_bot <-function(variable, min,max, ylab){
 }
 
 ####################################
-######## plot 3 snow variables #####
+######## plot 4 snow variables #####
 ####################################
 
 max_p <-grouped_box_plot_top(variable = df$mswe_mm/10, 
-                             min = 0, max = 300, ylab = "Max SWE (cm)")
+                             min = 0, max = 250, ylab = "Max SWE (cm)")
 
-dom_p <-grouped_box_plot_mid(variable = df$dom_dowy, 
+mwa_p <-grouped_box_plot_mid(variable = df$mwa_mm/10, 
+                             min = 0, max = 50, ylab = "MWA (cm)")
+
+fm_p <-grouped_box_plot_mid(variable = df$frac_melt, min = 0, max = 1, ylab = "FM")
+
+dom_p <-grouped_box_plot_bot(variable = df$dom_dowy, 
                              min = 50, max = 250, ylab = "DOM (DOWY)")
 
-fm_p <-grouped_box_plot_bot(variable = df$frac_melt, min = 0, max = 1, ylab = "FM")
-
-max_p
 
 # cowplot
-snow_cow <-plot_grid(max_p, dom_p, fm_p,
-                     labels = c("(a)", "(b)", "(c)"),
-                     nrow = 3, 
+snow_cow <-plot_grid(max_p, mwa_p, fm_p, dom_p, 
+                     labels = c("(a)", "(b)", "(c)","(d)"),
+                     nrow = 4, 
                      align = "v",
                      axis = "b",
                      label_size = 14,
                      vjust =  2.4,
-                     hjust = -2.8,
-                     rel_heights = c(.35, .3,.35))
+                     hjust = -2.6,
+                     rel_heights = c(.28,.22,.22,.28))
 
-plot(snow_cow)
+# plot(snow_cow)
 
 ggsave(snow_cow,
-       file = "./plots/snow3_boxplot_v2.png",
+       file = "./plots/snow4_boxplot_v5.png",
        width = 9, 
        height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/snow3_boxplot_v2.png")
+system("open ./plots/snow4_boxplot_v5.png")
 
 ####################################
 ######## plot 4 met  variables #####
 ####################################
 temp_p <-grouped_box_plot_top(variable = df$temp_mean_c, 
                               min = -7, max = 10, ylab = expression('ONDJFM ' ~T["Mean"] ~ '(°C)'))
-temp_p
 
 ah_p <-grouped_box_plot_mid(variable = df$abs_hum_gcm3, 
                             min = 1.5, max = 5, ylab = expression("AH (g cm"^-3*")"))
-ah_p
 
 srad_p <-grouped_box_plot_mid(variable = df$srad_wm2, 
                               min = 120, max = 170, ylab = expression("Insolation"~paste("(W m"^{-2},")")))
 
 insol_p <-grouped_box_plot_bot(variable = df$insol_watts, 
                                min = 30, max = 270, ylab = expression("CS Insolation"~paste("(W m"^{-2},")")))
-
-insol_p
 
 # cowplot test
 met_cow <-plot_grid(temp_p, ah_p, srad_p, insol_p,
@@ -286,20 +213,20 @@ met_cow <-plot_grid(temp_p, ah_p, srad_p, insol_p,
                     align = "v",
                     axis = "b",
                     label_size = 14,
-                    vjust =  2.4,
+                    vjust =  2.3,
                     hjust = -2.8,
                     rel_heights = c(.28,.22,.22,.28))
 
 # plot(met_cow)
 
 ggsave(met_cow,
-       file = "./plots/met4_boxplot_v2.png",
+       file = "./plots/met4_boxplot_v4.png",
        width = 9, 
        height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/met4_boxplot_v2.png")
+system("open ./plots/met4_boxplot_v4.png")
 
 
 
