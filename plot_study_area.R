@@ -305,7 +305,7 @@ kern_dem_plot <-plot_dem_nl(kern_df, kern_sf)
 kern_cc_plot <-plot_cc_nl(kern_df, kern_sf)
 kern_ez_plot <-plot_ez_nl(kern_df, kern_sf)
 kern_cow <-ggarrange(kern_dem_plot, kern_cc_plot, kern_ez_plot,
-                     labels = c("(a)"),
+                     labels = c("(b)"),
                      align = "h", # Align them both, horizontal and vertical
                      ncol = 3,
                      vjust =  2.7,
@@ -367,7 +367,7 @@ ca_plot <-ggplot(dem_full_df) +
     geom_sf(data = kern_sf, fill = NA, color = "red", linewidth = .5) +
     geom_sf(data = yuba_sf, fill = NA, color = "orange", linewidth = .5) +
     geom_sf(data = usj_sf, fill = NA, color = "purple", linewidth = .5) +
-    geom_text(x = -122.5, y = 41.6, label = "(a)", color = "black", size = 4, fontface = "bold")+
+    geom_text(x = -122.8, y = 41.8, label = "(a)", color = "black", size = 6, fontface = "bold")+
     coord_sf(label_graticule = "NW") +
     ylim(limits = c(35.4219961410279, 41.858638835292)) +
     scale_x_continuous(breaks = c(-122,-120,-118), limits = c(-123.065041220838, -117.651990878793), position = 'top') +
@@ -405,8 +405,8 @@ full_cow <-ggarrange(kern_and_inset,yuba_cow, usj_cow,
                      heights = c(1.4,.9,1.4))  
 ggsave(full_cow,
        file = "./plots/study_area_v1.png",
-       width = 11, 
+       width = 11.5, 
        height = 11.5,
-       dpi = 600)
+       dpi = 300)
 
 system("open ./plots/study_area_v1.png")
