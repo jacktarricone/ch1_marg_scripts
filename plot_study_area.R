@@ -52,6 +52,16 @@ snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
 # with sf
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
 snsr_sf <-st_geometry(snsr_v1)
+snsr_v <-vect(snsr_sf)
+
+# ca state boundary
+ca <-st_geometry(st_read("./vectors/California_State_Boundary/California_State_Boundary.shp"))
+ca_v <-vect(ca)
+plot(dem_v1)
+plot(ca_v, add = TRUE)
+plot(kern_v, add = TRUE)
+plot(usj_v, add = TRUE)
+plot(yuba_v, add = TRUE)
 
 # kern
 kern_sf <-st_geometry(st_read("./vectors/ca_basins/kern.gpkg"))
@@ -118,17 +128,58 @@ usj_df <-add_cat_vars(df = usj_df_v1)
 yuba_df <-add_cat_vars(df = yuba_df_v1)
 
 
-######################
-######################
-######## topo ########
-######################
-######################
-
+## define color scales
 # set scale
 topo_table <-read.csv("./gis/topo_colors.csv")
 topo_colors <-c(topo_table$colors)
+cc_scale <-c(brewer.pal(9, 'YlGn'))
+ez_colors <-c("palegreen", "palegreen4", "yellow", "sienna4", "white")
 
-# plot
+### define functions with and without color bor
+# ez
+plot_ez <-function(df, shp){
+  
+  ez_plot <-ggplot(df) +
+    geom_sf(data = shp, fill = "gray80", color = "black", linewidth = .1, inherit.aes = FALSE) +
+    geom_raster(data = df, mapping = aes(x,y, fill = as.factor(df$bin_name))) +
+    scale_fill_manual(values = ez_colors) +
+    labs(fill = "EZ") +
+    geom_sf(data = shp, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
+    theme(panel.border = element_blank(),
+          legend.key = element_rect(color = "black"),
+          axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "bottom",
+          legend.direction = "horizontal",
+          legend.text = element_text(size=10),
+          plot.margin = unit(c(0,0,0,0), "cm"),
+          legend.key.size = unit(.5, "cm")) + # Increase the spacing between legend items
+          guides(fill=guide_legend(nrow=2,byrow=TRUE))
+  return(ez_plot)
+}
+plot_ez_nl <-function(df, shp){
+  
+  ez_plot <-ggplot(df) +
+    geom_sf(data = shp, fill = "gray80", color = "black", linewidth = .1, inherit.aes = FALSE) +
+    geom_raster(data = df, mapping = aes(x,y, fill = as.factor(df$bin_name))) +
+    scale_fill_manual(values = ez_colors) +
+    labs(fill = "EZ") +
+    geom_sf(data = shp, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
+    theme(panel.border = element_blank(),
+          legend.key = element_rect(color = "black"),
+          axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = 'none')
+  return(ez_plot)
+}
+
+# dem
 plot_dem <-function(df, shp){
   
   dem_plot <-ggplot(df) +
@@ -136,8 +187,6 @@ plot_dem <-function(df, shp){
        geom_raster(mapping = aes(x,y, fill = df$dem)) +
        geom_sf(data = shp, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) +
        coord_sf(label_graticule = "NW") +
-       # scale_x_continuous(breaks = seq(-121.6,-120.4,.2), position = 'top') +
-       # scale_y_continuous(breaks = c(39.8,39.2,.2), position = 'top') +
        scale_fill_gradientn(colors = topo_colors, limits = c(1500,4000), na.value="#ebe9eb") + # max of color bar so it saturates
        labs(fill = "Elevation (m)") +
        theme(panel.border = element_blank(),
@@ -146,51 +195,49 @@ plot_dem <-function(df, shp){
              axis.title.x = element_blank(),
              axis.text.y = element_blank(),
              axis.ticks = element_blank(),
-             legend.position = "right",
+             legend.position = "bottom",
              plot.margin = unit(c(0,0,0,0), "cm"),
              legend.box.spacing = unit(0, "pt")) +
-       guides(fill = guide_colorbar(direction = "vertical",
-                                    label.position = 'right',
+       guides(fill = guide_colorbar(direction = "horizontal",
+                                    label.position = 'bottom',
                                     title.position ='top',
                                     title.hjust = .5,
-                                    barwidth = 1,
-                                    barheight = 10,
+                                    barwidth = 14,
+                                    barheight = 1,
                                     frame.colour = "black", 
                                     ticks.colour = "black")) 
 
     return(dem_plot)
 }
-kern_dem_plot <-plot_dem(kern_df, kern_sf)
-usj_dem_plot <-plot_dem(usj_df, usj_sf)
-yuba_dem_plot <-plot_dem(yuba_df, yuba_sf)
-plot(usj_dem_plot)
-
-# cowplot test
-cow_dem <-ggarrange(kern_dem_plot, usj_dem_plot, yuba_dem_plot,
-                    labels = c("","(a)"),
-                    common.legend = T, # COMMON LEGEND
-                    legend = "right", # legend position
-                    align = "v", # Align them both, horizontal and vertical
-                    ncol = 3,
-                    vjust =  2.7,
-                    hjust = 0,
-                    widths = c(.285, .75, 1),
-                    font.label = list(size = 18, color = "black", face = "bold"))  
-# save
-ggsave(cow_dem,
-       file = "./plots/cow_dem_v1.png",
-       width = 9.33, 
-       height = 3,
-       dpi = 600)
-
-system("open ./plots/cow_dem_v1.png")
-
-#######################
-##### cc test plot ####
-#######################
-
-# set scale 
-cc_scale <-c(brewer.pal(9, 'YlGn'))
+plot_dem_nl <-function(df, shp){
+  
+  dem_plot <-ggplot(df) +
+    geom_sf(data = shp, fill = "gray80", color = "black", linewidth = .1, inherit.aes = FALSE) +
+    geom_raster(mapping = aes(x,y, fill = df$dem)) +
+    geom_sf(data = shp, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) +
+    coord_sf(label_graticule = "NW") +
+    scale_fill_gradientn(colors = topo_colors, limits = c(1500,4000), na.value="#ebe9eb") + # max of color bar so it saturates
+    labs(fill = "Elevation (m)") +
+    theme(panel.border = element_blank(),
+          axis.text.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "none",
+          plot.margin = unit(c(0,0,0,0), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(fill = guide_colorbar(direction = "vertical",
+                                 label.position = 'right',
+                                 title.position ='top',
+                                 title.hjust = .5,
+                                 barwidth = 1,
+                                 barheight = 10,
+                                 frame.colour = "black", 
+                                 ticks.colour = "black")) 
+  
+  return(dem_plot)
+}
 
 # plot
 plot_cc <-function(df, shp){
@@ -207,7 +254,35 @@ plot_cc <-function(df, shp){
           axis.title.x = element_blank(),
           axis.text.y = element_blank(),
           axis.ticks = element_blank(),
-          legend.position = "right",
+          legend.position = "bottom",
+          plot.margin = unit(c(0,0,0,0), "cm"),
+          legend.box.spacing = unit(0, "pt")) +
+    guides(fill = guide_colorbar(direction = "horizontal",
+                                 label.position = 'bottom',
+                                 title.position ='top',
+                                 title.hjust = .5,
+                                 barwidth = 14,
+                                 barheight = 1,
+                                 frame.colour = "black", 
+                                 ticks.colour = "black")) 
+  
+  return(cc_plot)
+}
+plot_cc_nl <-function(df, shp){
+  
+  cc_plot <-ggplot(df) +
+    geom_sf(data = shp, fill = "gray80", color = "black", linewidth = .1, inherit.aes = FALSE) +
+    geom_raster(mapping = aes(x,y, fill = df$cc_percent)) +
+    geom_sf(data = shp, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) +
+    scale_fill_gradientn(colors = cc_scale, limits = c(0,70), na.value="#ebe9eb") + # max of color bar so it saturates
+    labs(fill = "CC (%)") +
+    theme(panel.border = element_blank(),
+          axis.text.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = 'none',
           plot.margin = unit(c(0,0,0,0), "cm"),
           legend.box.spacing = unit(0, "pt")) +
     guides(fill = guide_colorbar(direction = "vertical",
@@ -221,88 +296,77 @@ plot_cc <-function(df, shp){
   
   return(cc_plot)
 }
-kern_cc_plot <-plot_cc(kern_df, kern_sf)
-usj_cc_plot <-plot_cc(usj_df, usj_sf)
-yuba_cc_plot <-plot_cc(yuba_df, yuba_sf)
-# plot(yuba_cc_plot)
 
-# cowplot test
-cow_cc <-ggarrange(kern_cc_plot, usj_cc_plot, yuba_cc_plot,
-                    labels = c("","(b)"),
-                    common.legend = T, # COMMON LEGEND
-                    legend = "right", # legend position
-                    align = "v", # Align them both, horizontal and vertical
+## kern
+kern_dem_plot <-plot_dem_nl(kern_df, kern_sf)
+kern_cc_plot <-plot_cc_nl(kern_df, kern_sf)
+kern_ez_plot <-plot_ez_nl(kern_df, kern_sf)
+kern_cow <-ggarrange(kern_dem_plot, kern_cc_plot, kern_ez_plot,
+                     labels = c("(a)"),
+                     align = "h", # Align them both, horizontal and vertical
+                     ncol = 3,
+                     vjust =  2.7,
+                     hjust = -.5,
+                     widths = c(1, 1, 1),
+                     font.label = list(size = 18, color = "black", face = "bold"))  
+
+kern_cow
+
+## yuba
+yuba_dem_plot <-plot_dem_nl(yuba_df, yuba_sf)
+yuba_cc_plot <-plot_cc_nl(yuba_df, yuba_sf)
+yuba_ez_plot <-plot_ez_nl(yuba_df, yuba_sf)
+yuba_cow <-ggarrange(yuba_dem_plot, yuba_cc_plot, yuba_ez_plot,
+                     labels = c("(c)"),
+                     align = "h", # Align them both, horizontal and vertical
+                     ncol = 3,
+                     vjust =  2.7,
+                     hjust = -.5,
+                     widths = c(1, 1, 1),
+                     font.label = list(size = 18, color = "black", face = "bold"))  
+
+yuba_cow
+
+## usj
+usj_dem_plot <-plot_dem(usj_df, usj_sf)
+usj_cc_plot <-plot_cc(usj_df, usj_sf)
+usj_ez_plot <-plot_ez(usj_df, usj_sf)
+usj_cow <-ggarrange(usj_dem_plot, usj_cc_plot, usj_ez_plot,
+                     labels = c("(b)"),
+                     align = "h", # Align them both, horizontal and vertical
+                     ncol = 3,
+                     vjust =  2.7,
+                     hjust = -.5,
+                     widths = c(1, 1, 1),
+                     font.label = list(size = 18, color = "black", face = "bold"))  
+
+usj_cow
+
+## yuba
+yuba_dem_plot <-plot_dem(yuba_df, yuba_sf)
+yuba_cc_plot <-plot_cc(yuba_df, yuba_sf)
+yuba_ez_plot <-plot_ez(yuba_df, yuba_sf)
+yuba_cow <-ggarrange(yuba_dem_plot, yuba_cc_plot, yuba_ez_plot,
+                    labels = c("(c)"),
+                    align = "h", # Align them both, horizontal and vertical
                     ncol = 3,
                     vjust =  2.7,
-                    hjust = 0,
-                    widths = c(.285, .75, 1),
-                    font.label = list(size = 20, color = "black", face = "bold"))  
-# save
-ggsave(cow_cc,
-       file = "./plots/cow_cc_v1.png",
-       width = 9.33, 
-       height = 3,
-       dpi = 600)
+                    hjust = -.5,
+                    widths = c(1, 1, 1),
+                    font.label = list(size = 18, color = "black", face = "bold"))  
 
-system("open ./plots/cow_cc_v1.png")
+yuba_cow
 
-
-#######################
-######  aspect ########
-#######################
-
-ez_colors <-c("palegreen", "palegreen4", "yellow", "sienna4", "white")
-
-
-plot_ez <-function(df, shp){
-  
-  ez_plot <-ggplot(df) +
-    geom_sf(data = shp, fill = "gray80", color = "black", linewidth = .1, inherit.aes = FALSE) +
-    geom_raster(data = df, mapping = aes(x,y, fill = as.factor(df$bin_name))) +
-    scale_fill_manual(values = ez_colors) +
-    labs(fill = "EZ") +
-    geom_sf(data = shp, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
-    theme(panel.border = element_blank(),
-          legend.key = element_rect(color = "black"),
-          axis.title.y = element_blank(),
-          axis.title.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks = element_blank(),
-          legend.position = "right",
-          legend.direction = "vertical",
-          legend.text = element_text(size=12),
-          plot.margin = unit(c(0,0,0,0), "cm"),
-          legend.key.size = unit(.98, "cm")) # Increase the spacing between legend items
-  return(ez_plot)
-}
-
-kern_ez_plot <-plot_ez(kern_df, kern_sf)
-usj_ez_plot <-plot_ez(usj_df, usj_sf)
-yuba_ez_plot <-plot_ez(yuba_df, yuba_sf)
-
-# cowplot test
-cow_ez <-ggarrange(kern_ez_plot, usj_ez_plot, yuba_ez_plot,
-                   labels = c("","(c)"),
-                   common.legend = T, # COMMON LEGEND
-                   legend = "right", # legend position
-                   align = "v", # Align them both, horizontal and vertical
-                   ncol = 3,
-                   vjust =  2.7,
-                   hjust = 0,
-                   widths = c(.285, .75, 1),
-                   font.label = list(size = 18, color = "black", face = "bold"))  
-# save
-ggsave(cow_ez,
-       file = "./plots/cow_ez_v1.png",
-       width = 9.33, 
-       height = 3,
-       dpi = 600)
-
-system("open ./plots/cow_ez_v1.png")
 
 
 # full
 full_cow <-ggarrange(cow_dem, cow_cc, cow_ez,
-                     nrow = 3)  
-full_cow  
+                     nrow = 3,
+                     heights = c(1,1,1))  
+ggsave(full_cow,
+       file = "./plots/study_area_v1.png",
+       width = 9.33, 
+       height = 8.5,
+       dpi = 600)
+
+system("open ./plots/study_area_v1.png")
