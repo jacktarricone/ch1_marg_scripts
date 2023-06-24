@@ -166,16 +166,16 @@ yuba_dem_plot <-plot_dem(yuba_df, yuba_sf)
 plot(usj_dem_plot)
 
 # cowplot test
-cow_dem <-ggarrange(yuba_dem_plot, usj_dem_plot, kern_dem_plot,
-                    labels = c("(a) Yuba", "USJ", "Kern"),
+cow_dem <-ggarrange(kern_dem_plot, usj_dem_plot, yuba_dem_plot,
+                    labels = c("","(a)"),
                     common.legend = T, # COMMON LEGEND
                     legend = "right", # legend position
                     align = "v", # Align them both, horizontal and vertical
                     ncol = 3,
-                    vjust =  3,
-                    hjust = .2,
-                    widths = c(1, .75, .285),
-                    font.label = list(size = 14, color = "black", face = "bold"))  
+                    vjust =  2.7,
+                    hjust = 0,
+                    widths = c(.285, .75, 1),
+                    font.label = list(size = 18, color = "black", face = "bold"))  
 # save
 ggsave(cow_dem,
        file = "./plots/cow_dem_v1.png",
@@ -215,7 +215,7 @@ plot_cc <-function(df, shp){
                                  title.position ='top',
                                  title.hjust = .5,
                                  barwidth = 1,
-                                 barheight = 10,
+                                 barheight = 10.9,
                                  frame.colour = "black", 
                                  ticks.colour = "black")) 
   
@@ -224,19 +224,19 @@ plot_cc <-function(df, shp){
 kern_cc_plot <-plot_cc(kern_df, kern_sf)
 usj_cc_plot <-plot_cc(usj_df, usj_sf)
 yuba_cc_plot <-plot_cc(yuba_df, yuba_sf)
-plot(usj_cc_plot)
+# plot(yuba_cc_plot)
 
 # cowplot test
-cow_cc <-ggarrange(yuba_cc_plot, usj_cc_plot, kern_cc_plot,
-                    labels = c("(a) Yuba", "USJ", "Kern"),
+cow_cc <-ggarrange(kern_cc_plot, usj_cc_plot, yuba_cc_plot,
+                    labels = c("","(b)"),
                     common.legend = T, # COMMON LEGEND
                     legend = "right", # legend position
                     align = "v", # Align them both, horizontal and vertical
                     ncol = 3,
-                    vjust =  3,
-                    hjust = .2,
-                    widths = c(1, .75, .285),
-                    font.label = list(size = 14, color = "black", face = "bold"))  
+                    vjust =  2.7,
+                    hjust = 0,
+                    widths = c(.285, .75, 1),
+                    font.label = list(size = 20, color = "black", face = "bold"))  
 # save
 ggsave(cow_cc,
        file = "./plots/cow_cc_v1.png",
@@ -246,148 +246,63 @@ ggsave(cow_cc,
 
 system("open ./plots/cow_cc_v1.png")
 
-#######################
-#####     temp     ####
-#######################
-
-# set scale 
-temp_scale <-rev(brewer.pal(9, 'Spectral'))
-head(temp_df)
-
-# plot
-temp_plot <-ggplot(temp_df) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray 
-  geom_tile(mapping = aes(x,y, fill = mean)) +
-  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
-  coord_sf(label_graticule = "N") +
-  scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
-  scale_fill_gradientn(colors = temp_scale, limits = c(-6,6), oob = squish) + # max of color bar so it saturates
-  labs(fill = "Mean ONDJFM Temperature (°C)") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
-        axis.text.x =element_text(color="black"),
-        axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.y = element_text(color="black"),
-        legend.position = "bottom",
-        plot.margin = unit(c(0,0,0,0), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "horizontal",
-                               label.position = 'top',
-                               title.position ='bottom',
-                               title.hjust = .5,
-                               barwidth = 18,
-                               barheight = 1,
-                               frame.colour = "black", 
-                               ticks.colour = "black")) 
-
-# save
-ggsave(temp_plot,
-       file = "./plots/temp_plot_v3.png",
-       width = 4.8, 
-       height = 8.5,
-       dpi = 600)
-
-system("open ./plots/temp_plot_v3.png")
-
-
-
-#######################
-#####     insol   ####
-#######################
-
-# set scale 
-insol_scale <-viridis(30, option = "A")
-head(insol_df)
-
-# plot
-insol_plot <-ggplot(insol_df) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray 
-  geom_tile(mapping = aes(x,y, fill = mean)) +
-  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .15, inherit.aes = FALSE) + # for black line
-  coord_sf(label_graticule = "N") +
-  scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
-  scale_fill_gradientn(colors = insol_scale, limits = c(30,260), oob = squish) + # max of color bar so it saturates
-  labs(fill = expression(Mean ~ ONDJDM ~ Insolation ~ '(W m'^{"-2"} ~ ')')) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
-        axis.text.x =element_text(color="black"),
-        axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.y = element_text(color="black"),
-        legend.position = "bottom",
-        plot.margin = unit(c(0,0,0,0), "cm"),
-        legend.box.spacing = unit(0, "pt")) +
-  guides(fill = guide_colorbar(direction = "horizontal",
-                               label.position = 'top',
-                               title.position ='bottom',
-                               title.hjust = .5,
-                               barwidth = 18,
-                               barheight = 1,
-                               frame.colour = "black", 
-                               ticks.colour = "black")) 
-
-# save
-ggsave(insol_plot,
-       file = "./plots/insol_plot_v3.png",
-       width = 4.8, 
-       height = 8.5,
-       dpi = 600)
-
-system("open ./plots/insol_plot_v3.png")
-
 
 #######################
 ######  aspect ########
 #######################
 
-aspect_colors <-c("palegreen", "palegreen4", "sienna1", "sienna4", "grey70", "grey30")
+ez_colors <-c("palegreen", "palegreen4", "yellow", "sienna4", "white")
 
-# plot
-ez_plot <-ggplot(ez_df) +
-  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) + # for gray
-  geom_tile(data = ez_df, mapping = aes(x,y, fill = cat)) +
-  scale_fill_manual(# name = expression(paste("Zones")),
-                    values = aspect_colors, 
-                    breaks = c("EZ1_N","EZ1_S", "EZ2_N", "EZ2_S","EZ3_N", "EZ3_S")) +
-  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
-  coord_sf(label_graticule = "N") +
-  scale_x_continuous(breaks = c(-122,-120,-118), position = 'top') +
-  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
-        axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(color="black"),
-        axis.text.y = element_blank(),
-        legend.position = "bottom",
-        legend.title = element_blank(),
-        legend.text = element_text(size=14),
-        plot.margin = unit(c(0,0,0,0), "cm"),
-        legend.box.spacing = unit(0, "pt")) 
 
-# save
-ggsave(ez_plot,
-       file = "./plots/ez_bins_plot_v5.png",
-       width = 4.8, 
-       height = 8.5,
-       dpi = 600)
+plot_ez <-function(df, shp){
+  
+  ez_plot <-ggplot(df) +
+    geom_sf(data = shp, fill = "gray80", color = "black", linewidth = .1, inherit.aes = FALSE) +
+    geom_raster(data = df, mapping = aes(x,y, fill = as.factor(df$bin_name))) +
+    scale_fill_manual(values = ez_colors) +
+    labs(fill = "EZ") +
+    geom_sf(data = shp, fill = NA, color = "black", linewidth = .3, inherit.aes = FALSE) + # for black line
+    theme(panel.border = element_blank(),
+          legend.key = element_rect(color = "black"),
+          axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "right",
+          legend.direction = "vertical",
+          legend.text = element_text(size=12),
+          plot.margin = unit(c(0,0,0,0), "cm"),
+          legend.key.size = unit(.98, "cm")) # Increase the spacing between legend items
+  return(ez_plot)
+}
 
-system("open ./plots/ez_bins_plot_v5.png")
-
+kern_ez_plot <-plot_ez(kern_df, kern_sf)
+usj_ez_plot <-plot_ez(usj_df, usj_sf)
+yuba_ez_plot <-plot_ez(yuba_df, yuba_sf)
 
 # cowplot test
-full <-plot_grid(dem_plot, cc_plot, ez_plot,
-                 labels = c("(a)", "(b)", "(c)"),
-                 ncol = 3, 
-                 align = "hv",
-                 label_size = 22,
-                 vjust =  3,
-                 hjust = -2,
-                 rel_widths = c(1/3, 1/3, 1/3))
-# test save
-# make tighter together
-ggsave(full,
-       file = "./plots/study_area_v8.png",
-       width = 15.5, 
-       height = 8.5,
+cow_ez <-ggarrange(kern_ez_plot, usj_ez_plot, yuba_ez_plot,
+                   labels = c("","(c)"),
+                   common.legend = T, # COMMON LEGEND
+                   legend = "right", # legend position
+                   align = "v", # Align them both, horizontal and vertical
+                   ncol = 3,
+                   vjust =  2.7,
+                   hjust = 0,
+                   widths = c(.285, .75, 1),
+                   font.label = list(size = 18, color = "black", face = "bold"))  
+# save
+ggsave(cow_ez,
+       file = "./plots/cow_ez_v1.png",
+       width = 9.33, 
+       height = 3,
        dpi = 600)
 
-system("open ./plots/study_area_v8.png")
-  
+system("open ./plots/cow_ez_v1.png")
+
+
+# full
+full_cow <-ggarrange(cow_dem, cow_cc, cow_ez,
+                     nrow = 3)  
+full_cow  
