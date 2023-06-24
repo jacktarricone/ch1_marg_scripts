@@ -55,7 +55,9 @@ snsr_sf <-st_geometry(snsr_v1)
 snsr_v <-vect(snsr_sf)
 
 # ca state boundary
-ca <-st_geometry(st_read("./vectors/California_State_Boundary/California_State_Boundary.shp"))
+ca_v1 <-st_geometry(st_read("/Users/jacktarricone/ch1_jemez/vector_data/states/cb_2018_us_state_20m.shp"))
+ca <-st_transform(ca_v1, "EPSG:4326")
+plot(ca)
 ca_v <-vect(ca)
 plot(dem_v1)
 plot(ca_v, add = TRUE)
@@ -82,6 +84,7 @@ yuba_v <-vect(yuba_sf)
 #### read in metrics
 dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
 names(dem_v1) <-"dem"
+dem_full_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
 
 cc_v1 <-rast("./rasters/nlcd_cc/cc_w0.tif")
 names(cc_v1) <-"cc_percent"
@@ -317,7 +320,7 @@ yuba_dem_plot <-plot_dem_nl(yuba_df, yuba_sf)
 yuba_cc_plot <-plot_cc_nl(yuba_df, yuba_sf)
 yuba_ez_plot <-plot_ez_nl(yuba_df, yuba_sf)
 yuba_cow <-ggarrange(yuba_dem_plot, yuba_cc_plot, yuba_ez_plot,
-                     labels = c("(c)"),
+                     labels = c("(b)"),
                      align = "h", # Align them both, horizontal and vertical
                      ncol = 3,
                      vjust =  2.7,
@@ -332,7 +335,7 @@ usj_dem_plot <-plot_dem(usj_df, usj_sf)
 usj_cc_plot <-plot_cc(usj_df, usj_sf)
 usj_ez_plot <-plot_ez(usj_df, usj_sf)
 usj_cow <-ggarrange(usj_dem_plot, usj_cc_plot, usj_ez_plot,
-                     labels = c("(b)"),
+                     labels = c("(d)"),
                      align = "h", # Align them both, horizontal and vertical
                      ncol = 3,
                      vjust =  2.7,
@@ -355,18 +358,55 @@ yuba_cow <-ggarrange(yuba_dem_plot, yuba_cc_plot, yuba_ez_plot,
                     widths = c(1, 1, 1),
                     font.label = list(size = 18, color = "black", face = "bold"))  
 
-yuba_cow
 
+## ca inset plot
+ca_plot <-ggplot(dem_full_df) +
+    geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) +
+    geom_sf(data = ca, fill = NA, color = "black", linewidth = .1) +
+    geom_raster(mapping = aes(x,y, fill = dem), inherit.aes = FALSE) +
+    geom_sf(data = kern_sf, fill = NA, color = "red", linewidth = .5) +
+    geom_sf(data = yuba_sf, fill = NA, color = "orange", linewidth = .5) +
+    geom_sf(data = usj_sf, fill = NA, color = "purple", linewidth = .5) +
+    geom_text(x = -122.5, y = 41.6, label = "(a)", color = "black", size = 4, fontface = "bold")+
+    coord_sf(label_graticule = "NW") +
+    ylim(limits = c(35.4219961410279, 41.858638835292)) +
+    scale_x_continuous(breaks = c(-122,-120,-118), limits = c(-123.065041220838, -117.651990878793), position = 'top') +
+    scale_fill_gradientn(colors = topo_colors, limits = c(1500,4000), na.value="#ebe9eb") + # max of color bar so it saturates
+    theme(panel.border = element_rect(fill = NA, color = "black"),
+          axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          legend.position = 'none',
+          plot.margin = unit(c(0,0,0,0), "cm"),
+          legend.box.spacing = unit(0, "pt")) 
 
+# ggsave(ca_plot,
+#        file = "./plots/ca_inset_v1.png",
+#        width = 4, 
+#        height = 5,
+#        dpi = 300)
+# 
+# system("open ./plots/ca_inset_v1.png")
 
 # full
-full_cow <-ggarrange(cow_dem, cow_cc, cow_ez,
+kern_and_inset <-ggarrange(ca_plot, kern_cow,
+                           ncol = 2,
+                           widths  = c(.55,1)) 
+
+# ggsave(kern_and_inset,
+#        file = "./plots/kern_inset_v1.png",
+#        width = 9,
+#        height = 4.5,
+#        dpi = 300)
+# 
+# system("open ./plots/kern_inset_v1.png")
+
+full_cow <-ggarrange(kern_and_inset,yuba_cow, usj_cow,
                      nrow = 3,
-                     heights = c(1,1,1))  
+                     heights = c(1.4,.9,1.4))  
 ggsave(full_cow,
        file = "./plots/study_area_v1.png",
-       width = 9.33, 
-       height = 8.5,
+       width = 11, 
+       height = 11.5,
        dpi = 600)
 
 system("open ./plots/study_area_v1.png")
