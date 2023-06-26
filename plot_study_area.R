@@ -305,37 +305,32 @@ kern_dem_plot <-plot_dem_nl(kern_df, kern_sf)
 kern_cc_plot <-plot_cc_nl(kern_df, kern_sf)
 kern_ez_plot <-plot_ez_nl(kern_df, kern_sf)
 kern_cow <-ggarrange(kern_dem_plot, kern_cc_plot, kern_ez_plot,
-                     labels = c("(b)"),
+                     labels = c("(b) Kern"),
                      align = "h", # Align them both, horizontal and vertical
                      ncol = 3,
                      vjust =  2.7,
-                     hjust = -.5,
+                     hjust = .3,
                      widths = c(1, 1, 1),
                      font.label = list(size = 18, color = "black", face = "bold"))  
-
-kern_cow
-
 ## yuba
 yuba_dem_plot <-plot_dem_nl(yuba_df, yuba_sf)
 yuba_cc_plot <-plot_cc_nl(yuba_df, yuba_sf)
 yuba_ez_plot <-plot_ez_nl(yuba_df, yuba_sf)
 yuba_cow <-ggarrange(yuba_dem_plot, yuba_cc_plot, yuba_ez_plot,
-                     labels = c("(b)"),
+                     labels = c("(c) Yuba"),
                      align = "h", # Align them both, horizontal and vertical
                      ncol = 3,
                      vjust =  2.7,
                      hjust = -.5,
                      widths = c(1, 1, 1),
                      font.label = list(size = 18, color = "black", face = "bold"))  
-
-yuba_cow
 
 ## usj
 usj_dem_plot <-plot_dem(usj_df, usj_sf)
 usj_cc_plot <-plot_cc(usj_df, usj_sf)
 usj_ez_plot <-plot_ez(usj_df, usj_sf)
 usj_cow <-ggarrange(usj_dem_plot, usj_cc_plot, usj_ez_plot,
-                     labels = c("(d)"),
+                     labels = c("(d) USJ"),
                      align = "h", # Align them both, horizontal and vertical
                      ncol = 3,
                      vjust =  2.7,
@@ -343,27 +338,11 @@ usj_cow <-ggarrange(usj_dem_plot, usj_cc_plot, usj_ez_plot,
                      widths = c(1, 1, 1),
                      font.label = list(size = 18, color = "black", face = "bold"))  
 
-usj_cow
-
-## yuba
-yuba_dem_plot <-plot_dem(yuba_df, yuba_sf)
-yuba_cc_plot <-plot_cc(yuba_df, yuba_sf)
-yuba_ez_plot <-plot_ez(yuba_df, yuba_sf)
-yuba_cow <-ggarrange(yuba_dem_plot, yuba_cc_plot, yuba_ez_plot,
-                    labels = c("(c)"),
-                    align = "h", # Align them both, horizontal and vertical
-                    ncol = 3,
-                    vjust =  2.7,
-                    hjust = -.5,
-                    widths = c(1, 1, 1),
-                    font.label = list(size = 18, color = "black", face = "bold"))  
-
-
 ## ca inset plot
 ca_plot <-ggplot(dem_full_df) +
     geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .1, inherit.aes = FALSE) +
     geom_sf(data = ca, fill = NA, color = "black", linewidth = .1) +
-    geom_raster(mapping = aes(x,y, fill = dem), inherit.aes = FALSE) +
+    geom_raster(mapping = aes(x,y, fill = dem, alpha = .5), inherit.aes = FALSE) +
     geom_sf(data = kern_sf, fill = NA, color = "red", linewidth = .5) +
     geom_sf(data = yuba_sf, fill = NA, color = "orange", linewidth = .5) +
     geom_sf(data = usj_sf, fill = NA, color = "purple", linewidth = .5) +
@@ -379,34 +358,18 @@ ca_plot <-ggplot(dem_full_df) +
           plot.margin = unit(c(0,0,0,0), "cm"),
           legend.box.spacing = unit(0, "pt")) 
 
-# ggsave(ca_plot,
-#        file = "./plots/ca_inset_v1.png",
-#        width = 4, 
-#        height = 5,
-#        dpi = 300)
-# 
-# system("open ./plots/ca_inset_v1.png")
-
 # full
 kern_and_inset <-ggarrange(ca_plot, kern_cow,
                            ncol = 2,
                            widths  = c(.55,1)) 
 
-# ggsave(kern_and_inset,
-#        file = "./plots/kern_inset_v1.png",
-#        width = 9,
-#        height = 4.5,
-#        dpi = 300)
-# 
-# system("open ./plots/kern_inset_v1.png")
-
-full_cow <-ggarrange(kern_and_inset,yuba_cow, usj_cow,
+full_cow <-ggarrange(kern_and_inset,yuba_cow,usj_cow,
                      nrow = 3,
                      heights = c(1.4,.9,1.4))  
 ggsave(full_cow,
-       file = "./plots/study_area_v1.png",
+       file = "./plots/kuy_study_area_v2.png",
        width = 11.5, 
        height = 11.5,
        dpi = 300)
 
-system("open ./plots/study_area_v1.png")
+system("open ./plots/kuy_study_area_v2.png")
