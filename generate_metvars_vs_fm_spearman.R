@@ -17,6 +17,11 @@ setwd("~/ch1_margulis")
 # head_df for col referencing
 df_paths <-list.files("./csvs/gridmet_dfs", full.names = TRUE, pattern = "full_stat")
 df_list <-lapply(df_paths, fread)
+colnames(df_list[[1]])[c(6,24)] <-c("mean_rh","rh_mean")
+colnames(df_list[[2]])[c(6,24)] <-c("mean_rh","rh_mean")
+colnames(df_list[[3]])[c(6,24)] <-c("mean_rh","rh_mean")
+
+basin_list <-df_list[[3]]
 
 # funciton to create basin results dataframes
 generate_spearman_df <-function(basin_list, variable){
@@ -56,7 +61,7 @@ generate_spearman_df <-function(basin_list, variable){
   single_cell_df <-as.data.frame(basin %>% group_by(cell) %>%
     slice(which.min(x)) %>%
     select(-c(frac_melt,variable,wy,mswe_mm,mwa_mm,dom_dowy,
-              'rh_mean_%', abs_hum_gcm3, srad_wm2, sph_kgkg)))
+              rh_mean, abs_hum_gcm3, srad_wm2, sph_kgkg)))
   
   # make spearman df
   cell <-as.vector(unique(results_v1$cell))
@@ -79,7 +84,7 @@ generate_spearman_df <-function(basin_list, variable){
 }
 
 # testing
-var_list <-c("mswe_mm","abs_hum_gcm3","temp_mean_c", "abs_hum_gcm3")
+var_list <-c("mswe_mm","abs_hum_gcm3","temp_mean_c", "srad_wm2")
 
 # apply function to four variables
 # temp_mean_c
@@ -98,7 +103,6 @@ mswe_df <-as.data.table(bind_rows(mswe_list))
 head(mswe_df)
 fwrite(mswe_df,"./csvs/spearman_results/KUY_mswe_mm_vs_fm_spearman_results_v2.csv")
 
-
 # srad
 lapply(df_list, function(x) generate_spearman_df(x, variable = "srad_wm2"))
 srad_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'srad')
@@ -107,10 +111,18 @@ srad_df <-as.data.table(bind_rows(srad_list))
 head(srad_df)
 fwrite(srad_df,"./csvs/spearman_results/KUY_srad_wm2_vs_fm_spearman_results_v2.csv")
 
-
+# ah
 lapply(df_list, function(x) generate_spearman_df(x, variable = "abs_hum_gcm3"))
-ah_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'srad')
+ah_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'abs')
 ah_list <-lapply(ah_paths, fread)
 ah_df <-as.data.table(bind_rows(ah_list))
 head(ah_df)
 fwrite(ah_df,"./csvs/spearman_results/KUY_abs_hum_gcm3_vs_fm_spearman_results_v2.csv")
+
+# rh mean
+lapply(df_list, function(x) generate_spearman_df(x, variable = "rh_mean"))
+rh_paths <-list.files("./csvs/spearman_results/kern_yuba_usj", full.names = TRUE, pattern = 'rh')
+rh_list <-lapply(rh_paths, fread)
+rh_df <-as.data.table(bind_rows(rh_list))
+head(rh_df)
+fwrite(rh_df,"./csvs/spearman_results/KUY_rh_mean_vs_fm_spearman_results_v2.csv")
