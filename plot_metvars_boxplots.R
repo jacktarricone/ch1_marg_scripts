@@ -168,3 +168,125 @@ ggsave(cow,
 system("open ./plots/metvars_boxplots_v1.png")
 
 
+ys <- yuba[sample(.N, 1000), ]
+y1 <-filter(yuba, ez ==3)
+listu <-unique(yuba$cell)
+y2 <-subset(y1, yuba$cell %in% listu[50:100])
+head(y2)
+
+ggplot(ys, aes(y = frac_melt, x = temp_mean_c))+
+  geom_point(alpha = .5, size = 2, shape = 4)
+
+ggplot(ys, aes(y = frac_melt, x = rh_mean))+
+  geom_point(alpha = .5, size = 2, shape = 4, color = "firebrick")
+
+
+# plot
+mycolors <-rev(brewer.pal(9, "Spectral"))
+
+ggplot(y2, aes(y = frac_melt, x = abs_hum_gcm3, color = wy))+
+  geom_point(alpha = .8, size = 2, shape = 4) +
+  scale_color_gradientn(colors = mycolors, limits = c(1985,2016), oob = squish) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        panel.background = element_rect(fill = 'white'),
+        aspect.ratio = 1,
+        legend.position  = 'bottom',
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(color = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position = 'bottom',
+                               title.hjust = .5,
+                               barwidth = 15,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+
+ggsave(file = "./plots/random_fm_ah_wy_v1.png",
+       width = 4.4, 
+       height = 5,
+       dpi = 300)
+
+system("open ./plots/random_fm_ah_wy_v1.png")
+
+
+ggplot(y2, aes(y = mswe_mm, x = abs_hum_gcm3, color = wy))+
+  geom_point(alpha = .8, size = 2, shape = 4) +
+  scale_color_gradientn(colors = mycolors, limits = c(1985,2016), oob = squish) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        panel.background = element_rect(fill = 'white'),
+        aspect.ratio = 1,
+        legend.position  = 'bottom',
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(color = guide_colorbar(direction = "horizontal",
+                                label.position = 'top',
+                                title.position = 'bottom',
+                                title.hjust = .5,
+                                barwidth = 15,
+                                barheight = 1,
+                                frame.colour = "black", 
+                                ticks.colour = "black"))
+
+ggsave(file = "./plots/random_mswe_ah_wy_v1.png",
+       width = 4.4, 
+       height = 5,
+       dpi = 300)
+
+system("open ./plots/random_mswe_ah_wy_v1.png")
+
+ggplot(y2, aes(y = srad_wm2, x = abs_hum_gcm3, color = wy))+
+  geom_point(alpha = .8, size = 2, shape = 4) +
+  scale_color_gradientn(colors = mycolors, limits = c(1985,2016), oob = squish) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        panel.background = element_rect(fill = 'white'),
+        aspect.ratio = 1,
+        legend.position  = 'bottom',
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(color = guide_colorbar(direction = "horizontal",
+                                label.position = 'top',
+                                title.position = 'bottom',
+                                title.hjust = .5,
+                                barwidth = 15,
+                                barheight = 1,
+                                frame.colour = "black", 
+                                ticks.colour = "black"))
+
+ggsave(file = "./plots/random_srad_ah_wy_v1.png",
+       width = 4.4, 
+       height = 5,
+       dpi = 300)
+
+system("open ./plots/random_srad_ah_wy_v1.png")
+
+ggplot(y2, aes(y = temp_mean_c, x = abs_hum_gcm3, color = wy))+
+  geom_point(alpha = .8, size = 2, shape = 4) +
+  scale_color_gradientn(colors = mycolors, limits = c(1985,2016), oob = squish) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        panel.background = element_rect(fill = 'white'),
+        aspect.ratio = 1,
+        legend.position  = 'bottom',
+        plot.margin = unit(c(.25,.1,.1,.1), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(color = guide_colorbar(direction = "horizontal",
+                                label.position = 'top',
+                                title.position = 'bottom',
+                                title.hjust = .5,
+                                barwidth = 15,
+                                barheight = 1,
+                                frame.colour = "black", 
+                                ticks.colour = "black"))
+
+ggsave(file = "./plots/random_temp_ah_wy_v1.png",
+       width = 4.4, 
+       height = 5,
+       dpi = 300)
+
+system("open ./plots/random_temp_ah_wy_v1.png")
+
+
+
+test <-filter(y2, abs_hum_gcm3 > 3.6)
+
+

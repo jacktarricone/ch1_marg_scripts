@@ -20,6 +20,12 @@ sa_mask <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
 
 # define abs_hum function from the two stacks
 ah_stack <-(6.112 * exp((17.67 * tmean_stack) / (tmean_stack + 243.5)) * rmean_stack * 2.1674) / (273.15 + tmean_stack)
+
+# absolute_humidity <- function(air_temp, rh) {
+#   # https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/
+#   (6.112 * exp((17.67 * air_temp) / (air_temp + 243.5)) * rh * 2.1674) / (273.15 + air_temp)
+# }
+
 ah_stack_v2 <-mask(ah_stack, sa_mask, maskvalue = NA)
 plot(ah_stack_v2[[31]])
 writeRaster(ah_stack_v2, "./rasters/gridmet/ah/ah_stack.tif")
