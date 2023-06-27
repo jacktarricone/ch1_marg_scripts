@@ -48,11 +48,6 @@ theme_set(theme_classic(14))
 
 df_list <-list.files("./csvs/spearman_results", full.names = TRUE, pattern = "KUY")
 df_list
-df_path <-df_list[[1]]
-# hist(ah$p_val, breaks = 100)
-# hist(ah$mean_rh, breaks = 100)
-# hist(ah$mean_ah, breaks = 100)
-# hist(ah$mean_fm, breaks = 100)
 
 make_3panel_heatmap <-function(df_path, twovars){
   

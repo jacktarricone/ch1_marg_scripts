@@ -22,6 +22,7 @@ colnames(df_list[[2]])[c(6,24)] <-c("mean_rh","rh_mean")
 colnames(df_list[[3]])[c(6,24)] <-c("mean_rh","rh_mean")
 
 basin_list <-df_list[[3]]
+variable <-"abs_hum_gcm3"
 
 # funciton to create basin results dataframes
 generate_spearman_df <-function(basin_list, variable){
@@ -67,6 +68,9 @@ generate_spearman_df <-function(basin_list, variable){
   cell <-as.vector(unique(results_v1$cell))
   spearman_df <-data.frame(cell,p_val,rho_val,s_stat)
   head(spearman_df)
+  
+  hist(spearman_df$rho_val, breaks = 100)
+  hist(spearman_df$p_val, breaks = 100)
   
   # and check the cells are teh same
   identical(cell, single_cell_df$cell)

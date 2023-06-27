@@ -53,34 +53,46 @@ colnames(df_list[[3]])[c(6,24)] <-c("mean_rh","rh_mean")
 
 # pull out yuba
 yuba <-df_list[[3]]
-
+usj <-df_list[[2]]
+kern <-df_list[[1]]
 
 # add bins col for box plot
-yuba_bins <-yuba  %>%
+yuba_bins <-yuba %>%
   mutate(tmean_bin = cut_width(temp_mean_c, width = 1, boundary=-10),
          rhmean_bin = cut_width(rh_mean, width = 2, boundary=0),
          ah_bin = cut_width(abs_hum_gcm3, width = .15, boundary=0),
          srad_bin = cut_width(srad_wm2 , width = 2, boundary=0))
+
+usj <- usj %>%
+  mutate(tmean_bin = cut_width(temp_mean_c, width = 1, boundary=-10),
+         rhmean_bin = cut_width(rh_mean, width = 2, boundary=0),
+         ah_bin = cut_width(abs_hum_gcm3, width = .15, boundary=0),
+         srad_bin = cut_width(srad_wm2 , width = 2, boundary=0))
+
+head(yuba_bins)
 
 # box plot test
 # cc scale
 scale <-colorRampPalette(c("darkblue","#f7fcf5", "darkred"))
 scale(13)
 
-# temp
-temp_p <-ggplot(yuba_bins, mapping = aes(x = temp_mean_c, y = frac_melt, fill = as.factor(tmean_bin))) +
-  geom_boxplot(linewidth = .5, varwidth = TRUE, 
-               outlier.size = .3, outlier.shape = 1, outlier.color = "grey80", outlier.alpha = .01) +
-  xlab("tmean (c)") + ylab("frac_melt")+ 
-  scale_x_continuous(limits = c(-10,10), breaks = seq(-10,10,2), expand = c(0,.5)) +
-  scale_y_continuous(limits = c(0,1)) +
-  scale_fill_discrete(type = scale(13)) +
-  theme_classic(14) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, linetype = 1),
-        legend.position = "none",
-        legend.title = element_blank(),
-        legend.margin = margin(-5,1,1,1),
-        legend.box.background = element_rect(colour = "black"))
+
+plot_4_met_bp <-function(df){
+  
+  # temp
+  temp_p <-ggplot(yuba_bins, mapping = aes(x = temp_mean_c, y = frac_melt, fill = as.factor(tmean_bin))) +
+    geom_boxplot(linewidth = .5, varwidth = TRUE, 
+                 outlier.size = .3, outlier.shape = 1, outlier.color = "grey80", outlier.alpha = .01) +
+    xlab("tmean (c)") + ylab("frac_melt")+ 
+    scale_x_continuous(limits = c(-10,10), breaks = seq(-10,10,2), expand = c(0,.5)) +
+    scale_y_continuous(limits = c(0,1)) +
+    scale_fill_discrete(type = scale(13)) +
+    theme_classic(14) +
+    theme(panel.border = element_rect(colour = "black", fill = NA, linetype = 1),
+          legend.position = "none",
+          legend.title = element_blank(),
+          legend.margin = margin(-5,1,1,1),
+          legend.box.background = element_rect(colour = "black"))
 
 # srad
 scale2 <-colorRampPalette(c("brown","yellow"))
@@ -99,51 +111,52 @@ srad_p <-ggplot(yuba_bins, mapping = aes(x = srad_wm2, y = frac_melt, fill = as.
         legend.margin = margin(-5,1,1,1),
         legend.box.background = element_rect(colour = "black"))
 
-# rh
-scale3 <-colorRampPalette(c("orange","purple"))
+  # rh
+  scale3 <-colorRampPalette(c("orange","purple"))
+  
+  rh_p <-ggplot(yuba_bins, mapping = aes(x = rh_mean, y = frac_melt, fill = as.factor(rhmean_bin))) +
+    geom_boxplot(linewidth = .5, varwidth = TRUE, 
+                 outlier.size = .3, outlier.shape = 1, outlier.color = "grey80", outlier.alpha = .01) +
+    xlab("rh_mean (%)") + ylab("frac_melt")+ 
+    scale_x_continuous(limits = c(40,70), breaks = seq(40,70,5), expand = c(0,.5)) +
+    scale_y_continuous(limits = c(0,1)) +
+    scale_fill_discrete(type = scale3(15)) +
+    theme_classic(14) +
+    theme(panel.border = element_rect(colour = "black", fill = NA, linetype = 1),
+          legend.position = "none",
+          legend.title = element_blank(),
+          legend.margin = margin(-5,1,1,1),
+          legend.box.background = element_rect(colour = "black"))
+  
+  # ah
+  ah_p <-ggplot(yuba_bins, mapping = aes(x = abs_hum_gcm3, y = frac_melt, fill = as.factor(ah_bin))) +
+    geom_boxplot(linewidth = .5, varwidth = TRUE, 
+                 outlier.size = .3, outlier.shape = 1, outlier.color = "grey80", outlier.alpha = .01) +
+    xlab("abs_hum (g/cm^3)") + ylab("frac_melt")+ 
+    scale_x_continuous(limits = c(2.5,5), breaks = seq(2.5,5,.5), expand = c(0,.5)) +
+    scale_y_continuous(limits = c(0,1)) +
+    scale_fill_discrete(type = scale3(18)) +
+    theme_classic(14) +
+    theme(panel.border = element_rect(colour = "black", fill = NA, linetype = 1),
+          legend.position = "none",
+          legend.title = element_blank(),
+          legend.margin = margin(-5,1,1,1),
+          legend.box.background = element_rect(colour = "black"))
+  
+  # cowplot test
+  cow <-plot_grid(temp_p, rh_p, srad_p, ah_p,
+                  labels = c("(a)","(b)","(c)","(d)"),
+                  nrow = 2, 
+                  ncol = 2,
+                  align = "hv",
+                  label_size = 15,
+                  vjust =  3,
+                  hjust = -.7,
+                  rel_heights = c(1/2,1/2),
+                  rel_widths = c(1/2,1/2))
+ return(cow)
+  }
 
-rh_p <-ggplot(yuba_bins, mapping = aes(x = rh_mean, y = frac_melt, fill = as.factor(rhmean_bin))) +
-  geom_boxplot(linewidth = .5, varwidth = TRUE, 
-               outlier.size = .3, outlier.shape = 1, outlier.color = "grey80", outlier.alpha = .01) +
-  xlab("rh_mean (%)") + ylab("frac_melt")+ 
-  scale_x_continuous(limits = c(40,70), breaks = seq(40,70,5), expand = c(0,.5)) +
-  scale_y_continuous(limits = c(0,1)) +
-  scale_fill_discrete(type = scale3(15)) +
-  theme_classic(14) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, linetype = 1),
-        legend.position = "none",
-        legend.title = element_blank(),
-        legend.margin = margin(-5,1,1,1),
-        legend.box.background = element_rect(colour = "black"))
-
-# ah
-ah_p <-ggplot(yuba_bins, mapping = aes(x = abs_hum_gcm3, y = frac_melt, fill = as.factor(ah_bin))) +
-  geom_boxplot(linewidth = .5, varwidth = TRUE, 
-               outlier.size = .3, outlier.shape = 1, outlier.color = "grey80", outlier.alpha = .01) +
-  xlab("abs_hum (g/cm^3)") + ylab("frac_melt")+ 
-  scale_x_continuous(limits = c(2.5,5), breaks = seq(2.5,5,.5), expand = c(0,.5)) +
-  scale_y_continuous(limits = c(0,1)) +
-  scale_fill_discrete(type = scale3(18)) +
-  theme_classic(14) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, linetype = 1),
-        legend.position = "none",
-        legend.title = element_blank(),
-        legend.margin = margin(-5,1,1,1),
-        legend.box.background = element_rect(colour = "black"))
-
-
-
-# cowplot test
-cow <-plot_grid(temp_p, rh_p, srad_p, ah_p,
-                labels = c("(a)","(b)","(c)","(d)"),
-                nrow = 2, 
-                ncol = 2,
-                align = "hv",
-                label_size = 15,
-                vjust =  3,
-                hjust = -.7,
-                rel_heights = c(1/2,1/2),
-                rel_widths = c(1/2,1/2))
 # test save
 # make tighter together
 ggsave(cow,
