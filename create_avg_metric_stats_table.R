@@ -4,62 +4,49 @@
 
 library(terra)
 library(dplyr)
+library(tidyr)
 library(data.table)
 
 setwd("~/ch1_margulis")
 
-# read in df
-# fm
-fm_mean <-rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
-fm_mean_df <-as.data.frame(fm_mean, xy = TRUE, cells = TRUE)
-colnames(fm_mean_df)[4] <-"frac_melt"
-head(fm_mean_df)
+# # read in df
+# # fm
+# fm_mean <-rast("./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
+# fm_mean_df <-as.data.frame(fm_mean, xy = TRUE, cells = TRUE)
+# colnames(fm_mean_df)[4] <-"frac_melt"
+# head(fm_mean_df)
+# 
+# # max
+# max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
+# max_mean_df <-as.data.frame(max_mean, xy = TRUE, cells = TRUE)
+# colnames(max_mean_df)[4] <-"max_swe_mm"
+# head(max_mean_df)
+# 
+# # dom
+# dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
+# dom_mean_df <-as.data.frame(dom_mean, xy = TRUE, cells = TRUE)
+# colnames(dom_mean_df)[4] <-"dom_dowy"
+# head(dom_mean_df)
 
-# max
-max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
-max_mean_df <-as.data.frame(max_mean, xy = TRUE, cells = TRUE)
-colnames(max_mean_df)[4] <-"max_swe_mm"
-head(max_mean_df)
-
-# dom
-dom_mean <-rast("./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
-dom_mean_df <-as.data.frame(dom_mean, xy = TRUE, cells = TRUE)
-colnames(dom_mean_df)[4] <-"dom_dowy"
-head(dom_mean_df)
-
-# aspect
-ez <-rast("./rasters/categorized/dem_ez3_ns.tif")
-ez_df <-as.data.frame(ez, xy = TRUE, cells = TRUE)
-colnames(ez_df)[4] <-"ez"
-head(ez_df)
+# ez
+ez <-rast("./rasters/categorized/dem_6zb.tif")
+names(ez) <-"ez"
 
 # dem
 dem <-rast("./rasters/static/SNSR_DEM.tif")
-dem_df <-as.data.frame(dem, xy = TRUE, cells = TRUE)
-colnames(dem_df)[4] <-"elevation"
-head(dem_df)
+names(dem) <-"elevation"
 
 # cc
 cc <-rast("./rasters/nlcd_cc/cc_w0.tif")
-cc_df <-as.data.frame(cc, xy = TRUE, cells = TRUE)
-colnames(cc_df)[4] <-"cc_percent"
-head(cc_df)
+names(cc) <-"cc"
 
 # temp
 temp <-rast("./rasters/prism/prism_tmean_snsr_ondjfm.tif")
-temp_df <-as.data.frame(temp, xy = TRUE, cells = TRUE)
-colnames(temp_df)[4] <-"temp_c"
-head(temp_df)
+names(temp)<-"temp_c"
 
 # insol
-insol <-rast("./rasters/insolation/snsr_dem_insol_v2.tif")
-insol_df <-as.data.frame(insol, xy = TRUE, cells = TRUE)
-colnames(insol_df)[4] <-"insol_kwh"
-head(insol_df)
-
-insol_watts <-rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
-insol_watts_df <-as.data.frame(insol_watts, xy = TRUE, cells = TRUE)
-colnames(insol_df)[4] <-"insol_watts"
+insol <-rast("./rasters/insolation/snsr_dem_insol_watts_masked_v1.tif")
+names(insol) <-"insol_kwh"
 
 
 # join
@@ -118,80 +105,79 @@ names(ez_list[1])
 
 head(mean_ez_df)
 
-# make fun
-create_avg_table <-function(x){
-    
-    # pull out name 
-    pz_name <-names(ez_list[x])
-    print(pz_name)
-    
-    # pull out df
-    df <-ez_list[[x]]
-  
-    # header for table
-    header <-c("PZ", 
-               "Mean Elevation (m)", "SD Elevation (m)",
-               "Mean Temp (C)", "SD Temp (C)",
-               "Mean Insolation (kHw m^-2)", "SD Insolation (kHw m^-2)",
-               "Mean CC (%)", "SD CC (%)",
-               "Mean MSWE (m)", "SD MSWE (m)", 
-               "Mean DOM (DOWY)", "SD DOM (DOWY)", 
-               "Mean FM", "SD FM")
-    
-    ### calc metrics
-    # elevation
-    mean_ele <-round(mean(df$elevation),0)
-    sd_ele <-round(sd(df$elevation),0)
-    
-    # temp
-    mean_temp <-round(mean(df$temp_c),1)
-    sd_temp <-round(sd(df$temp_c),1)
-    
-    # temp
-    mean_insol <-round(mean(df$insol_kwh),1)
-    sd_insol <-round(sd(df$insol_kwh),1)
-    
-    # cc
-    mean_cc <-round(mean(df$cc_percent),0)
-    sd_cc <-round(sd(df$cc_percent),0)
-    
-    # mswe
-    mean_max <-round(mean(df$max_swe_m),2)
-    sd_max <-round(sd(df$max_swe_m),2)
-    
-    # dom
-    mean_dom <-round(mean(df$dom_dowy),0)
-    sd_dom <-round(sd(df$dom_dowy),0)
-    
-    # fm
-    mean_fm <-round(mean(df$frac_melt),2)
-    sd_fm <-round(sd(df$frac_melt),2)
-    
-    # bind values together
-    vals <-c(pz_name,
-             mean_ele,sd_ele,
-             mean_temp,sd_temp,
-             mean_insol,sd_insol,
-             mean_cc,sd_cc,
-             mean_max,sd_max,
-             mean_dom,sd_dom,
-             mean_fm,sd_fm)
-   
-    # vals
-    vals_w_header <-as.data.frame(t(vals))
-    names(vals_w_header)[1:15] <-header
-    # vals_w_header
-    return(vals_w_header)
-}
+#####################################
+# head_df for col referencing
+df_paths <-list.files("./csvs/gridmet_dfs", full.names = TRUE, pattern = "full_stat")
+df_list <-lapply(df_paths, fread)
+colnames(df_list[[1]])[c(6,24)] <-c("mean_rh","rh_mean")
+colnames(df_list[[2]])[c(6,24)] <-c("mean_rh","rh_mean")
+colnames(df_list[[3]])[c(6,24)] <-c("mean_rh","rh_mean")
+head(df_list[[1]])
 
-# test function
-seq_list <-1:6
-stats_list <-lapply(seq_list, create_avg_table)
 
-# make df
-results_df <-dplyr::bind_rows(stats_list)
-print(results_df)
+north_results <-filter(results_v1, aspect_name == "North")
+# make one big df
+df_v1 <-bind_rows(df_list)
+
+# elevations zones
+df_v1$zone_name <-ifelse(df_v1$ez== 1, "1500-1900 m", df_v1$ez)
+df_v1$zone_name <-ifelse(df_v1$ez == 2, "1900-2300 m", df_v1$zone_name)
+df_v1$zone_name <-ifelse(df_v1$ez == 3, "2300-2700 m", df_v1$zone_name)
+df_v1$zone_name <-ifelse(df_v1$ez == 4, "2700-3100 m", df_v1$zone_name)
+df_v1$zone_name <-ifelse(df_v1$ez == 5, "3100-4361 m", df_v1$zone_name)
+df_v1$zone_name <-ifelse(df_v1$ez == 6, "3100-4361 m", df_v1$zone_name)
+
+# elevations zones
+df_v1$aspect_name <-ifelse(df_v1$aspect == 1, "North", df_v1$aspect)
+df_v1$aspect_name <-ifelse(df_v1$aspect == 2, "East", df_v1$aspect_name)
+df_v1$aspect_name <-ifelse(df_v1$aspect == 3, "South", df_v1$aspect_name)
+df_v1$aspect_name <-ifelse(df_v1$aspect == 4, "West", df_v1$aspect_name)
+
+# filter
+df <-filter(df_v1, aspect_name == "North" | aspect_name == "South")
+
+# met data
+met_results <-df %>%
+  group_by(basin_name, zone_name, aspect_name) %>%
+  summarise(mean_ez_temp_c  = round(mean(mean_temp_c),2),
+            sd_ez_temp_c    = round(sd(mean_temp_c, na.rm = TRUE),2),
+            mean_ez_ah = round(mean(mean_ah),2),
+            sd_ez_ah    = round(sd(mean_ah, na.rm = TRUE),2),
+            mean_ez_srad = round(mean(mean_srad),2),
+            sd_ez_srad    = round(sd(mean_srad, na.rm = TRUE),2),)
+
+print(met_results, n = nrow(met_results))
+
+
+# summarize
+snow_results <-df %>%
+  group_by(basin_name, zone_name, aspect_name) %>%
+  summarise(mean_ez_mswe = as.integer(mean(mswe_mean_mm)),
+            sd_ez_mswe   = as.integer(sd(mswe_mean_mm, na.rm = TRUE)),
+            mean_ez_dom = as.integer(mean(mean_dom_dowy)),
+            sd_ez_dom    = as.integer(sd(mean_dom_dowy, na.rm = TRUE)),
+            mean_ez_fm = round(mean(mean_fm),2),
+            sd_ez_fm    = round(sd(mean_fm, na.rm = TRUE),2),
+            mean_ez_mwa = as.integer(mean(mean_mwa)),
+            sd_ez_mwa    = as.integer(sd(mean_mwa, na.rm = TRUE)))
+
+# unite
+snow_results_combined <- snow_results %>%
+  unite(mean_sd_ez_mswe, c(mean_ez_mswe, sd_ez_mswe), sep = " ± ", remove = TRUE) %>%
+  unite(mean_sd_ez_dom, c(mean_ez_dom, sd_ez_dom), sep = " ± ", remove = TRUE) %>%
+  unite(mean_sd_ez_fm, c(mean_ez_fm, sd_ez_fm), sep = " ± ", remove = TRUE) %>%
+  unite(mean_sd_ez_mwa, c(mean_ez_mwa, sd_ez_mwa), sep = " ± ", remove = TRUE)
+
+snow_results_combined 
+
+# Reshape the data into separate columns for aspect_name
+snow_results_wide <- snow_results_combined %>%
+  tidyr::pivot_wider(names_from = aspect_name,
+              values_from = c(mean_sd_ez_mswe, mean_sd_ez_dom, mean_sd_ez_fm, mean_sd_ez_mwa))
+
+print(snow_results_wide, n = nrow(snow_results_wide))
 
 # save
-write.csv(results_df, "./csvs/avg_metric_results_table_v3.csv", row.names = FALSE)
-system("open ./csvs/avg_metric_results_table_v3.csv")
+write.csv(snow_results_wide, "./csvs/snow_avg_metric_results_table_v1.csv", row.names = FALSE)
+system("open ./csvs/snow_avg_metric_results_table_v1.csv")
+
