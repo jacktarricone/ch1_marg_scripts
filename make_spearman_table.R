@@ -372,27 +372,26 @@ make_3panel_heatmap_ns <-function(df_path, twovars){
   return(full)
 }
 
-ah_test <-make_3panel_heatmap(df = df_list[[1]], twovars = "AH vs. FM")
-rh_test <-make_3panel_heatmap_ns(df = df_list[[3]], twovars = "RH vs. FM")
-srad_test <-make_3panel_heatmap_ns(df = df_list[[4]], twovars = "Srad vs. FM")
+rh_test <-make_3panel_heatmap(df = df_list[[3]], twovars = "RH vs. FM")
+srad_test <-make_3panel_heatmap_ns(df = df_list[[4]], twovars = "Insolation vs. FM")
 tmean_test <-make_3panel_heatmap_ns(df = df_list[[5]], twovars = "Tmean vs. FM")
 
 
-full <-plot_grid(tmean_test, rh_test, srad_test, ah_test,
-                 labels = c("(a)", "(b)", "(c)","(d)"),
+full <-plot_grid(tmean_test, srad_test, rh_test,
+                 labels = c("(a)", "(b)", "(c)"),
                  nrow = 4, 
                  align = "hv",
                  label_size = 18,
                  vjust =  1.7,
                  hjust = -.2,
-                 rel_heights = c(.9, .9, .9, 1.35))
+                 rel_heights = c(.9, .9, 1.35))
 # full
 ggsave(full,
-       file = "./plots/metvars_fm_heatmaps_v3.png",
+       file = "./plots/metvars_fm_heatmaps_v4.png",
        width = 17,
        height = 9,
        units = "in",
        dpi = 300)
 
-system("open ./plots/metvars_fm_heatmaps_v3.png")
+system("open ./plots/metvars_fm_heatmaps_v4.png")
   

@@ -116,8 +116,8 @@ met_df_sorted <- met_diff %>%
 met_df_sorted
 
 # save
-write.csv(met_df_sorted, "./csvs/met_avg_metric_results_table_v1.csv", row.names = FALSE)
-system("open ./csvs/met_avg_metric_results_table_v1.csv")
+write.csv(met_df_sorted, "./csvs/met_avg_metric_results_table_v2.csv", row.names = FALSE)
+system("open ./csvs/met_avg_metric_results_table_v2.csv")
 
 
 
