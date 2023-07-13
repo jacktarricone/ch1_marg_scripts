@@ -57,13 +57,6 @@ snsr_v <-vect(snsr_sf)
 # ca state boundary
 ca_v1 <-st_geometry(st_read("/Users/jacktarricone/ch1_jemez/vector_data/states/cb_2018_us_state_20m.shp"))
 ca <-st_transform(ca_v1, "EPSG:4326")
-plot(ca)
-ca_v <-vect(ca)
-plot(dem_v1)
-plot(ca_v, add = TRUE)
-plot(kern_v, add = TRUE)
-plot(usj_v, add = TRUE)
-plot(yuba_v, add = TRUE)
 
 # kern
 kern_sf <-st_geometry(st_read("./vectors/ca_basins/kern.gpkg"))
