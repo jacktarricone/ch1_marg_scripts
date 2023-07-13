@@ -41,7 +41,7 @@ theme_classic <- function(base_size = 11, base_family = "",
     )
 }
 
-theme_set(theme_classic(16))
+theme_set(theme_classic(18))
 
 
 # head_df for col referencing

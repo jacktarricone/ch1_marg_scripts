@@ -197,8 +197,8 @@ system("open ./plots/snow4_boxplot_v5.png")
 temp_p <-grouped_box_plot_top(variable = df$temp_mean_c, 
                               min = -7, max = 10, ylab = expression('ONDJFM ' ~T["Mean"] ~ '(°C)'))
 
-ah_p <-grouped_box_plot_mid(variable = df$abs_hum_gcm3, 
-                            min = 1.5, max = 5, ylab = expression("AH (g cm"^-3*")"))
+rh_p <-grouped_box_plot_mid(variable = df$`rh_mean_%`, 
+                            min = 35, max = 70, ylab = expression("RH (%)"))
 
 srad_p <-grouped_box_plot_mid(variable = df$srad_wm2, 
                               min = 120, max = 170, ylab = expression("Insolation"~paste("(W m"^{-2},")")))
@@ -207,7 +207,7 @@ insol_p <-grouped_box_plot_bot(variable = df$insol_watts,
                                min = 30, max = 270, ylab = expression("CS Insolation"~paste("(W m"^{-2},")")))
 
 # cowplot test
-met_cow <-plot_grid(temp_p, ah_p, srad_p, insol_p,
+met_cow <-plot_grid(temp_p, rh_p, srad_p, insol_p,
                     labels = c("(a)", "(b)", "(c)","(d)"),
                     nrow = 4, 
                     align = "v",
@@ -220,13 +220,13 @@ met_cow <-plot_grid(temp_p, ah_p, srad_p, insol_p,
 # plot(met_cow)
 
 ggsave(met_cow,
-       file = "./plots/met4_boxplot_v4.png",
+       file = "./plots/met4_boxplot_v5.png",
        width = 9, 
        height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/met4_boxplot_v4.png")
+system("open ./plots/met4_boxplot_v5.png")
 
 
 
