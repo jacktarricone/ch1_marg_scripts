@@ -7,6 +7,7 @@ library(lubridate)
 library(tidyverse)
 library(cowplot)
 library(data.table)
+library(ggsignif)
 
 
 theme_classic <- function(base_size = 11, base_family = "",
@@ -44,7 +45,6 @@ theme_set(theme_classic(16))
 setwd("~/ch1_margulis")
 
 
-
 ##############################################
 yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats_v4.csv")
 usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats_v4.csv")
@@ -65,7 +65,12 @@ df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
 
-head(df)
+
+# add grouped col
+df$aspect_basin <-paste0(df$aspect,".",df$basin_name)
+df$aspect_basin <-factor(df$aspect_basin, levels=c('1.kern', '3.kern', 
+                                                   '1.usj', '3.usj',
+                                                   '1.yuba','3.yuba'))
 
 # test hists
 hist(df$frac_melt, breaks = 50)
@@ -75,11 +80,12 @@ hist(df$mwa_mm, breaks = 50)
 #### make time series box plot ###
 ##################################
 
+
 # define 3 plotting functions
 grouped_box_plot_top <-function(variable, min,max, ylab){
   
-  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
-    geom_boxplot(linewidth = .3, width = .7,  position = 'dodge',
+  p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = aspect_basin)) +
+    geom_boxplot(linewidth = .3, width = .7, position = 'dodge',
                  outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01) +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
@@ -98,8 +104,11 @@ grouped_box_plot_top <-function(variable, min,max, ylab){
           legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
           axis.text.x = element_blank(),
           # legend.background = element_rect(colour = "black", fill = 'white', size = .2),
-          plot.margin = unit(c(.25,.25, 0,.25), "cm"))
-  
+          plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
+    geom_signif(
+      y_position = c(250), xmin = c(0.6), xmax = c(1),
+      annotation = c("**"), tip_length = 0.005, textsize = 7, size = 1
+    )  
   return(p)
 }
 grouped_box_plot_mid <-function(variable, min,max, ylab){

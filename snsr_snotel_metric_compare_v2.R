@@ -58,8 +58,8 @@ theme_set(theme_classic(14))
 
 snotel_df <-read.csv("./csvs/snotel_df_v3.csv")
 snotel_df <-subset(snotel_df, select=-c(X)) # move bad one
-head(snotel_df)
 
+names <-unique(snotel_df$site_name)
 #########################
 #########################
 ###  read in SNSR data ##

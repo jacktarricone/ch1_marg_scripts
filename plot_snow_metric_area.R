@@ -76,18 +76,6 @@ yuba_v <-vect(yuba_sf)
 ##### dem ####
 ##############
 
-#### read in metrics
-dem_v1 <-rast('./rasters/static/SNSR_DEM.tif')
-names(dem_v1) <-"dem"
-dem_full_df <-as.data.frame(dem_v1, xy = TRUE, cells = TRUE)
-
-cc_v1 <-rast("./rasters/nlcd_cc/cc_w0.tif")
-names(cc_v1) <-"cc_percent"
-
-ez_bins_v1 <-rast("./rasters/categorized/dem_6zb.tif")
-ez_bins <-ifel(6 == ez_bins_v1, 5, ez_bins_v1)
-names(ez_bins) <-"ez"
-
 # bring in mswe_mean
 general_sa_v1 <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
 general_sa <-ifel(general_sa_v1 > 0, -99, general_sa_v1)
@@ -95,8 +83,9 @@ plot(general_sa)
 
 # mask aspect
 aspect_v1 <-rast("./rasters/categorized/aspect_thres_4_classes.tif")
-aspect_v2 <-ifel(aspect_v1 == 4 | 2, NA, aspect_v1)
-aspect <-mask(aspect_v2, general_sa, maskvalue = -99)
+aspect_v2 <-ifel(aspect_v1 == 4, NA, aspect_v1)
+aspect_v3 <-ifel(aspect_v1 == 2, NA, aspect_v2)
+aspect <-mask(aspect_v3, general_sa, maskvalue = NA)
 plot(aspect)
 
 # crop and mask
@@ -106,13 +95,13 @@ plot(kern_sa)
 plot(kern_v, add = TRUE)
 plot(snsr_kern, add = TRUE)
 
-usj_sa <-mask(crop(general_sa,ext(usj_v)), usj_v)
+usj_sa <-mask(crop(aspect,ext(usj_v)), usj_v)
 snsr_usj <-crop(snsr_v, usj_v)
 plot(usj_sa)
 plot(usj_v, add = TRUE)
 plot(snsr_usj, add = TRUE)
 
-yuba_sa <-mask(crop(general_sa,ext(yuba_v)), yuba_v)
+yuba_sa <-mask(crop(aspect,ext(yuba_v)), yuba_v)
 snsr_yuba <-crop(snsr_v, yuba_v)
 plot(yuba_sa)
 plot(yuba_v, add = TRUE)
@@ -123,18 +112,18 @@ kern_sa_df <-as.data.frame(kern_sa, xy = TRUE, cells = TRUE)
 usj_sa_df <-as.data.frame(usj_sa, xy = TRUE, cells = TRUE)
 yuba_sa_df <-as.data.frame(yuba_sa, xy = TRUE, cells = TRUE)
 
+head(kern_sa_df)
 # make sfs
 snsr_kern_sf <-st_as_sf(snsr_kern)
 snsr_usj_sf <-st_as_sf(snsr_usj)
 snsr_yuba_sf <-st_as_sf(snsr_yuba)
-head(kern_sa_df)
 
 kern_plot <-ggplot(kern_sa_df) +
-  geom_sf(data = snsr_kern_sf, fill = "black", color = "black", linewidth = .01, inherit.aes = FALSE) +
-  geom_raster(mapping = aes(x,y, fill = as.factor(lyr.1))) +
-  geom_sf(data = snsr_kern_sf, fill = NA, color = "firebrick", linewidth = .4, inherit.aes = FALSE) +
+  geom_sf(data = snsr_kern_sf, fill = "gray70", color = "black", linewidth = .01, inherit.aes = FALSE) +
+  geom_raster(mapping = aes(x,y, fill = as.factor(aspect))) +
+  geom_sf(data = snsr_kern_sf, fill = NA, color = "darkorange", linewidth = .3, inherit.aes = FALSE) +
   geom_sf(data = kern_sf, fill = NA, color = "black", linewidth = .4, inherit.aes = FALSE) +
-  scale_fill_manual(values= "gray70") +
+  scale_fill_manual(values= c("darkblue","darkred")) +
   theme(panel.border = element_blank(),
         axis.text.x = element_blank(),
         axis.title.y = element_blank(),
@@ -147,11 +136,11 @@ kern_plot <-ggplot(kern_sa_df) +
 kern_plot
 
 usj_plot <-ggplot(usj_sa_df) +
-  geom_sf(data = snsr_usj_sf, fill = "black", color = "black", linewidth = .01, inherit.aes = FALSE) +
-  geom_raster(mapping = aes(x,y, fill = as.factor(lyr.1))) +
-  geom_sf(data = snsr_usj_sf, fill = NA, color = "firebrick", linewidth = .4, inherit.aes = FALSE) +
+  geom_sf(data = snsr_usj_sf, fill = "gray70", color = "black", linewidth = .01, inherit.aes = FALSE) +
+  geom_raster(mapping = aes(x,y, fill = as.factor(aspect))) +
+  geom_sf(data = snsr_usj_sf, fill = NA, color = "darkorange", linewidth = .3, inherit.aes = FALSE) +
   geom_sf(data = usj_sf, fill = NA, color = "black", linewidth = .4, inherit.aes = FALSE) +
-  scale_fill_manual(values= "gray70") +
+  scale_fill_manual(values= c("darkblue","darkred")) +
   theme(panel.border = element_blank(),
         axis.text.x = element_blank(),
         axis.title.y = element_blank(),
@@ -164,11 +153,11 @@ usj_plot <-ggplot(usj_sa_df) +
 usj_plot
 
 yuba_plot <-ggplot(yuba_sa_df) +
-  geom_sf(data = snsr_yuba_sf, fill = "black", color = "black", linewidth = .01, inherit.aes = FALSE) +
-  geom_raster(mapping = aes(x,y, fill = as.factor(lyr.1))) +
-  geom_sf(data = snsr_yuba_sf, fill = NA, color = "firebrick", linewidth = .4, inherit.aes = FALSE) +
+  geom_sf(data = snsr_yuba_sf, fill = "gray70", color = "black", linewidth = .01, inherit.aes = FALSE) +
+  geom_raster(mapping = aes(x,y, fill = as.factor(aspect))) +
+  geom_sf(data = snsr_yuba_sf, fill = NA, color = "darkorange", linewidth = .3, inherit.aes = FALSE) +
   geom_sf(data = yuba_sf, fill = NA, color = "black", linewidth = .4, inherit.aes = FALSE) +
-  scale_fill_manual(values= "gray70") +
+  scale_fill_manual(values= c("darkblue","darkred")) +
   theme(panel.border = element_blank(),
         axis.text.x = element_blank(),
         axis.title.y = element_blank(),
@@ -191,10 +180,10 @@ yu_cow <-plot_grid(kern_plot,yuba_plot, usj_plot,
                      axis = "t")  
 
 ggsave(yu_cow,
-       file = "./plots/kuy_snow_metric_area_v1.png",
+       file = "./plots/kuy_snow_metric_area_v2.png",
        width = 8, 
        height = 2.7,
        dpi = 300)
 
-system("open ./plots/kuy_snow_metric_area_v1.png")
+system("open ./plots/kuy_snow_metric_area_v2.png")
 

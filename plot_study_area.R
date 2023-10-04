@@ -44,10 +44,15 @@ theme_set(theme_classic(17))
 
 setwd("~/ch1_margulis")
 
-## bring in SNSR shape file
+
 # with terra
 snsr <-vect("./vectors/snsr_shp.gpkg")
 snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
+
+## bring in SNSR shape file
+snotel_df <-read.csv("./csvs/snotel_df_v3.csv")
+snotel_df <-subset(snotel_df, select=-c(X)) # move bad one
+snotel_points_sf <-st_as_sf(snotel_df, coords  = c("longitude","latitude"), crs = 4326)
 
 # with sf
 snsr_v1 <-st_read("./vectors/snsr_shp.gpkg")
@@ -60,7 +65,7 @@ ca <-st_transform(ca_v1, "EPSG:4326")
 
 # kern
 kern_sf <-st_geometry(st_read("./vectors/ca_basins/kern.gpkg"))
-kern_v <-vect(kern)
+kern_v <-vect(kern_sf)
 
 # usj
 usj_sf <-st_geometry(st_read("./vectors/ca_basins/usj.gpkg"))
@@ -339,6 +344,7 @@ ca_plot <-ggplot(dem_full_df) +
     geom_sf(data = kern_sf, fill = NA, color = "red", linewidth = .5) +
     geom_sf(data = yuba_sf, fill = NA, color = "orange", linewidth = .5) +
     geom_sf(data = usj_sf, fill = NA, color = "purple", linewidth = .5) +
+    geom_sf(data = snotel_points_sf, color = "black", size =1) +
     geom_text(x = -122.8, y = 41.8, label = "(a)", color = "black", size = 6, fontface = "bold")+
     coord_sf(label_graticule = "NW") +
     ylim(limits = c(35.4219961410279, 41.858638835292)) +
@@ -351,6 +357,14 @@ ca_plot <-ggplot(dem_full_df) +
           plot.margin = unit(c(0,0,0,0), "cm"),
           legend.box.spacing = unit(0, "pt")) 
 
+ggsave(ca_plot, 
+       file = "./plots/ca_plot_test.png",
+       width = 4, 
+       height = 5,
+       dpi = 150)
+
+system("open ./plots/ca_plot_test.png")
+
 # full
 kern_and_inset <-ggarrange(ca_plot, kern_cow,
                            ncol = 2,
@@ -360,9 +374,9 @@ full_cow <-ggarrange(kern_and_inset,yuba_cow,usj_cow,
                      nrow = 3,
                      heights = c(1.4,.9,1.4))  
 ggsave(full_cow,
-       file = "./plots/kuy_study_area_v2.png",
+       file = "./plots/kuy_study_area_v3.png",
        width = 11.5, 
        height = 11.5,
        dpi = 300)
 
-system("open ./plots/kuy_study_area_v2.png")
+system("open ./plots/kuy_study_area_v3.png")
