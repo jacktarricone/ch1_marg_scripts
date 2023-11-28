@@ -17,6 +17,18 @@ function_names <-c("max_swe", "max_swe_dowy","mwa","msl","melt_rate","sdd")
 
 ##### maximum annual of SWE (mm)
 
+avg_swe_d_mm <-function(x){
+  
+    swe_per_day <-as.numeric(sum(x)/length(x))
+    return(swe_per_day) 
+}
+
+#######################################
+############   max_swe   ##############
+#######################################
+
+##### maximum annual of SWE (mm)
+
 max_swe <-function(x, swe_thres){
 
   # 10 mm (1 cm threshold)  
