@@ -21,6 +21,7 @@ avg_swe_d_mm <-function(x){
   
     swe_per_day <-as.numeric(sum(x)/length(x))
     return(swe_per_day) 
+    
 }
 
 #######################################

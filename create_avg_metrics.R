@@ -14,6 +14,9 @@ metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
 snsr <-vect("./vectors/snsr_shp.gpkg")
 snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
 
+
+
+
 ##############
 ##### max ####
 ##############
