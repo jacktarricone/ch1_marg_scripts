@@ -147,11 +147,19 @@ ggsave("~/ch1_margulis/plots/wet_dry_years_basins_v1.pdf",
 system("open ~/ch1_margulis/plots/wet_dry_years_basins_v1.pdf")
   
 # bains# bainscolorConverter()
-year_means <- plotting_df %>%
+years_mean <- plotting_df %>%
   group_by(years) %>%
   summarize(year_max_mean = mean(max_anom),
             year_tmean_mean = mean(tmean_anom))
-year_means
+years_mean
+
+years_mean$hydro_cat <-NA
+years_mean$hydro_cat <-ifelse(years_mean$year_tmean_mean > 0 & years_mean$year_max_mean > 0, "hw", years_mean$hydro_cat)
+years_mean$hydro_cat <-ifelse(years_mean$year_tmean_mean < 0 & years_mean$year_max_mean > 0, "cw", years_mean$hydro_cat)
+years_mean$hydro_cat <-ifelse(years_mean$year_tmean_mean < 0 & years_mean$year_max_mean < 0, "cd", years_mean$hydro_cat)
+years_mean$hydro_cat <-ifelse(years_mean$year_tmean_mean > 0 & years_mean$year_max_mean < 0, "hd", years_mean$hydro_cat)
+as.data.frame(years_mean)
+write.csv(years_mean, "~/ch1_margulis/csvs/hydro_cat_years.csv")
 
 ggplot(year_means, aes(x = year_tmean_mean, y = year_max_mean))+
   geom_vline(xintercept = 0, linetype=2, col = "gray70", alpha = 1) +
@@ -178,3 +186,11 @@ ggsave("~/ch1_margulis/plots/wet_dry_years_v1.pdf",
        units = "in")
 
 system("open ~/ch1_margulis/plots/wet_dry_years_v1.pdf")
+
+plotting_df$hydro_cat <-NA
+plotting_df$hydro_cat <-ifelse(plotting_df$tmean_anom > 0 & plotting_df$max_anom > 0, "hw", plotting_df$hydro_cat)
+plotting_df$hydro_cat <-ifelse(plotting_df$tmean_anom < 0 & plotting_df$max_anom > 0, "cw", plotting_df$hydro_cat)
+plotting_df$hydro_cat <-ifelse(plotting_df$tmean_anom < 0 & plotting_df$max_anom < 0, "cd", plotting_df$hydro_cat)
+plotting_df$hydro_cat <-ifelse(plotting_df$tmean_anom > 0 & plotting_df$max_anom < 0, "hd", plotting_df$hydro_cat)
+plotting_df
+

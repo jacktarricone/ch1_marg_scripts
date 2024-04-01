@@ -13,9 +13,9 @@ setwd("~/ch1_margulis")
 
 # list of paths to shape files
 basin_paths_v1 <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
-basin_paths <-basin_paths_v1[c(18,20)]
+basin_paths <-basin_paths_v1[c(6,19,21)]
 
-# basin_paths_list <-basin_paths[1]
+basin_paths_list <-basin_paths[1]
 
 generate_gridmet_df <-function(basin_paths_list){
   

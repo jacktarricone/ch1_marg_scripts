@@ -44,11 +44,14 @@ theme_set(theme_classic(16))
 # set working dir
 setwd("~/ch1_margulis")
 
+#### read in hydro_cat df
+hydro_cat <-fread("./csvs/hydro_cat_years.csv")
 
 ##############################################
 yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats_v4.csv")
 usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats_v4.csv")
 kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats_v4.csv")
+head(kern_df)
 
 # join
 joined_df_v1 <-as.data.table(bind_rows(yuba_df, usj_df, kern_df))
