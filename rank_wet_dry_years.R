@@ -1,0 +1,157 @@
+# rank years on basin wide max swe vs. winter temp anomly
+
+library(terra)
+library(tidyverse)
+
+# set working dir
+setwd("~/ch1_margulis")
+
+# load in shape files
+yuba <-vect('./vectors/ca_basins/yuba.gpkg')
+usj <-vect('./vectors/ca_basins/usj.gpkg')
+kern <-vect('./vectors/ca_basins/kern.gpkg')
+snsr <-vect('./vectors/snsr_shp.gpkg')
+
+# max stack
+max_stack <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
+plot(max_stack[[1]])
+plot(yuba, add = T)
+plot(usj, add = T)
+plot(kern, add = T)
+
+# years list
+names1 <-seq(1985,2016,1)
+year_names <-paste0("WY",names1)
+
+# make basin stacks
+yuba_max <-crop(mask(max_stack, yuba),yuba)
+names(yuba_max) <-year_names
+usj_max <-crop(mask(max_stack, usj),usj)
+names(usj_max) <-year_names
+kern_max <-crop(mask(max_stack, kern),kern)
+names(kern_max) <-year_names
+
+# calculate time series scene wide mean
+yuba_max_years <-global(yuba_max, mean, na.rm = T)
+yuba_ts_mean <-mean(yuba_max_years$mean)
+
+usj_max_years <-global(usj_max, mean, na.rm = T)
+usj_ts_mean <-mean(usj_max_years$mean)
+
+kern_max_years <-global(kern_max, mean, na.rm = T)
+kern_ts_mean <-mean(kern_max_years$mean)
+
+# calculate max anom
+yuba_max_years$anom <-(yuba_max_years$mean)-yuba_ts_mean
+usj_max_years$anom <-(usj_max_years$mean)-usj_ts_mean
+kern_max_years$anom <-(kern_max_years$mean)-kern_ts_mean
+
+# continue formatting
+colnames(yuba_max_years)[1:2] <-c("max_mean","max_anom")
+yuba_max_years$years <-seq(1985,2016,1)
+yuba_max_years$basin <-rep("yuba", nrow(yuba_max_years))
+
+colnames(usj_max_years)[1:2] <-c("max_mean","max_anom")
+usj_max_years$years <-seq(1985,2016,1)
+usj_max_years$basin <-rep("usj", nrow(usj_max_years))
+
+colnames(kern_max_years)[1:2] <-c("max_mean","max_anom")
+kern_max_years$years <-seq(1985,2016,1)
+kern_max_years$basin <-rep("kern", nrow(kern_max_years))
+kern_max_years
+
+max_years1 <-bind_rows(kern_max_years,usj_max_years)
+max_years <-bind_rows(max_years1, yuba_max_years)
+max_years
+
+#  stack
+tmean_stack <-rast("./rasters/gridmet/tmean/tmean_stack.tif")
+
+# make basin stacks
+yuba_tmean <-crop(mask(tmean_stack, yuba),yuba)
+names(yuba_tmean) <-year_names
+usj_tmean <-crop(mask(tmean_stack, usj),usj)
+names(usj_tmean) <-year_names
+kern_tmean <-crop(mask(tmean_stack, kern),kern)
+names(kern_tmean) <-year_names
+
+# calculate time series scene wide mean
+yuba_tmean_years <-global(yuba_tmean, mean, na.rm = T)
+yuba_ts_mean <-mean(yuba_tmean_years$mean)
+
+usj_tmean_years <-global(usj_tmean, mean, na.rm = T)
+usj_ts_mean <-mean(usj_tmean_years$mean)
+
+kern_tmean_years <-global(kern_tmean, mean, na.rm = T)
+kern_ts_mean <-mean(kern_tmean_years$mean)
+
+# calculate tmean anom
+yuba_tmean_years$anom <-(yuba_tmean_years$mean)-yuba_ts_mean
+usj_tmean_years$anom <-(usj_tmean_years$mean)-usj_ts_mean
+kern_tmean_years$anom <-(kern_tmean_years$mean)-kern_ts_mean
+
+# continue formatting
+colnames(yuba_tmean_years)[1:2] <-c("tmean_mean","tmean_anom")
+yuba_tmean_years$years <-seq(1985,2016,1)
+yuba_tmean_years$basin <-rep("Yuba", nrow(yuba_tmean_years))
+
+colnames(usj_tmean_years)[1:2] <-c("tmean_mean","tmean_anom")
+usj_tmean_years$years <-seq(1985,2016,1)
+usj_tmean_years$basin <-rep("USJ", nrow(usj_tmean_years))
+
+colnames(kern_tmean_years)[1:2] <-c("tmean_mean","tmean_anom")
+kern_tmean_years$years <-seq(1985,2016,1)
+kern_tmean_years$basin <-rep("Kern", nrow(kern_tmean_years))
+
+tmean_years1 <-bind_rows(kern_tmean_years,usj_tmean_years)
+tmean_years <-bind_rows(tmean_years1, yuba_tmean_years)
+tmean_years
+
+plotting_df <-full_join(max_years, tmean_years, c("years","basin"))
+plotting_df
+
+ggplot(plotting_df)+
+  geom_point(aes(x = tmean_anom, y = max_anom, color = basin)) +
+  geom_vline(xintercept = 0, linetype=2, col = "gray70", alpha = 1) +
+  geom_hline(yintercept = 0, linetype=2, col = "gray70", alpha = 1) +
+  ylab("Max SWE Anomaly (mm)")+
+  xlab("ONDJFM Temperature Anomaly (°C)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1))+
+  theme(legend.position = c(.92,.74),
+        panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1),
+        legend.title=element_blank())
+  
+
+
+
+swe <-ggplot(cadwr_swe)+
+  geom_vline(xintercept = ls1, linetype=2, col = "purple4", alpha = 1) +
+  geom_vline(xintercept = ls2, linetype=2, col = "purple4", alpha = 1) +
+  geom_vline(xintercept = ls3, linetype=2, col = "purple4", alpha = 1) +
+  geom_vline(xintercept = start, linetype=2, col = "orange", alpha = 1) +
+  geom_vline(xintercept = flight2, linetype=2, col = "orange", alpha = 1) +
+  geom_vline(xintercept = flight3, linetype=2, col = "orange", alpha = 1) +
+  geom_vline(xintercept = flight4, linetype=2, col = "orange", alpha = 1) +
+  geom_vline(xintercept = end, linetype=2, col = "orange", alpha = 1) +
+  annotate("rect", xmin = start, xmax = end,
+           ymin = -Inf, ymax = Inf, alpha = .2)+
+  geom_line(aes(x = date, y = swe_cm, color = id),  size = .7)+
+  scale_x_date(date_labels = "%m/%y",
+               date_breaks = "1 month",
+               expand = c(0,3))+
+  scale_y_continuous(expand = c(.01,.01), 
+                     limits = c(0,70),
+                     breaks = c(seq(0,70,10)))+
+  ylab("SWE (cm)")+
+  xlab("Date") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1))+
+  scale_color_manual(values = my_colors,
+                     breaks = c('DPO', 'MHP',
+                                'UBC', 'VLC','CUES'),
+                     labels = c('DPO', 'MHP',
+                                'UBC', 'VLC','CUES'))+
+  theme(legend.position = c(.92,.74),
+        panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1),
+        axis.text.x=element_blank(),
+        axis.title.x=element_blank(),
+        legend.title=element_blank())

@@ -85,7 +85,7 @@ hist(df$mwa_mm, breaks = 50)
 grouped_box_plot_top <-function(variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = aspect_basin)) +
-    geom_boxplot(linewidth = .3, width = .7, position = 'dodge',
+    geom_boxplot(linewidth = .3, width = .7, position = 'dodge', notch = T,
                  outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01) +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
@@ -106,17 +106,18 @@ grouped_box_plot_top <-function(variable, min,max, ylab){
           # legend.background = element_rect(colour = "black", fill = 'white', size = .2),
           plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
     geom_signif(
-      y_position = c(250), xmin = c(0.6), xmax = c(1),
-      annotation = c("**"), tip_length = 0.005, textsize = 7, size = 1
-    )  
+      y_position = c(240, 240), xmin = c(0.8, 1.8), xmax = c(1.2, 2.2),
+      annotation = c("**", "NS"), tip_length = 0
+    )
   return(p)
 }
+
 grouped_box_plot_mid <-function(variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
     geom_boxplot(linewidth = .3, width = .7, 
                  outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01,
-                 position = 'dodge') +
+                 position = 'dodge', notch = T) +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -141,7 +142,7 @@ grouped_box_plot_bot <-function(variable, min,max, ylab){
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
     geom_boxplot(linewidth = .3, width = .7, 
                  outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01,
-                 position = 'dodge') +
+                 position = 'dodge', notch = T) +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -162,12 +163,18 @@ grouped_box_plot_bot <-function(variable, min,max, ylab){
   return(p)
 }
 
+
+
+
+
 ####################################
 ######## plot 4 snow variables #####
 ####################################
 
 max_p <-grouped_box_plot_top(variable = df$mswe_mm/10, 
                              min = 0, max = 250, ylab = "Max SWE (cm)")
+
+max_p
 
 mwa_p <-grouped_box_plot_mid(variable = df$mwa_mm/10, 
                              min = 0, max = 50, ylab = "MWA (cm)")
@@ -192,13 +199,13 @@ snow_cow <-plot_grid(max_p, mwa_p, fm_p, dom_p,
 # plot(snow_cow)
 
 ggsave(snow_cow,
-       file = "./plots/snow4_boxplot_v5.png",
+       file = "./plots/snow4_boxplot_v6.png",
        width = 9, 
        height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/snow4_boxplot_v5.png")
+system("open ./plots/snow4_boxplot_v6.png")
 
 ####################################
 ######## plot 4 met  variables #####
