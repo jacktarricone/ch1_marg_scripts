@@ -49,15 +49,15 @@ kern_max_years$anom <-(kern_max_years$mean)-kern_ts_mean
 # continue formatting
 colnames(yuba_max_years)[1:2] <-c("max_mean","max_anom")
 yuba_max_years$years <-seq(1985,2016,1)
-yuba_max_years$basin <-rep("yuba", nrow(yuba_max_years))
+yuba_max_years$basin <-rep("Yuba", nrow(yuba_max_years))
 
 colnames(usj_max_years)[1:2] <-c("max_mean","max_anom")
 usj_max_years$years <-seq(1985,2016,1)
-usj_max_years$basin <-rep("usj", nrow(usj_max_years))
+usj_max_years$basin <-rep("USJ", nrow(usj_max_years))
 
 colnames(kern_max_years)[1:2] <-c("max_mean","max_anom")
 kern_max_years$years <-seq(1985,2016,1)
-kern_max_years$basin <-rep("kern", nrow(kern_max_years))
+kern_max_years$basin <-rep("Kern", nrow(kern_max_years))
 kern_max_years
 
 max_years1 <-bind_rows(kern_max_years,usj_max_years)
@@ -107,51 +107,74 @@ tmean_years1 <-bind_rows(kern_tmean_years,usj_tmean_years)
 tmean_years <-bind_rows(tmean_years1, yuba_tmean_years)
 tmean_years
 
+# fulll df
 plotting_df <-full_join(max_years, tmean_years, c("years","basin"))
 plotting_df
 
+library(viridis)
+scale <-viridis(32, alpha = 1, option = "H")
+scale
+?viridis_pal
+
+# plot
 ggplot(plotting_df)+
-  geom_point(aes(x = tmean_anom, y = max_anom, color = basin)) +
+  geom_point(aes(x = tmean_anom, y = max_anom, shape = basin, color = years)) +
+  scale_color_gradientn(colors = scale) +
   geom_vline(xintercept = 0, linetype=2, col = "gray70", alpha = 1) +
   geom_hline(yintercept = 0, linetype=2, col = "gray70", alpha = 1) +
   ylab("Max SWE Anomaly (mm)")+
   xlab("ONDJFM Temperature Anomaly (°C)") +
+  scale_x_continuous(limits = c(-4,4), breaks = seq(-3,3,1))+
+  scale_y_continuous(limits = c(-750,750), breaks = seq(-750,750,250))+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1))+
-  theme(legend.position = c(.92,.74),
+  theme(legend.position = c(.9,.69),
+        aspect.ratio = 1,
         panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1),
-        legend.title=element_blank())
+        legend.text=element_text(size=6),
+        legend.box.spacing = unit(0, "pt"),
+        legend.title=element_blank())+
   
+  guides(color = guide_colorbar(barwidth = .5,
+                               barheight = 4,
+                               ticks.colour = "black"))
 
 
+ggsave("~/ch1_margulis/plots/wet_dry_years_basins_v1.pdf",
+       width = 5,
+       height = 5,
+       units = "in")
 
-swe <-ggplot(cadwr_swe)+
-  geom_vline(xintercept = ls1, linetype=2, col = "purple4", alpha = 1) +
-  geom_vline(xintercept = ls2, linetype=2, col = "purple4", alpha = 1) +
-  geom_vline(xintercept = ls3, linetype=2, col = "purple4", alpha = 1) +
-  geom_vline(xintercept = start, linetype=2, col = "orange", alpha = 1) +
-  geom_vline(xintercept = flight2, linetype=2, col = "orange", alpha = 1) +
-  geom_vline(xintercept = flight3, linetype=2, col = "orange", alpha = 1) +
-  geom_vline(xintercept = flight4, linetype=2, col = "orange", alpha = 1) +
-  geom_vline(xintercept = end, linetype=2, col = "orange", alpha = 1) +
-  annotate("rect", xmin = start, xmax = end,
-           ymin = -Inf, ymax = Inf, alpha = .2)+
-  geom_line(aes(x = date, y = swe_cm, color = id),  size = .7)+
-  scale_x_date(date_labels = "%m/%y",
-               date_breaks = "1 month",
-               expand = c(0,3))+
-  scale_y_continuous(expand = c(.01,.01), 
-                     limits = c(0,70),
-                     breaks = c(seq(0,70,10)))+
-  ylab("SWE (cm)")+
-  xlab("Date") +
+system("open ~/ch1_margulis/plots/wet_dry_years_basins_v1.pdf")
+  
+# bains# bainscolorConverter()
+year_means <- plotting_df %>%
+  group_by(years) %>%
+  summarize(year_max_mean = mean(max_anom),
+            year_tmean_mean = mean(tmean_anom))
+year_means
+
+ggplot(year_means, aes(x = year_tmean_mean, y = year_max_mean))+
+  geom_vline(xintercept = 0, linetype=2, col = "gray70", alpha = 1) +
+  geom_hline(yintercept = 0, linetype=2, col = "gray70", alpha = 1) +
+  geom_point(shape = 3) +
+  geom_text(aes(label = years),  hjust = 0.5,  vjust = -1, size = 2, color = "gray50") +
+  ylab("Max SWE Anomaly (mm)")+
+  xlab("ONDJFM Temperature Anomaly (°C)") +
+  scale_x_continuous(limits = c(-3,3), breaks = seq(-3,3,1))+
+  scale_y_continuous(limits = c(-600,600), breaks = seq(-600,600,200))+
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1))+
-  scale_color_manual(values = my_colors,
-                     breaks = c('DPO', 'MHP',
-                                'UBC', 'VLC','CUES'),
-                     labels = c('DPO', 'MHP',
-                                'UBC', 'VLC','CUES'))+
-  theme(legend.position = c(.92,.74),
+  theme(legend.position = c(.85,.79),
+        aspect.ratio = 1,
         panel.border = element_rect(colour = "black", fill=NA, linewidth  = 1),
-        axis.text.x=element_blank(),
-        axis.title.x=element_blank(),
-        legend.title=element_blank())
+        legend.title=element_blank())+
+  annotate("text", x = -2.3, y = 530, label = "Cold/Wet", color = "darkblue")+
+  annotate("text", x = -2.3, y = -530, label = "Cold/Dry", color = "grey") +
+  annotate("text", x = 2.3, y = 530, label = "Warm/Wet", color = "grey") +
+  annotate("text", x = 2.3, y = -530, label = "Warm/Dry", color = "darkred") 
+
+ggsave("~/ch1_margulis/plots/wet_dry_years_v1.pdf",
+       width = 5.5,
+       height = 5.5,
+       units = "in")
+
+system("open ~/ch1_margulis/plots/wet_dry_years_v1.pdf")
