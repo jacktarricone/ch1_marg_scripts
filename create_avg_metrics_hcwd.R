@@ -26,11 +26,11 @@ cw <-filter(hydro_cat, hydro_cat == "cw")
 hd <-filter(hydro_cat, hydro_cat == "hd")
 hw <-filter(hydro_cat, hydro_cat == "hw")
 
+metric_stack <-fm_stack
+name <-"fm"
 
-metric_hydro_cat_mean <-function(metric_stack){
-  
-  # name
-  name <-gsub("_stack","",metric_stack)
+# define function
+metric_hydro_cat_mean <-function(metric_stack,name){
   
   # subet layers into 4 quads
   metric_cd <-subset(metric_stack, cd$lyr)
@@ -41,26 +41,37 @@ metric_hydro_cat_mean <-function(metric_stack){
   # take mean per each quad
   metric_cd_mean <-app(metric_cd, fun = metric_mean, cores=14)
   names(metric_cd_mean) <-"metric_cd_mean"
+  print("cd done!")
   metric_cw_mean <-app(metric_cw, fun = metric_mean, cores=14)
   names(metric_cw_mean) <-"metric_cw_mean"
+  print("cw done!")
   metric_hd_mean <-app(metric_hd, fun = metric_mean, cores=14)
   names(metric_hd_mean) <-"metric_hd_mean"
+  print("hd done!")
   metric_hw_mean <-app(metric_hw, fun = metric_mean, cores=14)
   names(metric_hw_mean) <-"metric_hw_mean"
+  print("hw done!")
 
   # stack for saving
-  stack_list1 <-list(metric_cd_mean,
+  stack_list <-list(metric_cd_mean,
                   metric_cw_mean,
                   metric_hd_mean,
                   metric_hw_mean)
   
-  stack_list <-gsub(metric_)
+  # naming stuff
+  names_list1 <-c("metric_cd_mean",
+                  "metric_cw_mean",
+                  "metric_hd_mean",
+                  "metric_hw_mean")
+  
+  names_list <-gsub("metric",name,names_list1)
 
   # save
   for (i in 1:4){
    name <-names(stack_list[[i]])
-   writeRaster(stack_list[[i]], paste0("./rasters/snow_metric_averages/hydro_cat/",name,".tif"))
+   writeRaster(stack_list[[i]], paste0("./rasters/snow_metric_averages/hydro_cat/",names_list[[i]],".tif"))
   }
+  
 }
 
 
@@ -74,140 +85,40 @@ max_stack <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
 names(max_stack) <-hydro_cat$years
 max_stack
 
-# subet layers into 4 quads
-max_cd <-subset(max_stack, cd$lyr)
-max_cw <-subset(max_stack, cw$lyr)
-max_hd <-subset(max_stack, hd$lyr)
-max_hw <-subset(max_stack, hw$lyr)
-
-# take mean per each quad
-max_cd_mean <-app(max_cd, fun = metric_mean, cores=14)
-names(max_cd_mean) <-"max_cd_mean"
-max_cw_mean <-app(max_cw, fun = metric_mean, cores=14)
-names(max_cw_mean) <-"max_cw_mean"
-max_hd_mean <-app(max_hd, fun = metric_mean, cores=14)
-names(max_hd_mean) <-"max_hd_mean"
-max_hw_mean <-app(max_hw, fun = metric_mean, cores=14)
-names(max_hw_mean) <-"max_hw_mean"
-
-# stack for saving
-stack_list <-list(max_cd_mean,
-                        max_cw_mean,
-                        max_hd_mean,
-                        max_hw_mean)
-
-# save
-for (i in 1:4){
-  name <-names(stack_list[[i]])
-  writeRaster(stack_list[[i]], paste0("./rasters/snow_metric_averages/hydro_cat/",name,".tif"))
-  }
-
+# metric_hydro_cat_mean(max_stack)
 
 ####################
 ####### mwa ########
 ####################
 
 # load in stack
-mwa_stack <-rast("./rasters/snow_metric_averages/mwa_mean_f_25mm_27obs.tif")
+mwa_paths <-list.files("./rasters/snow_metrics/mwa_ondjfm_mm/", pattern = ".tif", full.names = TRUE)
+mwa_stack <-rast(mwa_paths)
 
+# metric_hydro_cat_mean(mwa_stack)
 
 ####################
 ####### fm #########
 ####################
 
 # load in stack
-fm_paths <-list.files("./rasters/snow_metrics/fm_apr1/", pattern = ".tif", full.names = TRUE)
-fm_stack_v1 <-rast(fm_paths)
+fm_stack <-rast("./rasters/snow_metrics/fm_apr1/fm_stack_f_25mm_27obs.tif")
 
-# mask with max
-fm_stack_v2 <-mask(fm_stack_v1, max_mean)
-# writeRaster(fm_stack_v2, "./rasters/snow_metrics/fm_apr1/fm_stack_f_25mm_27obs.tif")
-
-# calculate average
-fm_mean <-app(fm_stack_v2, fun = metric_mean, cores = 14)
-plot(fm_mean)
-
-# writeRaster(fm_mean, "./rasters/snow_metric_averages/fm_mean_f_25mm_27obs.tif")
+# run
+# metric_hydro_cat_mean(fm_stack)
 
 ####################
 #####   dom    ####
 ####################
 
-max_stack <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
+# load in stack
+dom_stack <-rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
+metric_hydro_cat_mean(dom_stack,"dom")
+
+####################
+#####   tmean   ####
+####################
 
 # load in stack
-dom_paths <-list.files("./rasters/snow_metrics/max_swe_dowy/", pattern = ".tif", full.names = TRUE)
-dom_stack_v1 <-rast(dom_paths)
-
-# make values less than 1 inch (25.4 mm) = NA
-dom_stack_v2 <-mask(dom_stack_v1, max_stack_v2)
-
-# calculate number of non na obs per pixel
-dom_stack_n_obs <-app(dom_stack_v2, function(x) sum(!is.na(x)))
-
-# dom all time series pixels that don't have 90% of obs (29 years)
-dom_stack_n_obs_27 <-subst(dom_stack_n_obs, 0:27, NA)
-
-# mask dom stack for pixels that only have 29 obs
-dom_stack <-mask(dom_stack_v1, max_stack)
-# writeRaster(dom_stack, "./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
-
-# calculate average
-dom_mean <-app(dom_stack, fun = metric_mean, cores=14)
-plot(dom_mean)
-
-# save
-writeRaster(dom_mean, "./rasters/snow_metric_averages/dom_mean_f_25mm_27obs.tif")
-
-##############
-##### mwa ####
-##############
-
-dom_stack <-rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
-
-mwa_list <-list.files('./rasters/snow_metrics/mwa_djfm_total/', pattern = '.tif', full.names = TRUE)
-mwa_stack <-rast(mwa_list)
-mwa_stack
-
-# make values less than 1 inch (25.4 mm) = NA
-mwa_stack_v2 <-mask(mwa_stack, dom_stack)
-plot(mwa_stack_v2[[8]])
-
-# calculate number of non na obs per pixel
-mwa_stack_n_obs <-app(mwa_stack_v2, function(x) sum(!is.na(x)), cores = 14)
-
-# dom all time series pixels that don't have 90% of obs (29 years)
-mwa_stack_n_obs_27 <-subst(mwa_stack_n_obs, 0:27, NA)
-
-# calculate average
-mwa_mean <-app(mwa_stack_v2, fun = metric_mean, cores = 14)
-plot(mwa_mean)
-writeRaster(mwa_mean, "./rasters/snow_metric_averages/mwa_djfm_v1.tif")
-
-##############
-##### fm ####
-##############
-
-dom_stack <-rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
-
-fm_list <-list.files('./rasters/snow_metrics/fm_apr1/', pattern = '.tif', full.names = TRUE)
-fm_stack <-rast(fm_list)
-fm_stack
-
-# make values less than 1 inch (25.4 mm) = NA
-fm_stack_v2 <-mask(fm_stack, dom_stack)
-plot(fm_stack_v2[[8]])
-
-# calculate number of non na obs per pixel
-# fm_stack_n_obs <-app(fm_stack_v2, function(x) sum(!is.na(x)), cores = 14)
-
-# dom all time series pixels that don't have 90% of obs (29 years)
-# fm_stack_n_obs_27 <-subst(fm_stack_n_obs, 0:27, NA)
-
-# calculate average
-fm_mean_v1 <-app(fm_stack, fun = metric_mean, cores = 14)
-fm_mean <-mask(fm_mean_v1, dom_stack[[1]])
-plot(fm_mean)
-plot(fm_mean_v1)
-
-writeRaster(fm_mean, "./rasters/snow_metric_averages/fm_mean_v1.tif")
+tmean_stack <-rast("./rasters/gridmet/tmean/tmean_stack.tif")
+metric_hydro_cat_mean(dom_stack,"tmean")

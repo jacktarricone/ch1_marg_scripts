@@ -1,6 +1,6 @@
-# fm box plot time series
-# jack tarricone
-# june 8th, 2023
+# updated snow metric box plots
+# split by hydro cat means
+
 
 library(terra)
 library(lubridate)
