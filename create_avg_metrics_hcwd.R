@@ -104,7 +104,7 @@ mwa_stack <-rast(mwa_paths)
 fm_stack <-rast("./rasters/snow_metrics/fm_apr1/fm_stack_f_25mm_27obs.tif")
 
 # run
-# metric_hydro_cat_mean(fm_stack)
+# metric_hydro_cat_mean(fm_stack, "fm")
 
 ####################
 #####   dom    ####

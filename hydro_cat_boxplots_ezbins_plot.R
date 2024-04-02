@@ -48,17 +48,7 @@ setwd("~/ch1_margulis")
 hydro_cat <-fread("./csvs/hydro_cat_years.csv")
 
 ##############################################
-yuba_df <-fread("./csvs/gridmet_dfs/yuba_full_stats_v4.csv")
-usj_df <-fread("./csvs/gridmet_dfs/usj_full_stats_v4.csv")
-kern_df <-fread("./csvs/gridmet_dfs/kern_full_stats_v4.csv")
-head(kern_df)
-
-# join
-joined_df_v1 <-as.data.table(bind_rows(yuba_df, usj_df, kern_df))
-joined_df <-dplyr::filter(joined_df_v1, aspect != 2 & aspect != 4)
-
-# read back in using data.table
-df <-joined_df
+df <-fread("./csvs/hydro_cat/full_df_hydro_cat_v1.csv")
 
 # rename
 df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
@@ -68,15 +58,24 @@ df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
 
+# filter aspects
+df <-dplyr::filter(df, aspect != 2 & aspect != 4)
 
 # add grouped col
 df$aspect_basin <-paste0(df$aspect,".",df$basin_name)
 df$aspect_basin <-factor(df$aspect_basin, levels=c('1.kern', '3.kern', 
                                                    '1.usj', '3.usj',
                                                    '1.yuba','3.yuba'))
+#
+cw_df <-filter(df, hydr0_cat == "cw")
+hd_df <-filter(df, hydr0_cat == "hd")
+hw_df <-filter(df, hydr0_cat == "hw")
+cd_df <-filter(df, hydr0_cat == "hd")
+head(cw_df)
 
 # test hists
-hist(df$frac_melt, breaks = 50)
+hist(cw_df$mean_mswe_mm, breaks = 50)
+hist(hd_df$mean_mswe_mm, breaks = 50, col = 'red', add = T)
 hist(df$mwa_mm, breaks = 50)
 
 ##################################
@@ -85,10 +84,12 @@ hist(df$mwa_mm, breaks = 50)
 
 
 # define 3 plotting functions
-grouped_box_plot_top <-function(variable, min,max, ylab){
+box_plot <-function(df, display_name){
+
+  grouped_box_plot_top <-function(df,variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = aspect_basin)) +
-    geom_boxplot(linewidth = .3, width = .7, position = 'dodge', notch = T,
+    geom_boxplot(linewidth = .3, width = .7, position = 'dodge',
                  outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01) +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
@@ -106,21 +107,16 @@ grouped_box_plot_top <-function(variable, min,max, ylab){
           legend.direction = 'horizontal',
           legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
           axis.text.x = element_blank(),
-          # legend.background = element_rect(colour = "black", fill = 'white', size = .2),
           plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-    geom_signif(
-      y_position = c(240, 240), xmin = c(0.8, 1.8), xmax = c(1.2, 2.2),
-      annotation = c("**", "NS"), tip_length = 0
-    )
+  annotate("text", x = 1, y = 220, label = display_name, color = "black", size = 7, fontface = 2)
   return(p)
 }
-
-grouped_box_plot_mid <-function(variable, min,max, ylab){
+  grouped_box_plot_mid <-function(df,variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
     geom_boxplot(linewidth = .3, width = .7, 
                  outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01,
-                 position = 'dodge', notch = T) +
+                 position = 'dodge') +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -140,12 +136,12 @@ grouped_box_plot_mid <-function(variable, min,max, ylab){
   
   return(p)
 }
-grouped_box_plot_bot <-function(variable, min,max, ylab){
+  grouped_box_plot_bot <-function(df,variable, min,max, ylab){
   
   p <-ggplot(df, mapping = aes(x = as.factor(bin_name), y = variable, fill = interaction(aspect, as.factor(basin_name)))) +
     geom_boxplot(linewidth = .3, width = .7, 
                  outlier.shape = 4, outlier.color = 'gray90', outlier.alpha = .05, outlier.size = .01,
-                 position = 'dodge', notch = T) +
+                 position = 'dodge') +
     scale_fill_manual(name = "Basin and Aspect",
                       values = c('1.kern' = 'azure4', '3.kern' = 'azure2', 
                                  '1.usj' = 'tomato4', '3.usj' = 'tomato1',
@@ -166,30 +162,23 @@ grouped_box_plot_bot <-function(variable, min,max, ylab){
   return(p)
 }
 
+  ####################################
+  ######## plot 4 snow variables #####
+  ####################################
 
-
-
-
-####################################
-######## plot 4 snow variables #####
-####################################
-
-max_p <-grouped_box_plot_top(variable = df$mswe_mm/10, 
+  max_p <-grouped_box_plot_top(df, variable = df$mean_mswe_mm/10, 
                              min = 0, max = 250, ylab = "Max SWE (cm)")
-
-max_p
-
-mwa_p <-grouped_box_plot_mid(variable = df$mwa_mm/10, 
+  
+  mwa_p <-grouped_box_plot_mid(df, variable = df$mean_mwa/10, 
                              min = 0, max = 50, ylab = "MWA (cm)")
 
-fm_p <-grouped_box_plot_mid(variable = df$frac_melt, min = 0, max = 1, ylab = "FM")
+  fm_p <-grouped_box_plot_mid(df, variable = df$mean_fm, min = 0, max = 1, ylab = "FM")
 
-dom_p <-grouped_box_plot_bot(variable = df$dom_dowy, 
-                             min = 50, max = 250, ylab = "DOM (DOWY)")
+  dom_p <-grouped_box_plot_bot(df, variable = df$mean_dom_dowy, 
+                             min = 100, max = 230, ylab = "DOM (DOWY)")
 
-
-# cowplot
-snow_cow <-plot_grid(max_p, mwa_p, fm_p, dom_p, 
+  # cowplot
+  snow_cow <-plot_grid(max_p, mwa_p, fm_p, dom_p, 
                      labels = c("(a)", "(b)", "(c)","(d)"),
                      nrow = 4, 
                      align = "v",
@@ -198,58 +187,28 @@ snow_cow <-plot_grid(max_p, mwa_p, fm_p, dom_p,
                      vjust =  2.4,
                      hjust = -2.6,
                      rel_heights = c(.28,.22,.22,.28))
+  plot(snow_cow)
+  return(snow_cow)
+}
 
-# plot(snow_cow)
+snow_cow_cw <-box_plot(df = cw_df, display_name = "Cold/Wet")
+snow_cow_hd <-box_plot(df = hd_df, display_name = "Hot/Dry")
 
-ggsave(snow_cow,
-       file = "./plots/snow4_boxplot_v6.png",
+ggsave(snow_cow_cw,
+       file = "./plots/hydro_cat_cw_v1.png",
        width = 9, 
        height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/snow4_boxplot_v6.png")
+system("open ./plots/hydro_cat_cw_v1.png")
 
-####################################
-######## plot 4 met  variables #####
-####################################
-temp_p <-grouped_box_plot_top(variable = df$temp_mean_c, 
-                              min = -7, max = 10, ylab = expression('ONDJFM ' ~T["Mean"] ~ '(°C)'))
-
-rh_p <-grouped_box_plot_mid(variable = df$`rh_mean_%`, 
-                            min = 35, max = 70, ylab = expression("RH (%)"))
-
-srad_p <-grouped_box_plot_mid(variable = df$srad_wm2, 
-                              min = 120, max = 170, ylab = expression("Insolation"~paste("(W m"^{-2},")")))
-
-insol_p <-grouped_box_plot_bot(variable = df$insol_watts, 
-                               min = 30, max = 270, ylab = expression("CS Insolation"~paste("(W m"^{-2},")")))
-
-# cowplot test
-met_cow <-plot_grid(temp_p, rh_p, srad_p, insol_p,
-                    labels = c("(a)", "(b)", "(c)","(d)"),
-                    nrow = 4, 
-                    align = "v",
-                    axis = "b",
-                    label_size = 14,
-                    vjust =  2.3,
-                    hjust = -2.8,
-                    rel_heights = c(.28,.22,.22,.28))
-
-# plot(met_cow)
-
-ggsave(met_cow,
-       file = "./plots/met4_boxplot_v5.png",
+ggsave(snow_cow_hd,
+       file = "./plots/hydro_cat_hd_v1.png",
        width = 9, 
        height = 7,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/met4_boxplot_v5.png")
-
-
-
-
-
-
+system("open ./plots/hydro_cat_hd_v1.png")
 
