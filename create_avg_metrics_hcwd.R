@@ -75,7 +75,6 @@ metric_hydro_cat_mean <-function(metric_stack,name){
 }
 
 
-
 ##############
 ##### max ####
 ##############
@@ -95,7 +94,7 @@ max_stack
 mwa_paths <-list.files("./rasters/snow_metrics/mwa_ondjfm_mm/", pattern = ".tif", full.names = TRUE)
 mwa_stack <-rast(mwa_paths)
 
-# metric_hydro_cat_mean(mwa_stack)
+# metric_hydro_cat_mean(mwa_stack,"mwa")
 
 ####################
 ####### fm #########
@@ -113,7 +112,8 @@ fm_stack <-rast("./rasters/snow_metrics/fm_apr1/fm_stack_f_25mm_27obs.tif")
 
 # load in stack
 dom_stack <-rast("./rasters/snow_metrics/max_swe_dowy/dom_stack_f_25mm_27obs.tif")
-metric_hydro_cat_mean(dom_stack,"dom")
+
+# metric_hydro_cat_mean(dom_stack,"dom")
 
 ####################
 #####   tmean   ####
@@ -121,4 +121,10 @@ metric_hydro_cat_mean(dom_stack,"dom")
 
 # load in stack
 tmean_stack <-rast("./rasters/gridmet/tmean/tmean_stack.tif")
-metric_hydro_cat_mean(dom_stack,"tmean")
+
+# metric_hydro_cat_mean(tmean_stack,"tmean")
+
+
+tmean_list <-list.files("./rasters/snow_metric_averages/hydro_cat/", pattern = "*tmean", full.names = T)
+tmean_stack <-rast(tmean_list)
+plot(tmean_stack)
