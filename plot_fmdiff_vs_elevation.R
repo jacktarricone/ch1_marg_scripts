@@ -132,100 +132,77 @@ df_sorted <- df_diff %>%
 
 # View the sorted dataframe
 df_sorted
+usj <-as.data.frame(filter(df_sorted, basin_name == "USJ"))
+kern <-as.data.frame(filter(df_sorted, basin_name == "Kern"))
+yuba <-as.data.frame(filter(df_sorted, basin_name == "Yuba"))
+
+min(df_sorted$diff_ez_fm)
 
 ######
 # by elevations
 ######
 
-ggplot(df_sorted, aes(x=mean_ez_tmean,y=diff_ez_fm,shape=basin_name,color=as.factor(ez2))) +
-  geom_point() +
-  ylab("SF-NF FM (-)") + xlab("tmean")+
-  scale_x_continuous(limits = c(-8,8), breaks = seq(8,8,2))+
-  scale_linetype_manual(name = "Basin", values = c("Kern" = "solid", "USJ" = "dotted", "Yuba" = "longdash")) +
-  scale_color_viridis(discrete = T)+
+yuba_p <-ggplot(yuba, aes(x=ez2,y=diff_ez_fm,shape=hydr0_cat)) +
+  geom_point(size = 3) +
+  ylab("SF-NF FM (-)") + xlab("Elevation Zone")+
+  scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
+  scale_y_continuous(limits = c(0,.45), breaks = seq(0,.4,.1))+
+  scale_shape_manual(name = "Hydro Cat", values = c("HD" = 17, "CW" = 4)) +
+  scale_color_viridis()+
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
         legend.position = 'top',
-        axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
         legend.direction = 'horizontal',
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-  annotate("text", x = 11, y = max(df_sorted$diff_ez_fm)*.93,  
-           label = "(a) FM", color = "Black", size = 6, hjust = 0)
+  annotate("text", x = 11, y = max(df_sorted$diff_ez_fm)*1,  
+           label = "(a) Yuba", color = "Black", size = 6, hjust = 0)
+yuba_p
 
-mwa <-ggplot(df_sorted, aes(x=mean_ez_tmean,y=diff_ez_mwa,shape=basin_name,color=hydr0_cat)) +
-  geom_point() +
-  ylab("SF-NF MWA (mm)") + xlab("Elevation Zone")+
-  scale_x_continuous(limits = c(-8,8), breaks = seq(8,8,2))+
-  scale_y_continuous(limits = c(0,300), breaks = seq(0,300,100))+
-  scale_linetype_manual(name = "Basin", values = c("Kern" = "solid", "USJ" = "dotted", "Yuba" = "longdash")) +
-  # scale_color_manual(name = "Basin",
-  #                    values = c('CW' = 'darkblue', 'HD' = 'tomato'),
-  #                    labels = c('CW','HD')) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = 'none',
-        axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        legend.direction = 'horizontal',
-        legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
-        plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-  annotate("text", x = 11, y = max(df_sorted$diff_ez_mwa)*1.05, 
-           label = "(b) MWA", color = "Black", size = 6, hjust = 0)
-mwa
-
-mswe <-ggplot(df_sorted, aes(x=ez2,y=diff_ez_mswe,linetype=basin_name,color=hydr0_cat)) +
-  geom_line() +
-  ylab("SF-NF MSWE (mm)") + xlab("Elevation Zone")+
+usj_p <-ggplot(usj, aes(x=ez2,y=diff_ez_fm,shape=hydr0_cat)) +
+  geom_point(size = 3) +
+  ylab("SF-NF FM (-)") + xlab("Elevation Zone")+
   scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
-  scale_y_continuous(limits = c(-600,0), breaks = seq(0,-600,-200))+
-  scale_linetype_manual(name = "Basin", values = c("Kern" = "solid", "USJ" = "dotted", "Yuba" = "longdash")) +
-  scale_color_manual(name = "Basin",
-                     values = c('CW' = 'darkblue', 'HD' = 'tomato'),
-                     labels = c('CW','HD')) +
+  scale_y_continuous(limits = c(0,.45), breaks = seq(0,.4,.1))+
+  scale_shape_manual(name = "Hydro Cat", values = c("HD" = 17, "CW" = 4)) +
+  scale_color_viridis()+
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = 'none',
-        axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
+        legend.position = 'top',
         legend.direction = 'horizontal',
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-  annotate("text", x = 11, y = min(df_sorted$diff_ez_mswe)*.07, 
-           label = "(c) MSWE", color = "Black", size = 6, hjust = 0)
+  annotate("text", x = 11, y = max(df_sorted$diff_ez_fm)*1,  
+           label = "(b) USJ", color = "Black", size = 6, hjust = 0)
 
-dom <-ggplot(df_sorted, aes(x=ez2,y=diff_ez_dom,linetype=basin_name,color=hydr0_cat)) +
-  geom_line() +
-  ylab("SF-NF DOM (days)") + xlab("Elevation Zone")+
+usj_p
+
+kern_p <-ggplot(kern, aes(x=ez2,y=diff_ez_fm,shape=hydr0_cat)) +
+  geom_point(size = 3) +
+  ylab("SF-NF FM (-)") + xlab("Elevation Zone")+
   scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
-  scale_y_continuous(limits = c(-40,0), breaks = seq(0,-40,-10))+
-  scale_linetype_manual(name = "Basin", values = c("Kern" = "solid", "USJ" = "dotted", "Yuba" = "longdash")) +
-  scale_color_manual(name = "Basin",
-                     values = c('CW' = 'darkblue', 'HD' = 'tomato'),
-                     labels = c('CW','HD')) +
+  scale_y_continuous(limits = c(0,.45), breaks = seq(0,.4,.1))+
+  scale_shape_manual(name = "Hydro Cat", values = c("HD" = 17, "CW" = 4)) +
+  scale_color_viridis()+
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = 'none',
+        legend.position = 'top',
         legend.direction = 'horizontal',
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-  annotate("text", x = 11, y = min(df_sorted$diff_ez_dom)*.07, 
-           label = "(d) DOM", color = "Black", size = 6, hjust = 0)
+  annotate("text", x = 11, y = max(df_sorted$diff_ez_fm)*1,  
+           label = "(c) Kern", color = "Black", size = 6, hjust = 0)
 
-snow_cow <-plot_grid(fm, mwa, mswe, dom, 
-                     nrow = 4, 
-                     align = "v",
-                     axis = "b",
-                     label_size = 14,
-                     vjust =  2.4,
-                     hjust = -2.6,
-                     rel_heights = c(.27,.22,.22,.27))
+kern_p
 
-ggsave(snow_cow,
-       file = "./plots/metric_diff_elevation_plot_v1.png",
-       width = 6, 
-       height = 9,
-       units = "in",
-       dpi = 300) 
 
-system("open ./plots/metric_diff_elevation_plot_v1.png")
+
+
+# ggsave(snow_cow,
+#        file = "./plots/metric_diff_elevation_plot_v1.png",
+#        width = 6, 
+#        height = 9,
+#        units = "in",
+#        dpi = 300) 
+# 
+# system("open ./plots/metric_diff_elevation_plot_v1.png")
 
 
 
