@@ -194,6 +194,10 @@ box_plot <-function(df, display_name){
 snow_cow_cw <-box_plot(df = cw_df, display_name = "Cold/Wet")
 snow_cow_hd <-box_plot(df = hd_df, display_name = "Hot/Dry")
 
+snow_cow <-plot_grid(snow_cow_cw, snow_cow_hd,
+                     ncol = 2, 
+                     rel_heights = c(.5,.5))
+
 ggsave(snow_cow_cw,
        file = "./plots/hydro_cat_cw_v1.png",
        width = 9, 
@@ -211,4 +215,16 @@ ggsave(snow_cow_hd,
        dpi = 300) 
 
 system("open ./plots/hydro_cat_hd_v1.png")
+
+ggsave(snow_cow,
+       file = "./plots/hydro_cat_hdcw_v1.png",
+       width = 13, 
+       height = 7,
+       units = "in",
+       dpi = 300) 
+
+system("open ./plots/hydro_cat_hdcw_v1.png")
+
+
+
 
