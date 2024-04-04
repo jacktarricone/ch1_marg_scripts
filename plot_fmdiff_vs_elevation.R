@@ -132,9 +132,9 @@ df_sorted <- df_diff %>%
 
 # View the sorted dataframe
 df_sorted
-usj <-as.data.frame(filter(df_sorted, basin_name == "USJ"))
-kern <-as.data.frame(filter(df_sorted, basin_name == "Kern"))
-yuba <-as.data.frame(filter(df_sorted, basin_name == "Yuba"))
+usj <-as.data.frame(filter(snow_results, basin_name == "USJ"))
+kern <-as.data.frame(filter(snow_results, basin_name == "Kern"))
+yuba <-as.data.frame(filter(snow_results, basin_name == "Yuba"))
 
 min(df_sorted$diff_ez_fm)
 
@@ -142,56 +142,211 @@ min(df_sorted$diff_ez_fm)
 # by elevations
 ######
 
-yuba_p <-ggplot(yuba, aes(x=ez2,y=diff_ez_fm,shape=hydr0_cat)) +
-  geom_point(size = 3) +
-  ylab("SF-NF FM (-)") + xlab("Elevation Zone")+
+big_plot <-function(variable, ylab,ylim1,ylim2,by,name){
+
+  yuba_p <-ggplot(yuba, aes(x=ez2,y=get(variable),linetype=hydr0_cat,color=as.factor(aspect_name))) +
+    geom_line(size = .7)+
+    ylab(ylab) + xlab("Elevation Zone")+
+    scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
+    scale_y_continuous(limits = c(ylim1,ylim2), breaks = seq(ylim1,ylim2,by))+
+    scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
+    scale_color_manual(name = "Aspect",
+                      values = c('North' = 'darkblue', 'South' = 'tomato'),
+                       labels = c('NF','SF')) +
+    theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+          legend.position = 'top',
+          legend.direction = 'horizontal',
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+          plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
+    annotate("text", x = 11.5, y = ylim2*.95,  
+            label = "(a) Yuba", color = "Black", size = 6, hjust = 0)+
+    annotate("text", x = 8, y = ylim2*.93,  
+            label = name, color = "Black", size = 8, hjust = 0)
+
+usj_p <-ggplot(usj, aes(x=ez2,y=get(variable),linetype=hydr0_cat,color=as.factor(aspect_name))) +
+    geom_line(size = .7)+
+    ylab(ylab) + xlab("Elevation Zone")+
+    scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
+    scale_y_continuous(limits = c(ylim1,ylim2), breaks = seq(ylim1,ylim2,by))+
+    scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
+    scale_color_manual(name = "Aspect",
+                       values = c('North' = 'darkblue', 'South' = 'tomato'),
+                       labels = c('NF','SF')) +
+    theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+          legend.position = 'none',
+          legend.direction = 'horizontal',
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+          plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
+    annotate("text", x = 11.5, y = ylim2*.95,  
+             label = "(b) USJ", color = "Black", size = 6, hjust = 0)
+
+  kern_p <-ggplot(kern, aes(x=ez2,y=get(variable),linetype=hydr0_cat,color=as.factor(aspect_name))) +
+      geom_line(size = .7)+
+      ylab(ylab) + xlab("Elevation Zone")+
+      scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
+      scale_y_continuous(limits = c(ylim1,ylim2), breaks = seq(ylim1,ylim2,by))+
+      scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
+      scale_color_manual(name = "Aspect",
+                         values = c('North' = 'darkblue', 'South' = 'tomato'),
+                         labels = c('NF','SF')) +
+      theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+            legend.position = 'none',
+            legend.direction = 'horizontal',
+            legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+            plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
+      annotate("text", x = 11.5, y = ylim2*.95,  
+               label = "(c) Kern", color = "Black", size = 6, hjust = 0)
+
+  snow_cow <-plot_grid(yuba_p, usj_p, kern_p, 
+                       nrow = 3, 
+                       align = "v",
+                       axis = "b",
+                       rel_heights = c(.36,.33,.36))
+}
+
+#### mswe
+mswe_big <-big_plot(variable = "mean_ez_mswe", ylab = "MSWE (mm)",
+                ylim1 = 0, ylim2 = 2000,by = 400, name = "MSWE")
+
+ggsave(mswe_big,
+       file = "./plots/mswe_diff_elevation_plot_v1.png",
+       width = 6,
+       height = 7,
+       units = "in",
+       dpi = 300)
+
+system("open ./plots/mswe_diff_elevation_plot_v1.png")
+
+### fm
+fm_big <-big_plot(variable = "mean_ez_fm", ylab = "FM (-)",
+                    ylim1 = 0, ylim2 = 1,by = .2, name = "FM")
+
+ggsave(fm_big,
+       file = "./plots/fm_diff_elevation_plot_v1.png",
+       width = 6,
+       height = 7,
+       units = "in",
+       dpi = 300)
+
+system("open ./plots/fm_diff_elevation_plot_v1.png")
+
+max(usj$mean_ez_mwa)
+
+### mwa
+mwa_big <-big_plot(variable = "mean_ez_mwa", ylab = "MWA (mm)",
+                  ylim1 = 0, ylim2 = 350,by = 50, name = "MWA")
+
+ggsave(mwa_big,
+       file = "./plots/mwa_diff_elevation_plot_v1.png",
+       width = 6,
+       height = 7,
+       units = "in",
+       dpi = 300)
+
+system("open ./plots/mwa_diff_elevation_plot_v1.png")
+
+### dom
+dom_big <-big_plot(variable = "mean_ez_dom", ylab = "DOM (DOWY)",
+                   ylim1 = 100, ylim2 = 250,by = 50, name = "DOM")
+
+ggsave(dom_big,
+       file = "./plots/dom_diff_elevation_plot_v1.png",
+       width = 6,
+       height = 7,
+       units = "in",
+       dpi = 300)
+
+system("open ./plots/dom_diff_elevation_plot_v1.png")
+
+
+
+
+
+
+
+
+
+
+
+
+yuba_p <-ggplot(yuba, aes(x=ez2,y=mean_ez_fm,linetype=hydr0_cat,color=as.factor(aspect_name))) +
+  geom_line(size = .7)+
+  ylab("FM (-)") + xlab("Elevation Zone")+
   scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
-  scale_y_continuous(limits = c(0,.45), breaks = seq(0,.4,.1))+
-  scale_shape_manual(name = "Hydro Cat", values = c("HD" = 17, "CW" = 4)) +
-  scale_color_viridis()+
+  scale_y_continuous(limits = c(0,1), breaks = seq(0,1,.2))+
+  scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
+  scale_color_manual(name = "Aspect",
+                     values = c('North' = 'darkblue', 'South' = 'tomato'),
+                     labels = c('NF','SF')) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
         legend.position = 'top',
         legend.direction = 'horizontal',
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-  annotate("text", x = 11, y = max(df_sorted$diff_ez_fm)*1,  
+  annotate("text", x = 11.5, y = .95,  
            label = "(a) Yuba", color = "Black", size = 6, hjust = 0)
 yuba_p
 
-usj_p <-ggplot(usj, aes(x=ez2,y=diff_ez_fm,shape=hydr0_cat)) +
-  geom_point(size = 3) +
-  ylab("SF-NF FM (-)") + xlab("Elevation Zone")+
+usj_p <-ggplot(usj, aes(x=ez2,y=mean_ez_fm,linetype=hydr0_cat,color=as.factor(aspect_name))) +
+  geom_line(size = .7)+
+  ylab("FM (-)") + xlab("Elevation Zone")+
   scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
-  scale_y_continuous(limits = c(0,.45), breaks = seq(0,.4,.1))+
-  scale_shape_manual(name = "Hydro Cat", values = c("HD" = 17, "CW" = 4)) +
-  scale_color_viridis()+
+  scale_y_continuous(limits = c(0,1), breaks = seq(0,1,.2))+
+  scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
+  scale_color_manual(name = "Aspect",
+                     values = c('North' = 'darkblue', 'South' = 'tomato'),
+                     labels = c('NF','SF')) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = 'top',
+        legend.position = 'none',
         legend.direction = 'horizontal',
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-  annotate("text", x = 11, y = max(df_sorted$diff_ez_fm)*1,  
+  annotate("text", x = 11.5, y = .95,  
            label = "(b) USJ", color = "Black", size = 6, hjust = 0)
 
 usj_p
 
-kern_p <-ggplot(kern, aes(x=ez2,y=diff_ez_fm,shape=hydr0_cat)) +
-  geom_point(size = 3) +
-  ylab("SF-NF FM (-)") + xlab("Elevation Zone")+
+kern_p <-ggplot(kern, aes(x=ez2,y=mean_ez_fm,linetype=hydr0_cat,color=as.factor(aspect_name))) +
+  geom_line(size = .7)+
+  ylab("FM (-)") + xlab("Elevation Zone")+
   scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
-  scale_y_continuous(limits = c(0,.45), breaks = seq(0,.4,.1))+
-  scale_shape_manual(name = "Hydro Cat", values = c("HD" = 17, "CW" = 4)) +
-  scale_color_viridis()+
+  scale_y_continuous(limits = c(0,1), breaks = seq(0,1,.2))+
+  scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
+  scale_color_manual(name = "Aspect",
+                     values = c('North' = 'darkblue', 'South' = 'tomato'),
+                     labels = c('NF','SF')) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
-        legend.position = 'top',
+        legend.position = 'none',
         legend.direction = 'horizontal',
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm")) +
-  annotate("text", x = 11, y = max(df_sorted$diff_ez_fm)*1,  
+  annotate("text", x = 11.5, y = .95,  
            label = "(c) Kern", color = "Black", size = 6, hjust = 0)
 
 kern_p
 
+snow_cow <-plot_grid(yuba_p, usj_p, kern_p, 
+                     nrow = 3, 
+                     align = "v",
+                     axis = "b",
+                     rel_heights = c(.36,.33,.36))
+
+ggsave(snow_cow,
+       file = "./plots/ns_metric_diff_elevation_plot_v1.png",
+       width = 6, 
+       height = 7,
+       units = "in",
+       dpi = 300) 
+
+system("open ./plots/ns_metric_diff_elevation_plot_v1.png")
 
 
 
