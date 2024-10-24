@@ -92,7 +92,7 @@ max_swe_dowy <-function(x, swe_thres){
 ###### winter ablation (mm)
 ###### calculated from dom
 
-wa <-function(x, swe_thres){
+wa <-function(x, swe_thres = 25.4){
   
   max_swe_dowy <-function(x){
     
