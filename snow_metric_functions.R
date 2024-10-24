@@ -9,7 +9,7 @@
 
 # list names
 
-function_names <-c("max_swe", "max_swe_dowy","mwa","msl","melt_rate","sdd")
+function_names <-c("max_swe", "max_swe_dowy","wa","msl","melt_rate","sdd")
 
 #######################################
 ############   max_swe   ##############
@@ -89,9 +89,10 @@ max_swe_dowy <-function(x, swe_thres){
 ############      mwa       ###########
 #######################################
 
-###### mid winter ablation (mm)
+###### winter ablation (mm)
+###### calculated from dom
 
-mwa <-function(x, swe_thres){
+wa <-function(x, swe_thres){
   
   max_swe_dowy <-function(x){
     

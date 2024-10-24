@@ -141,7 +141,6 @@ usj_hd7 <-filter(df_sorted, basin_name == "USJ" & hydr0_cat == "HD" & ez2 >= 7)
 mean(usj_hd7$diff_ez_fm)
 mean(usj_cw7$diff_ez_fm)
 
-(23.375/7.775)
 
 # View the sorted dataframe
 head(df_sorted)
@@ -149,8 +148,30 @@ usj <-as.data.frame(filter(snow_results, basin_name == "USJ"))
 kern <-as.data.frame(filter(snow_results, basin_name == "Kern"))
 yuba <-as.data.frame(filter(snow_results, basin_name == "Yuba"))
 
-min(df_sorted$diff_ez_fm)
+### good plot but too busy
+# ggplot(snow_results, aes(x=ez2,y=mean_ez_fm,linetype=hydr0_cat,color=as.factor(aspect_name), shape=as.factor(basin_name))) +
+#   geom_line(size = .7)+
+#   geom_point(size = 5)+
+#   ylab("FM (-)") + xlab("Elevation Zone")+
+#   scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
+#   scale_y_continuous(limits = c(0,1), breaks = seq(0,1,.2))+
+#   scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
+#   scale_shape_manual(name = "Basin", values = c("Kern" = 8, "USJ" = 17, "Yuba" = 15)) +
+#   scale_color_manual(name = "Aspect",
+#                      values = c('North' = 'darkblue', 'South' = 'tomato'),
+#                      labels = c('NF','SF')) +
+#   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+#         legend.position = 'top',
+#         legend.direction = 'horizontal',
+#         axis.text.x = element_blank(),
+#         axis.title.x = element_blank(),
+#         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+#         plot.margin = unit(c(.25,.25, 0,.25), "cm"))
 
+  # annotate("text", x = 11.5, y = 1*.95,  
+  #          label = "(a) Yuba", color = "Black", size = 6, hjust = 0)+
+  # annotate("text", x = 8, y = 1*.93,  
+  #          label = name, color = "Black", size = 8, hjust = 0)
 ######
 # by elevations
 ######
