@@ -1,5 +1,5 @@
 ### creating pixel-wise annual rasters for:
-#### mwa
+#### wa
 
 # april 25, 2023
 # jack tarricone
@@ -43,7 +43,7 @@ snow_metric_name
 
 # mcapply function 
 # set number of cores to use
-ncores <-1
+ncores <-5
 
 # check list, looks good
 swe_list
@@ -93,17 +93,18 @@ wa <-function(x, swe_thres = 25.4){
   }
 }
 
-# run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list[9], 
-                                     function(x)
-                                     generate_snow_metric_rasters(x, 
-                                                                  snow_metric_function = "wa", 
-                                                                  snow_metric_name = "wa"),
-                                     mc.cores = ncores, 
-                                     mc.cleanup = TRUE))
+# swe_list[31]
+# 
+# generate_snow_metric_rasters(swe_list[31], 
+#                              snow_metric_function = "wa", 
+#                              snow_metric_name = "wa")
 
-system.time(raster_list <-lapply(swe_list[9],
-                                  function(x)
-                                  generate_snow_metric_rasters(x, 
-                                                               snow_metric_function = "wa", 
-                                                               snow_metric_name = "wa")))
+
+# run function using progress bar (pb) multi-core lapply
+system.time(raster_list <-pbmclapply(swe_list,
+                                     function(x)
+                                     generate_snow_metric_rasters(x,
+                                                                  snow_metric_function = "wa",
+                                                                  snow_metric_name = "wa"),
+                                     mc.cores = ncores,
+                                     mc.cleanup = TRUE))
