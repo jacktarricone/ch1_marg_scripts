@@ -46,7 +46,8 @@ setwd("~/ch1_margulis")
 #####################################
 # head_df for col referencing
 ##############################################
-# df <-fread("./csvs/hydro_cat/full_df_hydro_cat_v1.csv")
+# df <-fread("./csvs/hydro_cat/new_full_df_hydro_cat_v2.csv")
+# head(df)
 # df$basin_name <-ifelse(df$basin_name == "kern","Kern",df$basin_name)
 # df$basin_name <-ifelse(df$basin_name == "usj","USJ",df$basin_name)
 # df$basin_name <-ifelse(df$basin_name == "yuba","Yuba",df$basin_name)
@@ -70,13 +71,13 @@ setwd("~/ch1_margulis")
 # df$ez2 <-ifelse(df$elevation > 3900 & df$elevation <= 4100, 13, df$ez2)
 # df$ez2 <-ifelse(df$elevation > 4100 & df$elevation <= 4400, 14, df$ez2)
 # 
-# # rename
-# # df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
-# # df$bin_name <-ifelse(df$ez == 2, "1900-2300 m", df$bin_name)
-# # df$bin_name <-ifelse(df$ez == 3, "2300-2700 m", df$bin_name)
-# # df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
-# # df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
-# # df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
+# rename
+# df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
+# df$bin_name <-ifelse(df$ez == 2, "1900-2300 m", df$bin_name)
+# df$bin_name <-ifelse(df$ez == 3, "2300-2700 m", df$bin_name)
+# df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
+# df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
+# df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
 # 
 # # filter aspects
 # df <-dplyr::filter(df, aspect != 2 & aspect != 4)
@@ -91,9 +92,9 @@ setwd("~/ch1_margulis")
 # df$aspect_name <-ifelse(df$aspect ==  3, "South", df$aspect_name)
 # head(df)
 # 
-# fwrite(df, "./full_df_hydro_cat_v2.csv")
+# fwrite(df, "./csvs/hydro_cat/formatted_df_v1.csv")
 
-df <-fread("./full_df_hydro_cat_v2.csv")
+df <-fread("./csvs/hydro_cat/formatted_df_v1.csv")
 head(df)
 
 ######################################
@@ -106,14 +107,14 @@ snow_results <-df %>%
   group_by(basin_name, ez2, hydr0_cat, aspect_name) %>%
   summarise(mean_ez_mswe = as.integer(mean(mean_mswe_mm)),
             mean_ez_dom = as.integer(mean(mean_dom_dowy)),
-            mean_ez_fm = round(mean(mean_fm),2),
-            mean_ez_mwa = as.integer(mean(mean_mwa)),
+            mean_ez_fwa = round(mean(mean_fwa),2),
+            mean_ez_wa = as.integer(mean(mean_wa)),
             mean_ez_tmean = round(mean(mean_tmean),2))
 
 # Reshape the data into separate columns for aspect_name
 snow_results_wide <- snow_results  %>%
   tidyr::pivot_wider(names_from = aspect_name,
-              values_from = c(mean_ez_mswe, mean_ez_dom, mean_ez_fm, mean_ez_mwa, mean_ez_tmean))
+              values_from = c(mean_ez_mswe, mean_ez_dom, mean_ez_fwa, mean_ez_wa, mean_ez_tmean))
 
 
 # calc diff
@@ -122,24 +123,24 @@ df_diff <- snow_results_wide %>%
     mean_ez_tmean = (mean_ez_tmean_North + mean_ez_tmean_South)/2,
     diff_ez_mswe = mean_ez_mswe_South - mean_ez_mswe_North,
     diff_ez_dom = mean_ez_dom_South - mean_ez_dom_North,
-    diff_ez_fm = mean_ez_fm_South - mean_ez_fm_North,
-    diff_ez_mwa = mean_ez_mwa_South - mean_ez_mwa_North
+    diff_ez_fwa = mean_ez_fwa_South - mean_ez_fwa_North,
+    diff_ez_wa = mean_ez_wa_South - mean_ez_wa_North
   )
 
 # Sort the dataframe
 df_sorted <- df_diff %>%
-  select(basin_name, ez2, mean_ez_tmean,matches("mswe"), matches("dom"), matches("fm"), matches("mwa"))
+  select(basin_name, ez2, mean_ez_tmean,matches("mswe"), matches("dom"), matches("fwa"), matches("wa"))
 
 usj_cw <-filter(df_sorted, basin_name == "USJ" & hydr0_cat == "CW")
 usj_hd <-filter(df_sorted, basin_name == "USJ" & hydr0_cat == "HD")
-mean(usj_hd$diff_ez_fm)
-mean(usj_cw$diff_ez_fm)
-max(usj_hd$diff_ez_fm)
+mean(usj_hd$diff_ez_fwa)
+mean(usj_cw$diff_ez_fwa)
+max(usj_hd$diff_ez_fwa)
 
 usj_cw7 <-filter(df_sorted, basin_name == "USJ" & hydr0_cat == "CW" & ez2 >= 7)
 usj_hd7 <-filter(df_sorted, basin_name == "USJ" & hydr0_cat == "HD" & ez2 >= 7)
-mean(usj_hd7$diff_ez_fm)
-mean(usj_cw7$diff_ez_fm)
+mean(usj_hd7$diff_ez_fwa)
+mean(usj_cw7$diff_ez_fwa)
 
 
 # View the sorted dataframe
@@ -149,10 +150,10 @@ kern <-as.data.frame(filter(snow_results, basin_name == "Kern"))
 yuba <-as.data.frame(filter(snow_results, basin_name == "Yuba"))
 
 ### good plot but too busy
-# ggplot(snow_results, aes(x=ez2,y=mean_ez_fm,linetype=hydr0_cat,color=as.factor(aspect_name), shape=as.factor(basin_name))) +
+# ggplot(snow_results, aes(x=ez2,y=mean_ez_fwa,linetype=hydr0_cat,color=as.factor(aspect_name), shape=as.factor(basin_name))) +
 #   geom_line(size = .7)+
 #   geom_point(size = 5)+
-#   ylab("FM (-)") + xlab("Elevation Zone")+
+#   ylab("fwa (-)") + xlab("Elevation Zone")+
 #   scale_x_continuous(limits = c(1,14), breaks = seq(1,13,2))+
 #   scale_y_continuous(limits = c(0,1), breaks = seq(0,1,.2))+
 #   scale_linetype_manual(name = "Hydro Cat", values = c("HD" = "longdash", "CW" = "dotted")) +
@@ -255,33 +256,33 @@ ggsave(mswe_big,
 
 system("open ./plots/mswe_diff_elevation_plot_v1.png")
 
-### fm
-fm_big <-big_plot(variable = "mean_ez_fm", ylab = "FM (-)",
-                    ylim1 = 0, ylim2 = 1,by = .2, name = "FM")
+### fwa
+fwa_big <-big_plot(variable = "mean_ez_fwa", ylab = "FWA (-)",
+                    ylim1 = 0, ylim2 = .8,by = .2, name = "FWA")
 
-ggsave(fm_big,
-       file = "./plots/fm_diff_elevation_plot_v1.png",
+ggsave(fwa_big,
+       file = "./plots/fwa_diff_elevation_plot_v1.png",
        width = 6,
        height = 7,
        units = "in",
        dpi = 300)
 
-system("open ./plots/fm_diff_elevation_plot_v1.png")
+system("open ./plots/fwa_diff_elevation_plot_v1.png")
 
-max(usj$mean_ez_mwa)
 
-### mwa
-mwa_big <-big_plot(variable = "mean_ez_mwa", ylab = "MWA (mm)",
-                  ylim1 = 0, ylim2 = 350,by = 50, name = "MWA")
 
-ggsave(mwa_big,
-       file = "./plots/mwa_diff_elevation_plot_v1.png",
+### wa
+wa_big <-big_plot(variable = "mean_ez_wa", ylab = "WA (mm)",
+                  ylim1 = 0, ylim2 = 250,by = 50, name = "WA")
+
+ggsave(wa_big,
+       file = "./plots/wa_diff_elevation_plot_v1.png",
        width = 6,
        height = 7,
        units = "in",
        dpi = 300)
 
-system("open ./plots/mwa_diff_elevation_plot_v1.png")
+system("open ./plots/wa_diff_elevation_plot_v1.png")
 
 ### dom
 dom_big <-big_plot(variable = "mean_ez_dom", ylab = "DOM (DOWY)",
