@@ -49,7 +49,7 @@ fwa_stack_v2 <-mask(fwa_stack_v1, max_mean)
 # calculate average
 fwa_mean <-app(fwa_stack_v2, fun = metric_mean, cores = 14)
 plot(fwa_mean)
-writeRaster(fwa_mean, "./rasters/snow_metric_averages/fwa_mean_mm.tif")
+writeRaster(fwa_mean, "./rasters/snow_metric_averages/fwa_mean.tif")
 
 
 
