@@ -14,10 +14,6 @@ snsr <-vect('./vectors/snsr_shp.gpkg')
 
 # max stack
 max_stack <-rast("./rasters/snow_metrics/max_swe/max_stack_f_25mm_27obs.tif")
-plot(max_stack[[1]])
-plot(yuba, add = T)
-plot(usj, add = T)
-plot(kern, add = T)
 
 # years list
 names1 <-seq(1985,2016,1)

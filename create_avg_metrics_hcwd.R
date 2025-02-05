@@ -26,8 +26,6 @@ cw <-filter(hydro_cat, hydro_cat == "cw")
 hd <-filter(hydro_cat, hydro_cat == "hd")
 hw <-filter(hydro_cat, hydro_cat == "hw")
 
-metric_stack <-fm_stack
-name <-"fm"
 
 # define function
 metric_hydro_cat_mean <-function(metric_stack,name){
@@ -87,24 +85,27 @@ max_stack
 # metric_hydro_cat_mean(max_stack)
 
 ####################
-####### mwa ########
+####### wa ########
 ####################
 
 # load in stack
-mwa_paths <-list.files("./rasters/snow_metrics/mwa_ondjfm_mm/", pattern = ".tif", full.names = TRUE)
-mwa_stack <-rast(mwa_paths)
+wa_paths <-list.files("./rasters/snow_metrics/wa/", pattern = ".tif", full.names = TRUE)
+wa_stack <-rast(wa_paths)
+wa_stack
 
-# metric_hydro_cat_mean(mwa_stack,"mwa")
+# metric_hydro_cat_mean(wa_stack,"wa")
 
 ####################
-####### fm #########
+####### fwa ########
 ####################
 
 # load in stack
-fm_stack <-rast("./rasters/snow_metrics/fm_apr1/fm_stack_f_25mm_27obs.tif")
+fwa_paths <-list.files("./rasters/snow_metrics/fwa/", pattern = ".tif", full.names = TRUE)
+fwa_stack <-rast(fwa_paths)
+fwa_stack
 
 # run
-# metric_hydro_cat_mean(fm_stack, "fm")
+metric_hydro_cat_mean(fwa_stack, "fwa")
 
 ####################
 #####   dom    ####

@@ -38,10 +38,10 @@ cw_list
 generate_gridmet_df <-function(basin_paths_list,
                                name,
                                dom_rast,
-                               fm_rast,
+                               fwa_rast,
                                max_rast,
-                               mwa_rast,
-                               tmean_rast){
+                               tmean_rast,
+                               wa_rast){
   
   # read in shape
   shp <-vect(basin_paths_list)
@@ -83,11 +83,11 @@ generate_gridmet_df <-function(basin_paths_list,
   plot(dom_mean_shp)
   
   
-  # fm_mean
-  fm_mean_shp <-mask(crop(fm_rast,ext(shp)), shp)
-  ext(fm_mean_shp) <-ext(dem_shp)
-  names(fm_mean_shp) <-"mean_fm"
-  plot(fm_mean_shp)
+  # fwa_mean
+  fwa_mean_shp <-mask(crop(fwa_rast,ext(shp)), shp)
+  ext(fwa_mean_shp) <-ext(dem_shp)
+  names(fwa_mean_shp) <-"mean_fwa"
+  plot(fwa_mean_shp)
   
   # max swe
   max_mean_shp <-mask(crop(max_rast,ext(shp)), shp)
@@ -95,11 +95,11 @@ generate_gridmet_df <-function(basin_paths_list,
   names(max_mean_shp) <-"mean_mswe_mm"
   plot(max_mean_shp)
   
-  # mwa
-  mwa_mean_shp <-mask(crop(mwa_rast,ext(shp)), shp)
-  ext(mwa_mean_shp) <-ext(dem_shp)
-  names(mwa_mean_shp) <-"mean_mwa"
-  plot(mwa_mean_shp)
+  # wa
+  wa_mean_shp <-mask(crop(wa_rast,ext(shp)), shp)
+  ext(wa_mean_shp) <-ext(dem_shp)
+  names(wa_mean_shp) <-"mean_wa"
+  plot(wa_mean_shp)
 
   # tmean
   tmean_mean_shp <-mask(crop(tmean_rast,ext(shp)), shp)
@@ -109,7 +109,7 @@ generate_gridmet_df <-function(basin_paths_list,
   
   # stack em
   pz_vars_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp)
-  snow_stack <-c(dom_mean_shp,fm_mean_shp, max_mean_shp, mwa_mean_shp, tmean_mean_shp)
+  snow_stack <-c(dom_mean_shp,fwa_mean_shp, max_mean_shp, tmean_mean_shp, wa_mean_shp)
   
   # static
   vars_stack <-c(pz_vars_stack,snow_stack)
@@ -127,7 +127,7 @@ generate_gridmet_df <-function(basin_paths_list,
   head(a_df11)
   
   # save
-  saving_name <-paste0(basin_name,"_",name,"_full_stats_v1.csv")
+  saving_name <-paste0(basin_name,"_",name,"_full_stats_v2.csv")
   fwrite(a_df11, paste0("./csvs/hydro_cat/",saving_name))
   print(paste0(basin_name, " is done!"))
 }
@@ -137,40 +137,40 @@ generate_gridmet_df <-function(basin_paths_list,
 lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
                                                     name = "hd",
                                                     dom_rast = hd_stack[[1]],
-                                                    fm_rast = hd_stack[[2]],
+                                                    fwa_rast = hd_stack[[2]],
                                                     max_rast = hd_stack[[3]],
-                                                    mwa_rast = hd_stack[[4]],
-                                                    tmean_rast = hd_stack[[5]]))
+                                                    tmean_rast = hd_stack[[4]],
+                                                    wa_rast = hd_stack[[5]]))
 
 # hw
 lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
                                                     name = "hw",
                                                     dom_rast = hw_stack[[1]],
-                                                    fm_rast = hw_stack[[2]],
+                                                    fwa_rast = hw_stack[[2]],
                                                     max_rast = hw_stack[[3]],
-                                                    mwa_rast = hw_stack[[4]],
-                                                    tmean_rast = hw_stack[[5]]))
+                                                    tmean_rast = hw_stack[[4]],
+                                                    wa_rast = hw_stack[[5]]))
 
 # cd
 lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
                                                     name = "cd",
                                                     dom_rast = cd_stack[[1]],
-                                                    fm_rast = cd_stack[[2]],
+                                                    fwa_rast = cd_stack[[2]],
                                                     max_rast = cd_stack[[3]],
-                                                    mwa_rast = cd_stack[[4]],
-                                                    tmean_rast = cd_stack[[5]]))
+                                                    tmean_rast = cd_stack[[4]],
+                                                    wa_rast = cd_stack[[5]]))
 
 # cw
 lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
                                         name = "cw",
                                         dom_rast = cw_stack[[1]],
-                                        fm_rast = cw_stack[[2]],
+                                        fwa_rast = cw_stack[[2]],
                                         max_rast = cw_stack[[3]],
-                                        mwa_rast = cw_stack[[4]],
-                                        tmean_rast = cw_stack[[5]]))
+                                        tmean_rast = cw_stack[[4]],
+                                        wa_rast = cw_stack[[5]]))
 
 # bind rows
 df_paths <-list.files("./csvs/hydro_cat/", full.names = TRUE)
 df_list <-lapply(df_paths, fread)
 full <-bind_rows(df_list, .id = "column_label")
-fwrite(full, "./csvs/hydro_cat/full_df_hydro_cat_v1.csv")
+fwrite(full, "./csvs/hydro_cat/full_df_hydro_cat_v2.csv")

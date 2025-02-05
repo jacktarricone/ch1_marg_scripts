@@ -92,6 +92,7 @@ na <-mask(na_v1, snsr)
 # convert to df for geom_raster
 # fm_df <-as.data.frame(fm_cm, xy = TRUE, cells = TRUE)
 wa_df <-as.data.frame(wa, xy = TRUE, cells = TRUE)
+fwa_df <-as.data.frame(fwa, xy = TRUE, cells = TRUE)
 max_df <-as.data.frame(max_m, xy = TRUE, cells = TRUE)
 fm_df <-as.data.frame(fm, xy = TRUE, cells = TRUE)
 dom_df <-as.data.frame(dom, xy = TRUE, cells = TRUE)
@@ -113,7 +114,7 @@ wa_plot <-ggplot(wa_df) +
   geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') + # plot nan points as gray
   geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # 
   geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
-  scale_fill_gradientn(colors = wa_scale, limits = c(0,200), oob = squish) + # wa of color bar so it saturates
+  scale_fill_gradientn(colors = wa_scale, limits = c(0,150), oob = squish) + # wa of color bar so it saturates
   labs(fill = "WA (mm)") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -136,12 +137,57 @@ wa_plot <-ggplot(wa_df) +
                                ticks.colour = "black"))
 # save
 ggsave(wa_plot,
-       file = "./plots/wa_snsr_v1.png",
+       file = "./plots/wa_snsr_v2.png",
        width = 4.5, 
        height = 8,
        dpi = 600)
 
-system("open ./plots/wa_snsr_v1.png")
+system("open ./plots/wa_snsr_v2.png")
+
+######################
+######################
+######## fwa #########
+######################
+######################
+
+# set scale 
+fwa_scale <-c(viridis(30, option = "viridis", direction = 1))
+
+# viridis# plot
+fwa_plot <-ggplot(fwa_df) +
+  geom_tile(mapping = aes(x,y, fill = lyr.1)) +
+  geom_tile(data = na_df, mapping = aes(x,y, fill = lyr.1), color = 'grey50') + # plot nan points as gray
+  geom_sf(data = snsr_sf, fill = NA, color = "black", linewidth = .05, inherit.aes = FALSE) + # 
+  geom_sf(data = snsr_basins_sf, fill = NA, color = "black", linewidth = .2, inherit.aes = FALSE) + # inherit.aes makes this work
+  scale_fill_gradientn(colors = fwa_scale, limits = c(0,.6), oob = squish) + # fwa of color bar so it saturates
+  labs(fill = "FWA (-)") +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme(panel.border = element_rect(color = NA, fill=NA),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "bottom",
+        plot.margin = unit(c(0,0,0,0), "cm"),
+        legend.box.spacing = unit(0, "pt")) +
+  guides(fill = guide_colorbar(direction = "horizontal",
+                               label.position = 'top',
+                               title.position ='bottom',
+                               title.hjust = .5,
+                               barwidth = 15,
+                               barheight = 1,
+                               frame.colour = "black", 
+                               ticks.colour = "black"))
+# save
+ggsave(fwa_plot,
+       file = "./plots/fwa_snsr_v2.png",
+       width = 4.5, 
+       height = 8,
+       dpi = 600)
+
+system("open ./plots/fwa_snsr_v2.png")
 
 
 
