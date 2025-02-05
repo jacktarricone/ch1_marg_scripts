@@ -14,6 +14,44 @@ metric_mean <-function(x){terra::mean(x, na.rm = TRUE)}
 snsr <-vect("./vectors/snsr_shp.gpkg")
 snsr_basins <-vect("./vectors/ca_basins/snsr_all_basins.shp")
 
+# load in max mean
+max_mean <-rast("./rasters/snow_metric_averages/max_mean_f_25mm_27obs.tif")
+
+####################
+####### wa #########
+####################
+
+# load in stack
+wa_paths <-list.files("./rasters/snow_metrics/wa", pattern = ".tif", full.names = TRUE)
+wa_stack_v1 <-rast(wa_paths)
+
+# mask with max
+wa_stack_v2 <-mask(wa_stack_v1, max_mean)
+# writeRaster(mwa_stack_v2, "./rasters/snow_metrics/mwa_ondjfm_mm/mwa_stack_f_25mm_27obs.tif")
+
+# calculate average
+wa_mean <-app(wa_stack_v2, fun = metric_mean, cores = 14)
+plot(wa_mean)
+writeRaster(wa_mean, "./rasters/snow_metric_averages/wa_mean_mm.tif")
+
+####################
+####### fwa #########
+####################
+
+# load in stack
+fwa_paths <-list.files("./rasters/snow_metrics/fwa", pattern = ".tif", full.names = TRUE)
+fwa_stack_v1 <-rast(fwa_paths)
+
+# mask with max
+fwa_stack_v2 <-mask(fwa_stack_v1, max_mean)
+# writeRaster(mfwa_stack_v2, "./rasters/snow_metrics/mfwa_ondjfm_mm/mfwa_stack_f_25mm_27obs.tif")
+
+# calculate average
+fwa_mean <-app(fwa_stack_v2, fun = metric_mean, cores = 14)
+plot(fwa_mean)
+writeRaster(fwa_mean, "./rasters/snow_metric_averages/fwa_mean_mm.tif")
+
+
 
 
 

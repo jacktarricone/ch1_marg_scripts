@@ -101,7 +101,7 @@ wa <-function(x, swe_thres = 25.4){
 
 
 # run function using progress bar (pb) multi-core lapply
-system.time(raster_list <-pbmclapply(swe_list,
+system.time(raster_list <-pbmclapply(swe_list[1:5],
                                      function(x)
                                      generate_snow_metric_rasters(x,
                                                                   snow_metric_function = "wa",
