@@ -48,7 +48,8 @@ setwd("~/ch1_margulis")
 hydro_cat <-fread("./csvs/hydro_cat_years.csv")
 
 ##############################################
-df <-fread("./csvs/hydro_cat/formatted_df_v1.csv")
+df <-fread("./csvs/hydro_cat/full_df_hydro_cat_v3.csv")
+head(df)
 
 # rename
 df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
@@ -58,8 +59,10 @@ df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
 
-# filter aspects
-df <-dplyr::filter(df, aspect != 2 & aspect != 4)
+# names
+df$basin_name <-ifelse(df$basin_name == "kern", "Kern", df$basin_name)
+df$basin_name <-ifelse(df$basin_name == "usj", "USJ", df$basin_name)
+df$basin_name <-ifelse(df$basin_name == "yuba", "Yuba", df$basin_name)
 
 # add grouped col
 df$aspect_basin <-paste0(df$aspect,".",df$basin_name)

@@ -56,6 +56,12 @@ generate_gridmet_df <-function(basin_paths_list,
   names(dem_shp) <-"elevation"
   plot(dem_shp)
   
+  # pixel area 
+  pa <-rast("./rasters/static/SNSR_pixel_area.tif")
+  pa_shp <-mask(crop(pa,ext(shp)), shp)
+  names(pa_shp) <-"area_m3"
+  plot(pa_shp)
+  
   # elevation zone
   ez_shp <-mask(crop(rast("./rasters/categorized/dem_6zb.tif"),ext(shp)), shp)
   ext(ez_shp) <-ext(dem_shp)
@@ -95,12 +101,22 @@ generate_gridmet_df <-function(basin_paths_list,
   names(max_mean_shp) <-"mean_mswe_mm"
   plot(max_mean_shp)
   
+  # max swe vol
+  max_vol_shp <-(max_mean_shp/1000)*pa_shp
+  names(max_vol_shp) <-"max_vol_m3"
+  plot(max_vol_shp)
+  
   # wa
   wa_mean_shp <-mask(crop(wa_rast,ext(shp)), shp)
   ext(wa_mean_shp) <-ext(dem_shp)
   names(wa_mean_shp) <-"mean_wa"
   plot(wa_mean_shp)
-
+  
+  # max swe vol
+  wa_vol_shp <-(wa_mean_shp/1000)*pa_shp
+  names(wa_vol_shp) <-"wa_vol_m3"
+  plot(wa_vol_shp)
+  
   # tmean
   tmean_mean_shp <-mask(crop(tmean_rast,ext(shp)), shp)
   ext(tmean_mean_shp) <-ext(dem_shp)
@@ -109,7 +125,8 @@ generate_gridmet_df <-function(basin_paths_list,
   
   # stack em
   pz_vars_stack <-c(dem_shp, ez_shp, aspect_shp, insol_shp)
-  snow_stack <-c(dom_mean_shp,fwa_mean_shp, max_mean_shp, tmean_mean_shp, wa_mean_shp)
+  snow_stack <-c(dom_mean_shp,fwa_mean_shp, max_mean_shp, tmean_mean_shp, wa_mean_shp, 
+                 max_vol_shp,wa_vol_shp)
   
   # static
   vars_stack <-c(pz_vars_stack,snow_stack)
@@ -127,7 +144,7 @@ generate_gridmet_df <-function(basin_paths_list,
   head(a_df11)
   
   # save
-  saving_name <-paste0(basin_name,"_",name,"_full_stats_v2.csv")
+  saving_name <-paste0(basin_name,"_",name,"_full_stats_v4.csv")
   fwrite(a_df11, paste0("./csvs/hydro_cat/",saving_name))
   print(paste0(basin_name, " is done!"))
 }
@@ -173,4 +190,8 @@ lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
 df_paths <-list.files("./csvs/hydro_cat/", full.names = TRUE)
 df_list <-lapply(df_paths, fread)
 full <-bind_rows(df_list, .id = "column_label")
-fwrite(full, "./csvs/hydro_cat/full_df_hydro_cat_v2.csv")
+fwrite(full, "./csvs/hydro_cat/full_df_hydro_cat_v4.csv")
+
+# test <-fread("/Users/jtarrico/ch1_margulis/csvs/hydro_cat/formatted_df_v1.csv")
+# head(test)
+# unique(test$aspect_name)
