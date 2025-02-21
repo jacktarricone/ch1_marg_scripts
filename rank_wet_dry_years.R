@@ -109,8 +109,6 @@ plotting_df
 
 library(viridis)
 scale <-viridis(32, alpha = 1, option = "H")
-scale
-?viridis_pal
 
 # plot
 ggplot(plotting_df)+

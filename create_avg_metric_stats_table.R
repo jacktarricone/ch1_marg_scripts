@@ -12,45 +12,18 @@ setwd("~/ch1_margulis")
 #####################################
 # head_df for col referencing
 ##############################################
-df <-fread("./csvs/hydro_cat/full_df_hydro_cat_v1.csv")
-
-# creat new zones of 200 m
-df$ez2 <-NA
-df$ez2 <-ifelse(df$elevation > 1500 & df$elevation <= 1700, 1, df$ez2)
-df$ez2 <-ifelse(df$elevation > 1700 & df$elevation <= 1900, 2, df$ez2)
-df$ez2 <-ifelse(df$elevation > 1900 & df$elevation <= 2100, 3, df$ez2)
-df$ez2 <-ifelse(df$elevation > 2100 & df$elevation <= 2300, 4, df$ez2)
-df$ez2 <-ifelse(df$elevation > 2300 & df$elevation <= 2500, 5, df$ez2)
-df$ez2 <-ifelse(df$elevation > 2500 & df$elevation <= 2700, 6, df$ez2)
-df$ez2 <-ifelse(df$elevation > 2700 & df$elevation <= 2900, 7, df$ez2)
-df$ez2 <-ifelse(df$elevation > 2900 & df$elevation <= 3100, 8, df$ez2)
-df$ez2 <-ifelse(df$elevation > 3100 & df$elevation <= 3300, 9, df$ez2)
-df$ez2 <-ifelse(df$elevation > 3300 & df$elevation <= 3500, 10, df$ez2)
-df$ez2 <-ifelse(df$elevation > 3500 & df$elevation <= 3700, 11, df$ez2)
-df$ez2 <-ifelse(df$elevation > 3700 & df$elevation <= 3900, 12, df$ez2)
-df$ez2 <-ifelse(df$elevation > 3900 & df$elevation <= 4100, 13, df$ez2)
-df$ez2 <-ifelse(df$elevation > 4100 & df$elevation <= 4400, 14, df$ez2)
-
-# check
-head(df)
-hist(df$ez2)
-hist(df$elevation)
-
-# rename
-# df$bin_name <-ifelse(df$ez == 1, "1500-1900 m", df$ez)
-# df$bin_name <-ifelse(df$ez == 2, "1900-2300 m", df$bin_name)
-# df$bin_name <-ifelse(df$ez == 3, "2300-2700 m", df$bin_name)
-# df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
-# df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
-# df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
+df <-fread("./csvs/hydro_cat/full_df_hydro_cat_v4.csv")
 
 # filter aspects
-df <-dplyr::filter(df, aspect != 2 & aspect != 4)
+# df <-dplyr::filter(df, aspect != 2 & aspect != 4)
 
 # filter
-df$aspect_name <-ifelse(df_v1$aspect ==  1, "North", df$aspect)
-df$aspect_name <-ifelse(df_v1$aspect ==  3, "South", df$aspect_name)
+df$aspect_name <-ifelse(df$aspect ==  1, "North", df$aspect)
+df$aspect_name <-ifelse(df$aspect ==  3, "South", df$aspect_name)
+df$aspect_name <-ifelse(df$aspect ==  2, "East", df$aspect_name)
+df$aspect_name <-ifelse(df$aspect ==  4, "West", df$aspect_name)
 head(df)
+
 
 ######################################
 ######################################
