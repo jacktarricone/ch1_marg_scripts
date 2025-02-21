@@ -27,12 +27,11 @@ max_stack <-rast(max_paths)
 names(max_stack) <-c(seq(1985,2016,1))
 max_stack
 
-generate_basin_df <-function(basin_paths_list,
-                               wa_rast){
+generate_basin_df <-function(paths_file,wa_rast){
   
   # read in shape
-  shp <-vect(basin_paths[1])
-  basin_name_v1 <-basename(basin_paths[1])
+  shp <-vect(paths_file)
+  basin_name_v1 <-basename(paths_file)
   basin_name <-gsub(".gpkg","",basin_name_v1)
   print(basin_name)
   
@@ -112,58 +111,15 @@ generate_basin_df <-function(basin_paths_list,
   joined_df1 <-joined_df %>% na.omit()
   head(joined_df1)
   
+  print("done!")
   joined_df1
-  
- 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # apply to shape files list
-testing <-lapply(basin_paths[[1]], function(x) generate_gridmet_df(basin_paths_list = x,
-                                                    wa_rast = wa_stack))
+kern_df <- generate_basin_df(paths_file = basin_paths[1],  wa_rast = wa_stack)
+usj_df <- generate_basin_df(paths_file= basin_paths[2],  wa_rast = wa_stack)
+yuba_df <- generate_basin_df(paths_file =basin_paths[3],  wa_rast = wa_stack)
 
-# hw
-lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
-                                                    name = "hw",
-                                                    dom_rast = hw_stack[[1]],
-                                                    fwa_rast = hw_stack[[2]],
-                                                    max_rast = hw_stack[[3]],
-                                                    tmean_rast = hw_stack[[4]],
-                                                    wa_rast = hw_stack[[5]]))
-
-# cd
-lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
-                                                    name = "cd",
-                                                    dom_rast = cd_stack[[1]],
-                                                    fwa_rast = cd_stack[[2]],
-                                                    max_rast = cd_stack[[3]],
-                                                    tmean_rast = cd_stack[[4]],
-                                                    wa_rast = cd_stack[[5]]))
-
-# cw
-lapply(basin_paths, function(x) generate_gridmet_df(basin_paths_list = x,
-                                        name = "cw",
-                                        dom_rast = cw_stack[[1]],
-                                        fwa_rast = cw_stack[[2]],
-                                        max_rast = cw_stack[[3]],
-                                        tmean_rast = cw_stack[[4]],
-                                        wa_rast = cw_stack[[5]]))
 
 # bind rows
 df_paths <-list.files("./csvs/hydro_cat/", full.names = TRUE)
