@@ -56,12 +56,24 @@ df$aspect_basin <-factor(df$aspect_basin, levels=c('1.Kern', '3.Kern',
 head(df)
 
 # Summarize max_vol_m3 and wa_vol_m3 by bin_name and basin_name
+# df_summary <- df %>%
+#   group_by(aspect_basin,bin_name,hydr0_cat) %>%
+#   summarise(
+#     total_max_vol_km3 = sum(max_vol_m3, na.rm = TRUE)/10^9,
+#     total_wa_vol_km3 = sum(wa_vol_m3, na.rm = TRUE)/10^9
+#   )
+
 df_summary <- df %>%
-  group_by(aspect_basin,bin_name,hydr0_cat) %>%
+  group_by(aspect_basin,bin_name,hydro_cat) %>%
   summarise(
-    total_max_vol_km3 = sum(max_vol_m3, na.rm = TRUE)/10^9,
-    total_wa_vol_km3 = sum(wa_vol_m3, na.rm = TRUE)/10^9
+    total_wa_swe_km3 = sum(wa_swe_m3, na.rm = TRUE)/10^9,
+    total_max_swe_km3 = sum(max_swe_m3, na.rm = TRUE)/10^9,
+    sd_wa_swe_km3 = sd(wa_swe_m3, na.rm = TRUE)/10^9,
+    sd_max_swe_km3 = sd(max_swe_m3, na.rm = TRUE)/10^9,
+    .groups = "drop"
   )
+head(summed_data)
+summed_data
 
 # View the result
 df_summary <-na.omit(df_summary)
@@ -69,8 +81,8 @@ print(df_summary)
 
 
 # plot
-vol_plot <-ggplot(df_summary, mapping = aes(x = as.factor(bin_name), y = total_max_vol_km3, fill = aspect_basin))+
-  facet_wrap( ~ hydr0_cat, nrow = 4)+
+vol_plot <-ggplot(df_summary, mapping = aes(x = as.factor(bin_name), y = total_max_swe_km3, fill = aspect_basin))+
+  facet_wrap( ~ hydro_cat, nrow = 4)+
   geom_bar(stat = "identity", position = "dodge", width = .7) +
   scale_fill_manual(name = "Basin and Aspect",
                     values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
@@ -87,14 +99,16 @@ vol_plot <-ggplot(df_summary, mapping = aes(x = as.factor(bin_name), y = total_m
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm"))
 
+vol_plot
+
 ggsave(vol_plot,
-       file = "./plots/max_vol_hydro_cat_v1.png",
+       file = "./plots/max_vol_hydro_cat_v2.png",
        width = 8, 
        height = 8,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/max_vol_hydro_cat_v1.png")
+system("open ./plots/max_vol_hydro_cat_v2.png")
 
 
 # plot

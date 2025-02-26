@@ -1,6 +1,5 @@
-# make full analysis df with new gridmet data
+# made sd per hydro class
 # jack tarricone
-# june 22nd, 2023
 
 library(terra)
 library(tidyverse)
@@ -116,23 +115,45 @@ generate_basin_df <-function(paths_file,wa_rast){
 }
 
 # apply to shape files list
-kern_df <- generate_basin_df(paths_file = basin_paths[1],  wa_rast = wa_stack)
-usj_df <- generate_basin_df(paths_file= basin_paths[2],  wa_rast = wa_stack)
-yuba_df <- generate_basin_df(paths_file =basin_paths[3],  wa_rast = wa_stack)
+kern_df <-generate_basin_df(paths_file = basin_paths[1],  wa_rast = wa_stack)
+usj_df <-generate_basin_df(paths_file= basin_paths[2],  wa_rast = wa_stack)
+yuba_df <-generate_basin_df(paths_file =basin_paths[3],  wa_rast = wa_stack)
 
+full <-rbind(kern_df,usj_df,yuba_df)
+head(full)
 
-# bind rows
-df_paths <-list.files("./csvs/hydro_cat/", full.names = TRUE)
-df_list <-lapply(df_paths, fread)
-full <-bind_rows(df_list, .id = "column_label")
-fwrite(full, "./csvs/hydro_cat/full_df_hydro_cat_v4.csv")
+# fwrite(full, "./csvs/hydro_cat/full_df_hydro_cat_v4.csv")
 
 # test <-fread("/Users/jtarrico/ch1_margulis/csvs/hydro_cat/formatted_df_v1.csv")
 # head(test)
 # unique(test$aspect_name)
 
 ##############################################
-df <-fread("./csvs/hydro_cat/full_df_hydro_cat_v4.csv")
+# full <-fread("./csvs/hydro_cat/full_df_hydro_cat_v4.csv")
+
+df <-full
+head(df)
+
+## hydro cat 
+hydro_cat <-read.csv("./csvs/hydro_cat_years.csv")
+hydro_cat$lyr <-seq(1,32,1) # lyr for subsetting
+hydro_cat
+
+# filter for four quads
+cd <-filter(hydro_cat, hydro_cat == "cd")
+cw <-filter(hydro_cat, hydro_cat == "cw")
+hd <-filter(hydro_cat, hydro_cat == "hd")
+hw <-filter(hydro_cat, hydro_cat == "hw")
+cd
+
+# add hydro cat labels
+df <- data.frame(df) %>%
+  mutate(hydro_cat = ifelse(wy %in% cd$years, "CD", "Other"),
+         hydro_cat = ifelse(wy %in% cw$years, "CW", hydro_cat),
+         hydro_cat = ifelse(wy %in% hw$years, "HW", hydro_cat),
+         hydro_cat = ifelse(wy %in% hd$years, "HD", hydro_cat))
+
+
 head(df)
 
 # rename
@@ -142,16 +163,41 @@ df$bin_name <-ifelse(df$ez == 3, "2300-2700 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 4, "2700-3100 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 5, "3100-4361 m", df$bin_name)
 df$bin_name <-ifelse(df$ez == 6, "3100-4361 m", df$bin_name)
-
-# names
-df$hydr0_cat <-ifelse(df$hydr0_cat == "cw", "CW", df$hydr0_cat)
-df$hydr0_cat <-ifelse(df$hydr0_cat == "cd", "CD", df$hydr0_cat)
-df$hydr0_cat <-ifelse(df$hydr0_cat == "hw", "HW", df$hydr0_cat)
-df$hydr0_cat <-ifelse(df$hydr0_cat == "hd", "HD", df$hydr0_cat)
-
-# names
-df$basin_name <-ifelse(df$basin_name == "kern", "Kern", df$basin_name)
-df$basin_name <-ifelse(df$basin_name == "usj", "USJ", df$basin_name)
-df$basin_name <-ifelse(df$basin_name == "yuba", "Yuba", df$basin_name)
 head(df)
-fwrite(df, "./csvs/hydro_cat/plotting_full_df_hydro_cat_v4.csv")
+
+# names
+df$basin <-ifelse(df$basin == "kern", "Kern", df$basin)
+df$basin <-ifelse(df$basin == "usj", "USJ", df$basin)
+df$basin <-ifelse(df$basin == "yuba", "Yuba", df$basin)
+head(df)
+
+fwrite(df, "./csvs/wa_max_all_years_v1.csv")
+
+#### read back in
+df <-fread("./csvs/wa_max_all_years_v1.csv")
+
+# Sum wa_swe_m3 and max_swe_m3 by basin, hydro_cat, and ez
+df$aspect_basin <-paste0(df$aspect,".",df$basin_name)
+head
+df$aspect_basin <-factor(df$aspect_basin, levels=c('1.Kern', '3.Kern', 
+                                                   '1.USJ', '3.USJ',
+                                                   '1.Yuba','3.Yuba'))
+
+summed_data <- df %>%
+  group_by(aspect_basin,bin_name,hydro_cat) %>%
+  summarise(
+    sum_wa_swe_km3 = sum(wa_swe_m3, na.rm = TRUE)/10^9,
+    sum_max_swe_km3 = sum(max_swe_m3, na.rm = TRUE)/10^9,
+    .groups = "drop"
+  )
+head(summed_data)
+summed_data
+
+# Compute standard deviation for each hydro_cat within each basin
+results <- summed_data %>%
+  group_by(basin, hydro_cat, aspect) %>%
+  summarise(
+    sd_wa_swe_km3 = sd(sum_wa_swe_m3, na.rm = TRUE),
+    sd_max_swe_km3 = sd(sum_max_swe_m3, na.rm = TRUE),
+    .groups = "drop"
+  )
