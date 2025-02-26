@@ -95,7 +95,10 @@ hist(df_summary2$sd_wa_swe_km3, breaks = 20)
 # plot
 vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mean_max_swe_km3, fill = aspect_basin))+
   facet_wrap( ~ hydro_cat, nrow = 4) +
-  geom_bar(stat = "identity", position = "dodge", width = .7) +
+  geom_bar(stat = "identity", position = "dodge", width = .8) +
+  geom_errorbar(position = "dodge", 
+                aes(ymin = mean_max_swe_km3 - sd_max_swe_km3, ymax = mean_max_swe_km3 + sd_max_swe_km3),
+                width = .8, linewidth = .3, alpha = .5) +
   # scale_fill_manual(name = "Basin and Aspect",
   #                   values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
   #                              '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
@@ -114,19 +117,22 @@ vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mean_m
 vol_plot
 
 ggsave(vol_plot,
-       file = "./plots/max_vol_hydro_cat_v3.png",
+       file = "./plots/max_vol_hydro_cat_v4.png",
        width = 8, 
        height = 8,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/max_vol_hydro_cat_v3.png")
+system("open ./plots/max_vol_hydro_cat_v4.png")
 
 
 # plot
 wa_vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mean_wa_swe_km3, fill = aspect_basin))+
   facet_wrap( ~ hydro_cat, nrow = 4)+
-  geom_bar(stat = "identity", position = "dodge", width = .7) +
+  geom_bar(stat = "identity", position = "dodge", width = .8) +
+  geom_errorbar(stat = "identity", position = "dodge", 
+                aes(ymin = mean_wa_swe_km3 - sd_wa_swe_km3, ymax = mean_wa_swe_km3 + sd_wa_swe_km3),
+                width = .8, linewidth = .3, alpha = .5) +
   # scale_fill_manual(name = "Basin and Aspect",
   #                   values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
   #                              '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
@@ -143,13 +149,13 @@ wa_vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mea
         plot.margin = unit(c(.25,.25, 0,.25), "cm"))
 
 ggsave(wa_vol_plot,
-       file = "./plots/wa_vol_hydro_cat_v2.png",
+       file = "./plots/wa_vol_hydro_cat_v3.png",
        width = 8, 
        height = 8,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/wa_vol_hydro_cat_v2.png")
+system("open ./plots/wa_vol_hydro_cat_v3.png")
 
 
 
