@@ -45,52 +45,64 @@ theme_set(theme_classic(13))
 setwd("~/ch1_margulis")
 
 ##############################################
-df <-fread("./csvs/hydro_cat/plotting_full_df_hydro_cat_v4.csv")
-hist(df$aspect)
+df <-fread("./csvs/wa_max_all_years_v1.csv")
+head(df)
+hist(df$)
+
+# sum by basin, aspect, bin_name, wy, and hydro_cat
+df_summary <- df %>%
+  group_by(basin,aspect,bin_name,wy,hydro_cat) %>%
+  summarise(
+    total_wa_swe_km3 = sum(wa_swe_m3, na.rm = TRUE)*1e-9,
+    total_max_swe_km3 = sum(max_swe_m3, na.rm = TRUE)*1e-9,
+  )
+
+# check
+head(df_summary)
+yuba <-filter(df_summary, basin == "Yuba")
+
+hist(yuba$total_max_swe_km3, breaks = 100)
+hist(yuba$total_wa_swe_km3, breaks = 100)
+
+# calc mean and SD by hydro_cat
+df_summary2 <- df_summary %>%
+  group_by(basin,aspect,bin_name,hydro_cat) %>%
+  summarise(
+    mean_wa_swe_km3 = mean(total_wa_swe_km3, na.rm = TRUE),
+    mean_max_swe_km3 = mean(total_max_swe_km3, na.rm = TRUE),
+    sd_wa_swe_km3 = sd(total_wa_swe_km3, na.rm = TRUE),
+    sd_max_swe_km3 = sd(total_max_swe_km3, na.rm = TRUE),
+  )
+
+df_summary2
 
 # add grouped col
-df$aspect_basin <-paste0(df$aspect,".",df$basin_name)
-df$aspect_basin <-factor(df$aspect_basin, levels=c('1.Kern', '3.Kern', 
+df_summary2$aspect_basin <-paste0(df_summary2$aspect,".",df_summary2$basin)
+# df_summary2$aspect_basin <-factor(df_summary2$aspect_basin, levels=c('1.Kern', '3.Kern', 
                                                    '1.USJ', '3.USJ',
                                                    '1.Yuba','3.Yuba'))
-head(df)
 
-# Summarize max_vol_m3 and wa_vol_m3 by bin_name and basin_name
-# df_summary <- df %>%
-#   group_by(aspect_basin,bin_name,hydr0_cat) %>%
-#   summarise(
-#     total_max_vol_km3 = sum(max_vol_m3, na.rm = TRUE)/10^9,
-#     total_wa_vol_km3 = sum(wa_vol_m3, na.rm = TRUE)/10^9
-#   )
-
-df_summary <- df %>%
-  group_by(aspect_basin,bin_name,hydro_cat) %>%
-  summarise(
-    total_wa_swe_km3 = sum(wa_swe_m3, na.rm = TRUE)/10^9,
-    total_max_swe_km3 = sum(max_swe_m3, na.rm = TRUE)/10^9,
-    sd_wa_swe_km3 = sd(wa_swe_m3, na.rm = TRUE)/10^9,
-    sd_max_swe_km3 = sd(max_swe_m3, na.rm = TRUE)/10^9,
-    .groups = "drop"
-  )
-head(summed_data)
-summed_data
+head(df_summary2)
+unique(df_summary2$aspect_basin)
 
 # View the result
-df_summary <-na.omit(df_summary)
-print(df_summary)
+# plotting_df <-na.omit(df_summary2)
+# print(plotting_df)
 
+hist(df_summary2$sd_max_swe_km3, breaks = 20)
+hist(df_summary2$sd_wa_swe_km3, breaks = 20)
 
 # plot
-vol_plot <-ggplot(df_summary, mapping = aes(x = as.factor(bin_name), y = total_max_swe_km3, fill = aspect_basin))+
-  facet_wrap( ~ hydro_cat, nrow = 4)+
+vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mean_max_swe_km3, fill = aspect_basin))+
+  facet_wrap( ~ hydro_cat, nrow = 4) +
   geom_bar(stat = "identity", position = "dodge", width = .7) +
-  scale_fill_manual(name = "Basin and Aspect",
-                    values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
-                               '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
-                               '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
-                    labels = c('Kern N','Kern S',  
-                               'USJ N', 'USJ S',
-                               'Yuba N','Yuba S')) +
+  # scale_fill_manual(name = "Basin and Aspect",
+  #                   values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
+  #                              '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
+  #                              '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
+  #                   labels = c('Kern N','Kern S',  
+  #                              'USJ N', 'USJ S',
+  #                              'Yuba N','Yuba S')) +
   labs(x = "Elevation Bin", y = "Mean Max SWE (km³)", fill = "Basin Name") +
   guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
@@ -102,26 +114,26 @@ vol_plot <-ggplot(df_summary, mapping = aes(x = as.factor(bin_name), y = total_m
 vol_plot
 
 ggsave(vol_plot,
-       file = "./plots/max_vol_hydro_cat_v2.png",
+       file = "./plots/max_vol_hydro_cat_v3.png",
        width = 8, 
        height = 8,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/max_vol_hydro_cat_v2.png")
+system("open ./plots/max_vol_hydro_cat_v3.png")
 
 
 # plot
-wa_vol_plot <-ggplot(df_summary, mapping = aes(x = as.factor(bin_name), y = total_wa_vol_km3, fill = aspect_basin))+
-  facet_wrap( ~ hydr0_cat, nrow = 4)+
+wa_vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mean_wa_swe_km3, fill = aspect_basin))+
+  facet_wrap( ~ hydro_cat, nrow = 4)+
   geom_bar(stat = "identity", position = "dodge", width = .7) +
-  scale_fill_manual(name = "Basin and Aspect",
-                    values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
-                               '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
-                               '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
-                    labels = c('Kern N','Kern S',  
-                               'USJ N', 'USJ S',
-                               'Yuba N','Yuba S')) +
+  # scale_fill_manual(name = "Basin and Aspect",
+  #                   values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
+  #                              '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
+  #                              '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
+  #                   labels = c('Kern N','Kern S',  
+  #                              'USJ N', 'USJ S',
+  #                              'Yuba N','Yuba S')) +
   labs(x = "Elevation Bin", y = "Mean WA (km³)", fill = "Basin Name") +
   guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
@@ -131,27 +143,27 @@ wa_vol_plot <-ggplot(df_summary, mapping = aes(x = as.factor(bin_name), y = tota
         plot.margin = unit(c(.25,.25, 0,.25), "cm"))
 
 ggsave(wa_vol_plot,
-       file = "./plots/wa_vol_hydro_cat_v1.png",
+       file = "./plots/wa_vol_hydro_cat_v2.png",
        width = 8, 
        height = 8,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/wa_vol_hydro_cat_v1.png")
+system("open ./plots/wa_vol_hydro_cat_v2.png")
 
 
 
 # Summarize max_vol_m3 and wa_vol_m3 by bin_name and basin_name
-df_summary2 <- df %>%
-  group_by(basin_name,bin_name,hydr0_cat) %>%
+df_summary3 <- df %>%
+  group_by(basin,bin_name,hydro_cat) %>%
   summarise(
-    total_max_vol_km3 = sum(max_vol_m3, na.rm = TRUE)/10^9,
-    total_wa_vol_km3 = sum(wa_vol_m3, na.rm = TRUE)/10^9
+    total_max_vol_km3 = sum(max_swe_m3, na.rm = TRUE)/10^9,
+    total_wa_vol_km3 = sum(wa_swe_m3, na.rm = TRUE)/10^9
   )
 
-head(df_summary2)
+head(df_summary3)
 
-df_piv <- df_summary2 %>%
+df_piv <- df_summary3 %>%
   pivot_longer(cols = c(total_max_vol_km3, total_wa_vol_km3),
                names_to = "Metric",
                values_to = "swe_km3") %>%
@@ -166,8 +178,8 @@ df_wa <-dplyr::filter(df_piv, Metric == "WA")
 basin_wa_vol_plot <-ggplot(df_wa, 
                      mapping = aes(x = as.factor(bin_name), 
                                    y = swe_km3,
-                                   fill = basin_name))+
-  facet_wrap( ~ hydr0_cat, nrow = 4)+
+                                   fill = basin))+
+  facet_wrap( ~ hydro_cat, nrow = 4)+
   geom_bar(stat = "identity", position = "dodge", width = .7) +
   scale_fill_manual(name = "Basin",
                     values = c('Kern' = 'azure4', 'USJ' = 'tomato4', 'Yuba' = 'chartreuse4'),
@@ -183,10 +195,10 @@ basin_wa_vol_plot <-ggplot(df_wa,
 basin_wa_vol_plot
 
 ggsave(basin_wa_vol_plot,
-       file = "./plots/basin_wa_vol_hydro_cat_v1.png",
+       file = "./plots/basin_wa_vol_hydro_cat_v2.png",
        width = 8, 
        height = 8,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/basin_wa_vol_hydro_cat_v1.png")
+system("open ./plots/basin_wa_vol_hydro_cat_v2.png")

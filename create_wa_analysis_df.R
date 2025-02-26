@@ -122,6 +122,9 @@ yuba_df <-generate_basin_df(paths_file =basin_paths[3],  wa_rast = wa_stack)
 full <-rbind(kern_df,usj_df,yuba_df)
 head(full)
 
+hist(full$wa_swe_m3, breaks = 100)
+hist(full$max_swe_m3, breaks = 100)
+
 # fwrite(full, "./csvs/hydro_cat/full_df_hydro_cat_v4.csv")
 
 # test <-fread("/Users/jtarrico/ch1_margulis/csvs/hydro_cat/formatted_df_v1.csv")
@@ -173,31 +176,3 @@ head(df)
 
 fwrite(df, "./csvs/wa_max_all_years_v1.csv")
 
-#### read back in
-df <-fread("./csvs/wa_max_all_years_v1.csv")
-
-# Sum wa_swe_m3 and max_swe_m3 by basin, hydro_cat, and ez
-df$aspect_basin <-paste0(df$aspect,".",df$basin_name)
-head
-df$aspect_basin <-factor(df$aspect_basin, levels=c('1.Kern', '3.Kern', 
-                                                   '1.USJ', '3.USJ',
-                                                   '1.Yuba','3.Yuba'))
-
-summed_data <- df %>%
-  group_by(aspect_basin,bin_name,hydro_cat) %>%
-  summarise(
-    sum_wa_swe_km3 = sum(wa_swe_m3, na.rm = TRUE)/10^9,
-    sum_max_swe_km3 = sum(max_swe_m3, na.rm = TRUE)/10^9,
-    .groups = "drop"
-  )
-head(summed_data)
-summed_data
-
-# Compute standard deviation for each hydro_cat within each basin
-results <- summed_data %>%
-  group_by(basin, hydro_cat, aspect) %>%
-  summarise(
-    sd_wa_swe_km3 = sd(sum_wa_swe_m3, na.rm = TRUE),
-    sd_max_swe_km3 = sd(sum_max_swe_m3, na.rm = TRUE),
-    .groups = "drop"
-  )
