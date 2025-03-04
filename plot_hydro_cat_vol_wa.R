@@ -47,7 +47,6 @@ setwd("~/ch1_margulis")
 ##############################################
 df <-fread("./csvs/wa_max_all_years_v1.csv")
 head(df)
-hist(df$)
 
 # sum by basin, aspect, bin_name, wy, and hydro_cat
 df_summary <- df %>%
@@ -59,9 +58,16 @@ df_summary <- df %>%
 
 # check
 head(df_summary)
-yuba <-filter(df_summary, basin == "Yuba")
+yuba <-filter(df_summary, basin == "Kern")
+yuba2 <-filter(yuba, bin_name == "2700-3100 m")
+yuba3 <-filter(yuba2, hydro_cat == "HW")
+yuba4 <-filter(yuba3, aspect == "3")
 
-hist(yuba$total_max_swe_km3, breaks = 100)
+yuba4
+mean_wa <-as.numeric(mean(yuba4$total_wa_swe_km3))
+sd_wa <-as.numeric(sd(yuba4$total_wa_swe_km3))
+
+hist(yuba4$total_max_swe_km3, breaks = 100)
 hist(yuba$total_wa_swe_km3, breaks = 100)
 
 # calc mean and SD by hydro_cat
@@ -76,86 +82,107 @@ df_summary2 <- df_summary %>%
 
 df_summary2
 
+
+## filter for just north and south
+df_summary3 <-filter(df_summary2, aspect == 2 | 4)
+
+
 # add grouped col
-df_summary2$aspect_basin <-paste0(df_summary2$aspect,".",df_summary2$basin)
-# df_summary2$aspect_basin <-factor(df_summary2$aspect_basin, levels=c('1.Kern', '3.Kern', 
+df_summary3$aspect_basin <-paste0(df_summary3$aspect,".",df_summary3$basin)
+df_summary3$aspect_basin <-factor(df_summary3$aspect_basin, levels=c('1.Kern', '3.Kern', 
                                                    '1.USJ', '3.USJ',
                                                    '1.Yuba','3.Yuba'))
 
-head(df_summary2)
-unique(df_summary2$aspect_basin)
 
-# View the result
-# plotting_df <-na.omit(df_summary2)
-# print(plotting_df)
+# check
+head(df_summary3)
+unique(df_summary3$aspect_basin)
 
+# omit nans
+df_summary4 <-na.omit(df_summary3)
+
+# check
 hist(df_summary2$sd_max_swe_km3, breaks = 20)
 hist(df_summary2$sd_wa_swe_km3, breaks = 20)
 
+head(df_summary4)
+
+# labls
+f_labels <- data.frame(
+  label = c("CD", "CW" ,"HD", "HW"),
+  hydro_cat = c("CD", "CW" ,"HD", "HW"),
+  bin_name = c('1500-1900 m','1500-1900 m','1500-1900 m','1500-1900 m'))
+
 # plot
-vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mean_max_swe_km3, fill = aspect_basin))+
-  facet_wrap( ~ hydro_cat, nrow = 4) +
+vol_plot <-ggplot(df_summary4, mapping = aes(x = as.factor(bin_name), y = mean_max_swe_km3, fill = aspect_basin))+
+  geom_text(data = f_labels, aes(y = .2, label = label, fill = label), size = 11) +
+  facet_wrap( ~ hydro_cat, scales = "fixed", nrow = 4) +
   geom_bar(stat = "identity", position = "dodge", width = .8) +
   geom_errorbar(position = "dodge", 
                 aes(ymin = mean_max_swe_km3 - sd_max_swe_km3, ymax = mean_max_swe_km3 + sd_max_swe_km3),
-                width = .8, linewidth = .3, alpha = .5) +
-  # scale_fill_manual(name = "Basin and Aspect",
-  #                   values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
-  #                              '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
-  #                              '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
-  #                   labels = c('Kern N','Kern S',  
-  #                              'USJ N', 'USJ S',
-  #                              'Yuba N','Yuba S')) +
-  labs(x = "Elevation Bin", y = "Mean Max SWE (km³)", fill = "Basin Name") +
+                width = .8, linewidth = .3, alpha = 1) +
+  scale_fill_manual(name = "Basin and Aspect",
+                    values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2',
+                               '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
+                               '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
+                    labels = c('Kern N','Kern S',
+                               'USJ N', 'USJ S',
+                               'Yuba N','Yuba S')) +
+  labs(x = "Elevation Bin", y = "Max SWE (km³)", fill = "Basin Name") +
+  scale_y_continuous(expand = c(.01,0), limits = c(0,.28), breaks = seq(0,.25,.05))+
   guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
+        plot.title=element_text(margin=margin(t=40,b=-30)),
         legend.position = 'top',
         legend.direction = 'horizontal',
+        strip.text = element_blank(),
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm"))
 
 vol_plot
 
 ggsave(vol_plot,
-       file = "./plots/max_vol_hydro_cat_v4.png",
+       file = "./plots/max_vol_hydro_cat_v6.pdf",
        width = 8, 
        height = 8,
-       units = "in",
-       dpi = 300) 
+       units = "in") 
 
-system("open ./plots/max_vol_hydro_cat_v4.png")
+system("open ./plots/max_vol_hydro_cat_v6.pdf")
 
 
 # plot
-wa_vol_plot <-ggplot(df_summary2, mapping = aes(x = as.factor(bin_name), y = mean_wa_swe_km3, fill = aspect_basin))+
+wa_vol_plot <-ggplot(df_summary4, mapping = aes(x = as.factor(bin_name), y = mean_wa_swe_km3, fill = aspect_basin))+
+  geom_text(data = f_labels, aes(y = .037, label = label, fill = label), size = 11) +
   facet_wrap( ~ hydro_cat, nrow = 4)+
   geom_bar(stat = "identity", position = "dodge", width = .8) +
   geom_errorbar(stat = "identity", position = "dodge", 
                 aes(ymin = mean_wa_swe_km3 - sd_wa_swe_km3, ymax = mean_wa_swe_km3 + sd_wa_swe_km3),
-                width = .8, linewidth = .3, alpha = .5) +
-  # scale_fill_manual(name = "Basin and Aspect",
-  #                   values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2', 
-  #                              '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
-  #                              '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
-  #                   labels = c('Kern N','Kern S',  
-  #                              'USJ N', 'USJ S',
-  #                              'Yuba N','Yuba S')) +
-  labs(x = "Elevation Bin", y = "Mean WA (km³)", fill = "Basin Name") +
+                width = .8, linewidth = .3, alpha = 1) +
+  scale_fill_manual(name = "Basin and Aspect",
+                    values = c('1.Kern' = 'azure4', '3.Kern' = 'azure2',
+                               '1.USJ' = 'tomato4', '3.USJ' = 'tomato1',
+                               '1.Yuba' = 'chartreuse4', '3.Yuba' = 'lightgreen'),
+                    labels = c('Kern N','Kern S',
+                               'USJ N', 'USJ S',
+                               'Yuba N','Yuba S')) +
+  labs(x = "Elevation Bin", y = "WA (km³)", fill = "Basin Name") +
+  #scale_y_continuous(expand = c(0.01, 0), limits = c(0,.05)) +
   guides(fill = guide_legend(ncol = 6, override.aes = list(order = c(1,2,3,4,5,6)))) +
   theme(panel.border = element_rect(colour = "black", fill = NA, linewidth  = 1),
         legend.position = 'top',
         legend.direction = 'horizontal',
+        strip.text = element_blank(),
         legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
         plot.margin = unit(c(.25,.25, 0,.25), "cm"))
 
 ggsave(wa_vol_plot,
-       file = "./plots/wa_vol_hydro_cat_v3.png",
+       file = "./plots/wa_vol_hydro_cat_v5.pdf",
        width = 8, 
        height = 8,
        units = "in",
        dpi = 300) 
 
-system("open ./plots/wa_vol_hydro_cat_v3.png")
+system("open ./plots/wa_vol_hydro_cat_v5.pdf")
 
 
 

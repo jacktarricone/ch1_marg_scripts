@@ -69,8 +69,8 @@ theme_set(theme_classic(14))
 # write.csv(snotel_df, "./csvs/snotel_df_v3.csv")
 
 snotel_df_v1 <-read.csv("./csvs/snotel_df_v3.csv")
-snotel_df_v1 <-subset(snotel_df_v1, select=-c(X)) # move bad one
-head(snotel_df_v1)
+snotel_df <-subset(snotel_df_v1, select=-c(X)) # move bad one
+head(snotel_df)
 
 #########################
 #########################
@@ -122,13 +122,13 @@ max_25 <-ggplot(data = max_df, mapping = aes(x = max_snotel_25.4, y = max_snsr_2
 plot(max_25)
 
 # save
-ggsave( "./plots/max_metric_compare_v7.pdf",
-       max_25,
-       width = 4.5,
-       height = 4.5,
-       units = "in")
-
-system("open ./plots/max_metric_compare_v7.pdf")
+# ggsave( "./plots/max_metric_compare_v7.pdf",
+#        max_25,
+#        width = 4.5,
+#        height = 4.5,
+#        units = "in")
+# 
+# system("open ./plots/max_metric_compare_v7.pdf")
 
 
 #########################
@@ -162,13 +162,13 @@ max_dowy_25 <-ggplot(data = max_dowy_df, mapping = aes(x = max_dowy_snotel_25.4,
 plot(max_dowy_25)
 
 # save
-ggsave( "./plots/max_dowy_metric_compare_v6.pdf",
-       max_dowy_25,
-       width = 4.5,
-       height = 4.5,
-       units = "in")
-
-system("open ./plots/max_dowy_metric_compare_v6.pdf")
+# ggsave( "./plots/max_dowy_metric_compare_v6.pdf",
+#        max_dowy_25,
+#        width = 4.5,
+#        height = 4.5,
+#        units = "in")
+# 
+# system("open ./plots/max_dowy_metric_compare_v6.pdf")
 
 
 

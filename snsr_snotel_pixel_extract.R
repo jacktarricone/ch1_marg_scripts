@@ -6,6 +6,7 @@ library(terra)
 library(dplyr)
 library(parallel)
 library(pbmcapply)
+library(data.table)
 
 setwd("~/ch1_margulis/")
 
@@ -51,6 +52,7 @@ plot(cn[[2]])
 plot(ca_points_snsr, add =TRUE)
 
 # extract pixels
+# ??terra::extract
 snsr_snotel_pixel_nums <-terra::extract(cn, ca_points_snsr, 
                                  names = TRUE, 
                                  cells = TRUE, 
@@ -58,23 +60,66 @@ snsr_snotel_pixel_nums <-terra::extract(cn, ca_points_snsr,
                                  ID = TRUE,
                                  method = 'simple')
 
+colnames(snsr_snotel_pixel_nums)[4] <-c("cell1")
 snsr_snotel_pixel_nums
 
+# extract 8 surronding cells
+test_cells <-adjacent(cn, snsr_snotel_pixel_nums$cell1, direction = 8)
+
+# for five stations
+with_cells <-cbind(snsr_snotel_pixel_nums,test_cells)
+colnames(with_cells)[7:14] <-c("cell2","cell3","cell4","cell5",
+                               "cell6","cell7","cell8","cell9")
+with_cells
+
+cells_long <- with_cells %>%
+  pivot_longer(cols = starts_with("cell"), 
+               names_to = "cell_type", 
+               values_to = "cell")
+
+cells_long_v2 <-cells_long[-c(2:5)]
+cells_long_v2
+
+full_pixel_nums <-terra::extract(cn, cells_long_v2$cell)
+colnames(full_pixel_nums)[1:2] <-c("x_cell_num2","y_cell_num2")
+
 # bind and save
-snsr_snotels <-cbind(snotel_ca, snsr_snotel_pixel_nums)
-colnames(snsr_snotels)[14:15] <-c("cell_lon","cell_lat")
+snsr_snotels <-cbind(snotel_ca, with_cells)
+snsr_snotels
+colnames(snsr_snotels)[14:15] <-c("lon","lat")
 head(snsr_snotels)
 # write.csv(snsr_snotels, "./csvs/snsr_snotels.csv")
 
+df_long <- snsr_snotels %>%
+  pivot_longer(cols = starts_with("cell"), 
+               names_to = "cell_type", 
+               values_to = "cell")
+
+df_long2  <-cbind(df_long,full_pixel_nums)
+df_long2
+
+# create df to define max and min for cells
+new_cells_df <-df_long2 %>%
+  group_by(Site_Name) %>%
+  summarise(
+    max_x = max(x_cell_num2, na.rm = TRUE),
+    min_x = min(x_cell_num2, na.rm = TRUE),
+    max_y = max(y_cell_num2, na.rm = TRUE),
+    min_y = min(y_cell_num2, na.rm = TRUE),
+  )
+
+new_cells_df
+
 # fine hdf swe files
 hdf_paths <-list.files("./swe/hdf", full.names = TRUE) # set paths
-# x <-hdf_paths[8]
+x <-hdf_paths[8]
+i <-1
 
 # define function
-snotel_snsr_extract <-function(x){
+snotel_9cell_snsr_extract <-function(x){
   
   # this is sloppy but it works
-  for(i in seq_len(nrow(snsr_snotels))) {
+  for(i in seq_len(nrow(new_cells_df))) {
     
     # file
     file <-basename(x)
@@ -87,8 +132,77 @@ snotel_snsr_extract <-function(x){
     # use df which has SNOTEL station SNSR cell numbers
     # to read in single pixel where snotel station is
     swe_raw <-h5read(x, "/SWE", 
-                          index = list(snsr_snotels$y_cell_num[i], 
-                                       snsr_snotels$x_cell_num[i], 
+                     index = list(new_cells_df$min_x[i]:new_cells_df$max_x[i],
+                                  new_cells_df$min_y[i]:new_cells_df$max_y[i], 
+                                  1:nday))
+    
+    
+    # convert to df
+    swe_raw2 <-swe_raw
+    dim(swe_raw2) <- c(9,nday)
+    swe_raw2
+    t_swe_raw2 <-t(swe_raw2)
+    snsr_swe_mm <-as.data.frame(t_swe_raw2)
+    snsr_swe_mm
+    
+    colnames(snsr_swe_mm)[1:9] <- c("cell1","cell2","cell3","cell4",
+                                    "cell5","cell6","cell7","cell8","cell9")
+    
+    # extract year
+    year_v1 <- gsub(".h5", "", file) # take off .h5
+    year <- gsub("SN_SWE_WY", "", year_v1) # take of begining letters
+    
+    # format names, remove spaces
+    snotel_name_v1 <-snsr_snotels$Site_Name[i]
+    snotel_name <-gsub(" ", "_", snotel_name_v1)
+    
+    # pull out other data
+    wy <-rep(year,nday)
+    site_name <-rep(snotel_name,nday) 
+    latitude <-rep(snsr_snotels$lat[i], nday)
+    longitude <-rep(snsr_snotels$lon[i], nday)
+    ele_m <-rep(snsr_snotels$Elevation_m[i], nday)
+    station_id <-rep(snsr_snotels$Site_ID[i], nday)
+    cell <-rep(snsr_snotels$cell1[i], nday)
+    x_cell <-rep(snsr_snotels$x_cell_num[i], nday)
+    y_cell <-rep(snsr_snotels$y_cell_num[i], nday)
+    
+    test<-cbind(snsr_swe_mm,site_name)
+    
+    # make df
+    final_df <-cbind(site_name, wy, snsr_swe_mm, 
+                     latitude, longitude, ele_m,
+                     station_id, cell, x_cell, y_cell) # bind all 3 cols
+    head(final_df)
+    
+    # create saving information
+    saving_location <-file.path("./csvs/snsr_snotel_data2/")
+    full_saving_name <-paste0(saving_location,"swe_",year,"_",snotel_name,".csv")
+    
+    # save
+    fwrite(final_df, full_saving_name, row.names=FALSE)
+  }
+}
+
+# define function
+snotel_snsr_extract <-function(x){
+  
+  # this is sloppy but it works
+  for(i in seq_len(nrow(df_long2))) {
+    
+    # file
+    file <-basename(x)
+    
+    # pull out number of days in given year
+    test <-h5ls(x) # contains 3 groups: lat, long, and SCA
+    dims <-test$dim[1]
+    nday <-as.integer(sub("6601 x 5701 x ","",dims))
+    
+    # use df which has SNOTEL station SNSR cell numbers
+    # to read in single pixel where snotel station is
+    swe_raw <-h5read(x, "/SWE", 
+                          index = list(snsr_snotels$y_cell_num2[i], 
+                                       snsr_snotels$x_cell_num2[i], 
                                        1:nday))
     
     # convert to df
@@ -121,11 +235,11 @@ snotel_snsr_extract <-function(x){
     head(final_df)
     
     # create saving information
-    saving_location <-file.path("./csvs/snsr_snotel_data/")
+    saving_location <-file.path("./csvs/snsr_snotel_data2/")
     full_saving_name <-paste0(saving_location,"swe_",year,"_",snotel_name,".csv")
     
     # save
-    write.csv(final_df, full_saving_name, row.names=FALSE)
+    fwrite(final_df, full_saving_name, row.names=FALSE)
   }
 }
 
