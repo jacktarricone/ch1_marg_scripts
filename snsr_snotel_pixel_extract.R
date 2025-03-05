@@ -7,11 +7,12 @@ library(dplyr)
 library(parallel)
 library(pbmcapply)
 library(data.table)
+library(tidyr)
 
 setwd("~/ch1_margulis/")
 
 # bring in real snotel locations
-snotel_locs <-read.csv("./csvs/SNOTEL_MASTER_pt_update.csv")
+snotel_locs <-fread("./csvs/SNOTEL_MASTER_pt_update.csv")
 head(snotel_locs)
 
 # read in stack
@@ -20,12 +21,9 @@ y_cell <-rast('./rasters/static/y_cell_num.tif')
 x_cell <-rast('./rasters/static/x_cell_num.tif')
 cell_numbers <-c(x_cell,y_cell)
 cn_v1 <-mask(cell_numbers, dem)
-cn_v1
-plot(cn_v1)
 
 # read in snsr shp
 snsr_shp <-vect("./vectors/snsr_shp.gpkg")
-plot(snsr_shp)
 
 # stations in CA with 32 years of record in the SNSR
 good_stations <-as.integer(c(356, 428, 462, 463, 473, 508, 518, 539, 
@@ -38,9 +36,8 @@ snotel_ca
 # convert to vect
 ca_points <-vect(snotel_ca, geom = c("Longitude","Latitude"), crs = crs(cell_numbers))
 snotel_vect <-vect(snotel_locs, geom = c("Longitude","Latitude"), crs = crs(cell_numbers))
-plot(snotel_vect)
 snsr_snotels <-mask(snotel_vect, snsr_shp)
-plot(snsr_snotels)
+
 
 # crop down to extent of points test
 crop_ext <-ext(-120.79192, -119, 38, 39.8)
@@ -112,8 +109,8 @@ new_cells_df
 
 # fine hdf swe files
 hdf_paths <-list.files("./swe/hdf", full.names = TRUE) # set paths
-x <-hdf_paths[8]
-i <-1
+i <-2
+x <-hdf_paths[9]
 
 # define function
 snotel_9cell_snsr_extract <-function(x){
@@ -138,13 +135,13 @@ snotel_9cell_snsr_extract <-function(x){
     
     
     # convert to df
-    swe_raw2 <-swe_raw
-    dim(swe_raw2) <- c(9,nday)
-    swe_raw2
-    t_swe_raw2 <-t(swe_raw2)
-    snsr_swe_mm <-as.data.frame(t_swe_raw2)
-    snsr_swe_mm
+    swe_raw2 <-swe_raw # duplicate
+    dim(swe_raw2) <- c(9,nday) # make 9 columns
+    t_swe_raw2 <-t(swe_raw2) # transpose
+    snsr_swe_mm <-as.data.frame(t_swe_raw2) # convert to df
+    head(snsr_swe_mm) # check
     
+    # rename cells
     colnames(snsr_swe_mm)[1:9] <- c("cell1","cell2","cell3","cell4",
                                     "cell5","cell6","cell7","cell8","cell9")
     
@@ -163,7 +160,7 @@ snotel_9cell_snsr_extract <-function(x){
     longitude <-rep(snsr_snotels$lon[i], nday)
     ele_m <-rep(snsr_snotels$Elevation_m[i], nday)
     station_id <-rep(snsr_snotels$Site_ID[i], nday)
-    cell <-rep(snsr_snotels$cell1[i], nday)
+    c_number <-rep(snsr_snotels$cell1[i], nday)
     x_cell <-rep(snsr_snotels$x_cell_num[i], nday)
     y_cell <-rep(snsr_snotels$y_cell_num[i], nday)
     
@@ -172,78 +169,25 @@ snotel_9cell_snsr_extract <-function(x){
     # make df
     final_df <-cbind(site_name, wy, snsr_swe_mm, 
                      latitude, longitude, ele_m,
-                     station_id, cell, x_cell, y_cell) # bind all 3 cols
+                     station_id, c_number, x_cell, y_cell) # bind all 3 cols
     head(final_df)
+    
+    # make long by cell
+    final_df_long <-final_df %>%
+      pivot_longer(cols = starts_with("cell"), 
+                   names_to = "cell_nume", 
+                   values_to = "swe_mm")
     
     # create saving information
     saving_location <-file.path("./csvs/snsr_snotel_data2/")
     full_saving_name <-paste0(saving_location,"swe_",year,"_",snotel_name,".csv")
     
     # save
-    fwrite(final_df, full_saving_name, row.names=FALSE)
-  }
-}
-
-# define function
-snotel_snsr_extract <-function(x){
-  
-  # this is sloppy but it works
-  for(i in seq_len(nrow(df_long2))) {
-    
-    # file
-    file <-basename(x)
-    
-    # pull out number of days in given year
-    test <-h5ls(x) # contains 3 groups: lat, long, and SCA
-    dims <-test$dim[1]
-    nday <-as.integer(sub("6601 x 5701 x ","",dims))
-    
-    # use df which has SNOTEL station SNSR cell numbers
-    # to read in single pixel where snotel station is
-    swe_raw <-h5read(x, "/SWE", 
-                          index = list(snsr_snotels$y_cell_num2[i], 
-                                       snsr_snotels$x_cell_num2[i], 
-                                       1:nday))
-    
-    # convert to df
-    snsr_swe_mm <-as.data.frame(matrix(swe_raw))
-    colnames(snsr_swe_mm)[1] <- "snsr_swe_mm" # change 3rd col name to sca
-    
-    # extract year
-    year_v1 <- gsub(".h5", "", file) # take off .h5
-    year <- gsub("SN_SWE_WY", "", year_v1) # take of begining letters
-    
-    # format names, remove spaces
-    snotel_name_v1 <-snsr_snotels$Site_Name[i]
-    snotel_name <-gsub(" ", "_", snotel_name_v1)
-    
-    # pull out other data
-    wy <-rep(year,nday)
-    site_name <-rep(snotel_name,nday) 
-    latitude <-rep(snsr_snotels$cell_lat[i], nday)
-    longitude <-rep(snsr_snotels$cell_lon[i], nday)
-    ele_m <-rep(snsr_snotels$Elevation_m[i], nday)
-    station_id <-rep(snsr_snotels$Site_ID[i], nday)
-    cell_number <-rep(snsr_snotels$cell[i], nday)
-    x_cell <-rep(snsr_snotels$x_cell_num[i], nday)
-    y_cell <-rep(snsr_snotels$y_cell_num[i], nday)
-    
-    # make df
-    final_df <-cbind(site_name, wy, snsr_swe_mm, 
-                     latitude, longitude, ele_m,
-                     station_id, cell_number, x_cell, y_cell) # bind all 3 cols
-    head(final_df)
-    
-    # create saving information
-    saving_location <-file.path("./csvs/snsr_snotel_data2/")
-    full_saving_name <-paste0(saving_location,"swe_",year,"_",snotel_name,".csv")
-    
-    # save
-    fwrite(final_df, full_saving_name, row.names=FALSE)
+    fwrite(final_df_long, full_saving_name, row.names=FALSE)
   }
 }
 
 # apply function to list of hdf files
-# pbmclapply(hdf_paths, function(x) snotel_snsr_extract(x), mc.cores = 14, mc.cleanup = TRUE)
-lapply(hdf_paths[14], function(x) snotel_snsr_extract(x))
+pbmclapply(hdf_paths, function(x) snotel_9cell_snsr_extract(x), mc.cores = 12, mc.cleanup = TRUE)
+# lapply(hdf_paths[14], function(x) snotel_snsr_extract(x))
 
