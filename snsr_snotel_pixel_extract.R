@@ -8,6 +8,7 @@ library(parallel)
 library(pbmcapply)
 library(data.table)
 library(tidyr)
+library(ggplot2)
 
 setwd("~/ch1_margulis/")
 
@@ -58,7 +59,6 @@ snsr_snotel_pixel_nums <-terra::extract(cn, ca_points_snsr,
                                  method = 'simple')
 
 colnames(snsr_snotel_pixel_nums)[4] <-c("cell1")
-snsr_snotel_pixel_nums
 
 # extract 8 surronding cells
 test_cells <-adjacent(cn, snsr_snotel_pixel_nums$cell1, direction = 8)
@@ -67,7 +67,6 @@ test_cells <-adjacent(cn, snsr_snotel_pixel_nums$cell1, direction = 8)
 with_cells <-cbind(snsr_snotel_pixel_nums,test_cells)
 colnames(with_cells)[7:14] <-c("cell2","cell3","cell4","cell5",
                                "cell6","cell7","cell8","cell9")
-with_cells
 
 cells_long <- with_cells %>%
   pivot_longer(cols = starts_with("cell"), 
@@ -75,7 +74,6 @@ cells_long <- with_cells %>%
                values_to = "cell")
 
 cells_long_v2 <-cells_long[-c(2:5)]
-cells_long_v2
 
 full_pixel_nums <-terra::extract(cn, cells_long_v2$cell)
 colnames(full_pixel_nums)[1:2] <-c("x_cell_num2","y_cell_num2")
@@ -93,7 +91,6 @@ df_long <- snsr_snotels %>%
                values_to = "cell")
 
 df_long2  <-cbind(df_long,full_pixel_nums)
-df_long2
 
 # create df to define max and min for cells
 new_cells_df <-df_long2 %>%
@@ -106,6 +103,7 @@ new_cells_df <-df_long2 %>%
   )
 
 new_cells_df
+cn_v1
 
 # fine hdf swe files
 hdf_paths <-list.files("./swe/hdf", full.names = TRUE) # set paths
@@ -129,8 +127,8 @@ snotel_9cell_snsr_extract <-function(x){
     # use df which has SNOTEL station SNSR cell numbers
     # to read in single pixel where snotel station is
     swe_raw <-h5read(x, "/SWE", 
-                     index = list(new_cells_df$min_x[i]:new_cells_df$max_x[i],
-                                  new_cells_df$min_y[i]:new_cells_df$max_y[i], 
+                     index = list(new_cells_df$min_y[i]:new_cells_df$max_y[i],
+                                  new_cells_df$min_x[i]:new_cells_df$max_x[i],
                                   1:nday))
     
     
@@ -163,20 +161,20 @@ snotel_9cell_snsr_extract <-function(x){
     c_number <-rep(snsr_snotels$cell1[i], nday)
     x_cell <-rep(snsr_snotels$x_cell_num[i], nday)
     y_cell <-rep(snsr_snotels$y_cell_num[i], nday)
-    
-    test<-cbind(snsr_swe_mm,site_name)
+    dowy <-seq(1,nday,1)
     
     # make df
-    final_df <-cbind(site_name, wy, snsr_swe_mm, 
+    final_df <-cbind(site_name, wy, snsr_swe_mm, dowy,
                      latitude, longitude, ele_m,
                      station_id, c_number, x_cell, y_cell) # bind all 3 cols
-    head(final_df)
     
     # make long by cell
     final_df_long <-final_df %>%
       pivot_longer(cols = starts_with("cell"), 
-                   names_to = "cell_nume", 
+                   names_to = "cell_num", 
                    values_to = "swe_mm")
+    
+    head(final_df_long)
     
     # create saving information
     saving_location <-file.path("./csvs/snsr_snotel_data2/")
@@ -191,3 +189,10 @@ snotel_9cell_snsr_extract <-function(x){
 pbmclapply(hdf_paths, function(x) snotel_9cell_snsr_extract(x), mc.cores = 12, mc.cleanup = TRUE)
 # lapply(hdf_paths[14], function(x) snotel_snsr_extract(x))
 
+
+# test
+test_df <-fread("./csvs/snsr_snotel_data2/swe_1993_CSS_LAB.csv")
+head(test_df)
+
+ggplot(test_df)+
+  geom_line(aes(y = swe_mm, x =  dowy, color = cell_num), size = .1)
