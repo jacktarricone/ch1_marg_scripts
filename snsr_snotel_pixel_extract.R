@@ -107,8 +107,6 @@ cn_v1
 
 # fine hdf swe files
 hdf_paths <-list.files("./swe/hdf", full.names = TRUE) # set paths
-i <-2
-x <-hdf_paths[9]
 
 # define function
 snotel_9cell_snsr_extract <-function(x){

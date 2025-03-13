@@ -45,67 +45,126 @@ theme_set(theme_classic(13))
 setwd("~/ch1_margulis")
 
 ##############################################
-df <-fread("./csvs/wa_max_all_years_v1.csv")
+df1 <-fread("./csvs/wa_max_all_years_v1.csv")
+head(df1)
+
+df<-as.data.frame(full_join(df1, static_summary))
 head(df)
 
 # sum by basin, aspect, bin_name, wy, and hydro_cat
 df_summary <- df %>%
-  group_by(basin,aspect,bin_name,wy,hydro_cat) %>%
+  group_by(basin,aspect,bin_name,ez,wy,hydro_cat) %>%
   summarise(
     total_wa_swe_km3 = sum(wa_swe_m3, na.rm = TRUE)*1e-9,
     total_max_swe_km3 = sum(max_swe_m3, na.rm = TRUE)*1e-9,
+    total_area_km3 = sum(total_area_km3, na.rm = TRUE)*1e-6
   )
 
 # check
-head(df_summary)
-yuba <-filter(df_summary, basin == "Kern")
-yuba2 <-filter(yuba, bin_name == "2700-3100 m")
-yuba3 <-filter(yuba2, hydro_cat == "HW")
-yuba4 <-filter(yuba3, aspect == "3")
-
-yuba4
-mean_wa <-as.numeric(mean(yuba4$total_wa_swe_km3))
-sd_wa <-as.numeric(sd(yuba4$total_wa_swe_km3))
-
-hist(yuba4$total_max_swe_km3, breaks = 100)
-hist(yuba$total_wa_swe_km3, breaks = 100)
+# head(df_summary)
+# yuba <-filter(df_summary, basin == "Kern")
+# yuba2 <-filter(yuba, bin_name == "2700-3100 m")
+# yuba3 <-filter(yuba2, hydro_cat == "HW")
+# yuba4 <-filter(yuba3, aspect == "3")
+# 
+# yuba4
+# mean_wa <-as.numeric(mean(yuba4$total_wa_swe_km3))
+# sd_wa <-as.numeric(sd(yuba4$total_wa_swe_km3))
+# 
+# hist(yuba4$total_max_swe_km3, breaks = 100)
+# hist(yuba$total_wa_swe_km3, breaks = 100)
 
 # calc mean and SD by hydro_cat
-df_summary2 <- df_summary %>%
-  group_by(basin,aspect,bin_name,hydro_cat) %>%
+df_summary3 <- df_summary2 %>%
+  group_by(basin,aspect,bin_name,ez,hydro_cat) %>%
   summarise(
     mean_wa_swe_km3 = mean(total_wa_swe_km3, na.rm = TRUE),
     mean_max_swe_km3 = mean(total_max_swe_km3, na.rm = TRUE),
     sd_wa_swe_km3 = sd(total_wa_swe_km3, na.rm = TRUE),
-    sd_max_swe_km3 = sd(total_max_swe_km3, na.rm = TRUE),
+    sd_max_swe_km3 = sd(total_max_swe_km3, na.rm = TRUE))
   )
 
-df_summary2
+df_summary3
 
 
 ## filter for just north and south
-df_summary3 <-filter(df_summary2, aspect == 2 | 4)
-
+df_summary4 <-as.data.frame(filter(df_summary3, aspect == 2 | 4))
+static_filt <-as.data.frame(filter(static_summary, aspect == 2 | 4))
+df_summary4 <-as.data.frame(full_join(df_summary4, static_filt))
+head(df_summary4)
 
 # add grouped col
-df_summary3$aspect_basin <-paste0(df_summary3$aspect,".",df_summary3$basin)
-df_summary3$aspect_basin <-factor(df_summary3$aspect_basin, levels=c('1.Kern', '3.Kern', 
+df_summary4$aspect_basin <-paste0(df_summary4$aspect,".",df_summary3$basin)
+df_summary4$aspect_basin <-factor(df_summary4$aspect_basin, levels=c('1.Kern', '3.Kern', 
                                                    '1.USJ', '3.USJ',
                                                    '1.Yuba','3.Yuba'))
-
-
 # check
-head(df_summary3)
-unique(df_summary3$aspect_basin)
-
-# omit nans
-df_summary4 <-na.omit(df_summary3)
-
-# check
-hist(df_summary2$sd_max_swe_km3, breaks = 20)
-hist(df_summary2$sd_wa_swe_km3, breaks = 20)
-
 head(df_summary4)
+unique(df_summary4$aspect_basin)
+
+df_summary5 <- df_summary4 %>%
+  group_by(basin,ez,aspect) %>%
+  summarise(
+    norm_max_swe = mean_max_swe_km3/total_area_km3
+)
+
+df_summary5
+
+## add bin area rast
+# list of paths to shape files
+basin_paths_v1 <-list.files("./vectors/ca_basins", full.names = TRUE, pattern = "\\.gpkg$")
+basin_paths <-basin_paths_v1[c(6,19,21)]
+kern_shp <-vect(basin_paths[[1]])
+usj_shp <-vect(basin_paths[[2]])
+yuba_shp <-vect(basin_paths[[3]])
+
+# load in pa
+pa <-rast("./rasters/static/SNSR_pixel_area.tif")
+names(pa) <-"area_m3"
+ez <-rast("./rasters/categorized/dem_6zb.tif")
+names(ez) <-"ez"
+aspect <- rast("./rasters/categorized/aspect_thres_4_classes.tif")
+static <-c(pa,ez,aspect)
+static
+
+# pull out bains
+yuba_static <-mask(static,yuba_shp)
+usj_static <-mask(static,usj_shp)
+kern_static <-mask(static,kern_shp)
+
+# make stack
+static_basins <-c(kern_static,usj_static,yuba_static)
+
+# make df
+kern_df1 <-as.data.frame(kern_static, xy = T)
+kern_df2 <-drop_na(kern_df1)
+kern_df2$basin <-rep("Kern",nrow(kern_df2))
+head(kern_df2)
+
+usj_df1 <-as.data.frame(usj_static, xy = T)
+usj_df2 <-drop_na(usj_df1)
+usj_df2$basin <-rep("USJ",nrow(usj_df2))
+
+yuba_df1 <-as.data.frame(yuba_static, xy = T)
+yuba_df2 <-drop_na(yuba_df1)
+yuba_df2$basin <-rep("Yuba",nrow(yuba_df2))
+
+basin_static <-rbind(yuba_df2,usj_df2,yuba_df2)
+head(basin_static)
+
+# calc mean and SD by hydro_cat
+static_summary <- basin_static %>%
+  group_by(basin,aspect,ez) %>%
+  summarise(
+    total_area_km3 = sum(area_m3, na.rm = TRUE)*1e-6,
+  )
+static_summary
+
+
+test <-as.data.frame(full_join(df_summary4, static_summary))
+test
+df_summary4
+
 
 # labls
 f_labels <- data.frame(

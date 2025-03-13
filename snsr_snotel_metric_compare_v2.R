@@ -8,6 +8,8 @@ library(hydroGOF)
 library(cowplot)
 library(viridis)
 library(ggpointdensity)
+library(data.table)
+library(tidyr)
 
 # set wd
 setwd('~/ch1_margulis')
@@ -56,28 +58,36 @@ theme_set(theme_classic(14))
 #########################
 #########################
 
-snotel_df <-read.csv("./csvs/snotel_df_v3.csv")
-snotel_df <-subset(snotel_df, select=-c(X)) # move bad one
+snotel_df1 <-fread("./csvs/snotel_df_v3.csv")
+head(snotel_df1)
 
-names <-unique(snotel_df$site_name)
+# stations in CA with 32 years of record in the SNSR
+good_stations <-as.integer(c(356, 428, 462, 463, 473, 508, 518, 539, 
+                             540, 541, 575, 697, 724, 771, 778, 784, 809, 834, 846, 848))
+
+# filter for CA
+snotel_df <-filter(snotel_df1, site_id %in% good_stations)
+head(snotel_df)
+
 #########################
 #########################
 ###  read in SNSR data ##
 #########################
 #########################
 
-# read in csvs
-snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data", full.names = TRUE))
-snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
-
 # bind together
 snsr_df <-bind_rows(snsr_snotel_data) # make df
-snsr_df <-subset(snsr_df, select=-c(station_id)) # move bad one
 colnames(snsr_df)[c(1,4,5)] <-c('site_name_v2','lat','lon')
+head(snsr_df)
+
+# read in csvs
+snsr_snotel_list <-sort(list.files("./csvs/snsr_snotel_data2", full.names = TRUE))
+snsr_snotel_data <-lapply(snsr_snotel_list, read.csv)
+
 
 # bind together
-swe_df <-cbind(snotel_df, snsr_df)
-head(swe_df)
+# swe_df <-cbind(snotel_df, snsr_df)
+# head(swe_df)
 
 
 #########################
@@ -87,15 +97,46 @@ head(swe_df)
 #########################
 
 # calc metric 
-max_df <-as.data.frame(swe_df %>%
-                       group_by(site_name, waterYear) %>%
-                       summarise(max_snotel_0 = max_swe(snotel_swe_mm, swe_thres = 0)/1000,
-                                 max_snsr_0   = max_swe(snsr_swe_mm, swe_thres = 0)/1000,
-                                 max_snotel_25.4 = max_swe(snotel_swe_mm, swe_thres = 25.4)/1000,
-                                 max_snsr_25.4   = max_swe(snsr_swe_mm, swe_thres = 25.4)/1000,
-                                 max_snotel_50.8 = max_swe(snotel_swe_mm, swe_thres = 50.8)/1000,
-                                 max_snsr_50.8   = max_swe(snsr_swe_mm, swe_thres = 50.8)/1000))
+snotel_max_df <-as.data.frame(snotel_df) %>%
+                              group_by(site_name, waterYear) %>%
+                              summarise(max_snotel_m  = max_swe(snotel_swe_mm, swe_thres = 25.4)/1000)
 
+snotel_max_df
+
+snsr_max_df <-as.data.frame(snsr_df) %>%
+                       group_by(cell_num, site_name_v2, wy) %>%
+                       summarise(max_snsr_m  = max_swe(swe_mm, swe_thres = 25.4)/1000)
+
+snsr_max_df
+unique(snsr_max_df$max_snsr_m)
+
+# loop through cells
+cells <- paste0("cell", 1:9)  
+print(cells)
+
+r_df <- vector("numeric", 9) 
+
+for(i in 1:9) {
+  # file
+  test_cell <-cells[i]
+  filt_df <-filter(snsr_max_df, cell_num == test_cell)
+  test_df1 <-cbind(filt_df, snotel_max_df$max_snotel_m)
+  colnames(test_df1)[5] <-"max_snotel_m"
+  test_df <-drop_na(test_df1)
+  result <-round(cor(test_df$max_snsr_m, test_df$max_snotel_m, method = "pearson"),4)
+  r_df[i] <-paste(result)
+  max_r_df <-as.data.frame(cbind(cells,r_df))
+  colnames(max_r_df)[1:2] <-c("cell","r")
+}
+
+# test df
+max_r_df
+
+# filter for max
+best_cell <-filter(max_r_df, r == max(r))
+best_cell
+
+# snsr
 
 max_25 <-ggplot(data = max_df, mapping = aes(x = max_snotel_25.4, y = max_snsr_25.4)) +
   geom_pointdensity(adjust = .1, size = 1) +
@@ -160,44 +201,101 @@ plot(max_dowy_25)
 # 
 # system("open ./plots/max_dowy_metric_compare_v6.pdf")
 
+
 ##########################
 ##########################
-#######    fm   ##########
+#######    wa   ##########
 ##########################
 ##########################
+test_wy <-1990
+
+bl_sno <-filter(snotel_df, site_name == "css lab " & waterYear == test_wy)
+bl_sno$dowy <-seq(1,nrow(bl_sno),1)
+bl_sno
+
+bl_snsr <-filter(snsr_df, site_name_v2 == "CSS_LAB" & wy == test_wy)
+
+
+ggplot()+
+  geom_line(data = bl_snsr, aes(x = dowy, y = swe_mm, color = cell_num)) +
+  geom_line(data = bl_sno, aes(x = dowy, y = snotel_swe_mm), color = "black")
 
 # calc metric 
-fm_df <-as.data.frame(swe_df %>%
-                       group_by(site_name, waterYear) %>%
-                       summarise(fm_snotel_0 = fm_apr1(snotel_swe_mm, swe_thres = 0),
-                                 fm_snsr_0   = fm_apr1(snsr_swe_mm, swe_thres = 0),
-                                 fm_snotel_25.4 = fm_apr1(snotel_swe_mm, swe_thres = 25.4),
-                                 fm_snsr_25.4   = fm_apr1(snsr_swe_mm, swe_thres = 25.4),
-                                 fm_snotel_50.8 = fm_apr1(snotel_swe_mm, swe_thres = 50.8),
-                                 fm_snsr_50.8   = fm_apr1(snsr_swe_mm, swe_thres = 50.8)))
+snotel_wa_df <-as.data.frame(snotel_df) %>%
+  group_by(site_name, waterYear) %>%
+  summarise(wa_snotel_mm  = wa(snotel_swe_mm, swe_thres = 25.4))
+
+snotel_wa_df
+
+snsr_wa_df <-as.data.frame(snsr_df) %>%
+  group_by(cell_num, site_name_v2, wy) %>%
+  summarise(wa_snsr_mm  = wa(swe_mm, swe_thres = 25.4))
+
+snsr_wa_mean_df <-as.data.frame(snsr_wa_df) %>%
+  group_by(site_name_v2, wy) %>%
+  summarise(mean_wa_snsr_mm = mean(wa_snsr_mm, na.rm = TRUE), .groups = "drop")
+
+colnames(snotel_wa_df)[2] <-"wy"
+
+testing <-cbind(snsr_wa_mean_df,snotel_wa_df)
+testing <-drop_na(testing)
+
+result <-round(cor(testing$mean_wa_snsr_mm, 
+                   testing$wa_snotel_mm, 
+                   method = "pearson"),4)
+
+snsr_wa_df
+hist(snsr_wa_df, breaks = 100)
+hist(snotel_wa_df, breaks = 100, add = T, col = )
+
+example <-cbind(snotel_wa_df, snsr_wa_mean_df$mean_wa_snsr_mm)
+colnames(example)[4] <-"wa_snsr_mean_mm"
+example
+
+r_df <- vector("numeric", 9) 
+
+for(i in 1:9) {
+  # file
+  test_cell <-cells[i]
+  filt_df <-filter(snsr_wa_df, cell_num == test_cell)
+  test_df1 <-cbind(filt_df, snotel_wa_df$wa_snotel_mm)
+  colnames(test_df1)[5] <-"wa_snotel_mm"
+  test_df <-drop_na(test_df1)
+  result <-round(cor(test_df$wa_snsr_mm, test_df$wa_snotel_mm, method = "pearson"),4)
+  r_df[i] <-paste(result)
+  wa_r_df <-as.data.frame(cbind(cells,r_df))
+  colnames(wa_r_df)[1:2] <-c("cell","r")
+}
+
+# test df
+wa_r_df
+
+# filter for max
+best_cell <-filter(wa_r_df, r == max(r))
+best_cell
+
+best_wa <-filter(snsr_df, cell_num ==best_cell$cell[1])
+
+snsr_wa_df_best <-as.data.frame(best_wa) %>%
+  group_by(cell_num, site_name_v2, wy) %>%
+  summarise(wa_snsr_mm  = wa(swe_mm, swe_thres = 25.4))
+
+wa_plotting_df <-cross_join(snotel_wa_df,snsr_wa_df_best)
+head(wa_plotting_df)
 
 # plot
-fm_25 <-ggplot(fm_df, aes(x = fm_snotel_25.4, y = fm_snsr_25.4)) +
-  geom_pointdensity(adjust = .1, size = 1) +
+wa_25 <-ggplot(wa_plotting_df, aes(x = wa_snotel_mm, y = wa_snsr_mm)) +
+  geom_pointdensity(adjust = 50, size = 1) +
   scale_color_viridis(option = "H") +
   geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
-  scale_y_continuous(limits = c(0,1),expand = (c(0,0))) +
-  scale_x_continuous(limits = c(0,1),expand = (c(0,.02))) +
-  xlab("SNOTEL FM") + ylab("SNSR FM") +
+  scale_y_continuous(limits = c(0,600),expand = (c(0,0))) +
+  scale_x_continuous(limits = c(0,600),expand = (c(0,.02))) +
+  xlab("SNOTEL WA (mm)") + ylab("SNSR WA (mm)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
         aspect.ratio = 1,
         legend.position = "none")
 
-plot(fm_25)
-
-# # save
-# ggsave( "./plots/fm_metric_compare_v2.pdf",
-#         fm_25,
-#         width = 4.5,
-#         height = 4.5,
-#         units = "in")
-# 
-# system("open ./plots/fm_metric_compare_v2.pdf")
+plot(wa_25)
 
 
 ##########################
