@@ -7,8 +7,48 @@ library(dplyr)
 library(parallel)
 library(pbmcapply)
 library(snotelr)
+library(EflowStats)
 
-setwd("~/ch1_margulis/")
+# setwd
+setwd('~/ch1_margulis')
+
+# load in functions
+# this file has all the snow metric functions and the raster creation one
+url <-"https://raw.githubusercontent.com/jacktarricone/ch1_marg_scripts/main/snow_metric_functions.R"
+devtools::source_url(url)
+
+# set custom plot theme
+theme_classic <-function(base_size = 11, base_family = "",
+                         base_line_size = base_size / 22,
+                         base_rect_size = base_size / 22) {
+  theme_bw(
+    base_size = base_size,
+    base_family = base_family,
+    base_line_size = base_line_size,
+    base_rect_size = base_rect_size
+  ) %+replace%
+    theme(
+      # no background and no grid
+      panel.border     = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      
+      # show axes
+      # axis.line      = element_line(colour = "black", linewidth = rel(1)),
+      
+      # match legend key to panel.background
+      legend.key       = element_blank(),
+      
+      # simple, black and white strips
+      strip.background = element_rect(fill = "white", colour = "black", linewidth = rel(2)),
+      # NB: size is 1 but clipped, it looks like the 0.5 of the axes
+      
+      complete = TRUE
+    )
+}
+
+theme_set(theme_classic(14))
+
 
 # bring in real snotel locations
 snotel_locs <-read.csv("./csvs/SNOTEL_MASTER_pt_update.csv")
@@ -55,6 +95,40 @@ snotel_df <-snotel_download(
 snotel_df$date <-lubridate::ymd(snotel_df$date)
 snotel_df$waterYear <-calcWaterYear(snotel_df$date)
 snotel_2020 <-filter(snotel_df, waterYear == 2020)
+snotel_2020$dowy <-get_waterYearDay(snotel_2020$date, wyMonth = 10L)
+
+p1 <-ggplot(snotel_2020, aes(x = dowy, y = snow_water_equivalent, color = site_name))+
+  geom_line(alpha = .6)+
+  scale_y_continuous(expand = (c(0,10))) +
+  scale_x_continuous(limits = c(0,280),expand = (c(0,1))) +
+  xlab("DOWY") + ylab("SWE (mm)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+      legend.position = "none")
+
+ggsave( "./plots/flm_snotel_2020.pdf",
+        p1,
+        width = 6,
+        height = 4,
+        units = "in")
+
+# filter for bad stations
+bad_stations <-filter(snotel_2020, site_name == "spratt creek " | site_name == "leavitt meadows " |
+                      site_name == "tahoe city cross ")
+
+p2 <-ggplot(bad_stations, aes(x = dowy, y = snow_water_equivalent, color = site_name))+
+  geom_line(alpha = .6)+
+  #geom_text(aes(label = site_name), hjust = -0.1, vjust = 0, size = 3) +  
+  scale_y_continuous(expand = (c(0,5))) +
+  scale_x_continuous(limits = c(0,280),expand = (c(0,1))) +
+  xlab("DOWY") + ylab("SWE (mm)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        legend.position = "none")
+
+ggsave( "./plots/flm_bad_stations.pdf",
+       p2,
+       width = 6,
+       height = 4,
+       units = "in")
 
 # calc metric 
 snotel_sdd <-as.data.frame(snotel_2020) %>%
@@ -63,146 +137,42 @@ snotel_sdd <-as.data.frame(snotel_2020) %>%
 
 snotel_sdd
 
+# make new df for flm
+flm_df1 <-flm_sdd[c(2,6)]
+names(flm_df1)[1] <-"flm_sdd_dowy"
+flm_df1$data <-rep("flm", nrow(flm_df1))
+flm_df1$flm_sdd_dowy <-as.integer(flm_df1$flm_sdd_dowy)
+
+# snotel
+snotel_df1 <-as.data.frame(cbind(snotel_sdd$sdd_dowy,flm_df1$site_name,rep("snotel",nrow(flm_df1))))
+names(snotel_df1)[1:3] <-c("snotel_sdd_dowy","site_name","data")
+snotel_df1$snotel_sdd_dowy <-as.integer(snotel_df1$snotel_sdd_dowy)
+snotel_df1
+
+# creat plootting df
+plot_df <-cbind(flm_df1,snotel_df1$snotel_sdd_dowy)
+names(plot_df)[4] <-"snotel_sdd_dowy"
+plot_df
+
+#plot
+p3 <-ggplot(plot_df, mapping = aes(x = snotel_sdd_dowy , y = flm_sdd_dowy)) +
+  geom_point(alpha = .5)+
+  geom_text(aes(label = site_name), hjust = -0.1, vjust = 0, size = 3) +  
+  geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = .25) +
+  scale_y_continuous(limits = c(130,260),expand = (c(0,.0))) +
+  scale_x_continuous(limits = c(130,260),expand = (c(0,.0))) +
+  xlab("SNOTEL SDD (DOWY)") + ylab("FLM SDD (DOWY)") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth =1),
+        aspect.ratio = 1,
+        legend.position = "none")
+
+ggsave( "./plots/flm_snotel_sdd_compare.pdf",
+        p3,
+        width = 6,
+        height = 6,
+        units = "in")
 
 
 
 
 
-
-# bind and save
-snsr_snotels <-cbind(new_stations, snsr_snotel_pixel_nums)
-colnames(snsr_snotels)[14:15] <-c("cell_lon","cell_lat")
-snsr_snotels
-# write.csv(snsr_snotels, "./csvs/snsr_snotels.csv")
-
-# read in data to check the start date on it all
-snotel_df_list <-as.list(rep(NA, nrow(snsr_snotels)))
-
-# read in SNOTEL CSVs using ID number and name from meta data
-for (i in seq_along(snsr_snotels$Site_Name)){
-  snotel_df_list[[i]] <-as.data.frame(snotel_download(snsr_snotels$Site_ID[i], path = tempdir(), internal = TRUE))
-}
-
-# convert from list of dfs to one big one
-snotel_df <-bind_rows(snotel_df_list, .id = "network")
-snotel_df$date <-lubridate::ymd(snotel_df$date)
-head(snotel_df)
-
-# add water year
-colnames(snotel_df)[12] <-"Date"
-colnames(snotel_df)[13] <-"snotel_swe_mm"
-snotel_df <-dataRetrieval::addWaterYear(snotel_df)
-head(snotel_df)
-
-
-# calculate minimum year for each station
-start_date_df <-as.data.frame(snotel_df %>%
-                         group_by(site_name) %>%
-                         summarise(first_year = min(waterYear)))
-
-start_date_df 
-
-# new stations first WY: 
-# burnside (2004), carson (2005), forestdale (2004)
-# horse meadow (2004), leavitt (1990)
-
-# filter for data with the full time series
-snsr_snotels_full_ts <-snsr_snotels[-c(1,3,5,6,7),]
-snsr_snotels_full_ts
-
-# fine hdf swe files
-hdf_paths <-list.files("./swe/hdf", full.names = TRUE) # set paths
-
-# define function
-snotel_snsr_extract <-function(x,snsr_snotels){
-  
-  # this is sloppy but it works
-  for(i in seq_len(nrow(snsr_snotels))) {
-    
-    # file
-    file <-basename(x)
-    
-    # pull out number of days in given year
-    test <-h5ls(x) # contains 3 groups: lat, long, and SCA
-    dims <-test$dim[1]
-    nday <-as.integer(sub("6601 x 5701 x ","",dims))
-    
-    # use df which has SNOTEL station SNSR cell numbers
-    # to read in single pixel where snotel station is
-    swe_raw <-h5read(x, "/SWE", 
-                          index = list(snsr_snotels$y_cell_num[i], 
-                                       snsr_snotels$x_cell_num[i], 
-                                       1:nday))
-    
-    # convert to df
-    snsr_swe_mm <-as.data.frame(matrix(swe_raw))
-    colnames(snsr_swe_mm)[1] <- "snsr_swe_mm" # change 3rd col name to sca
-    
-    # extract year
-    year_v1 <- gsub(".h5", "", file) # take off .h5
-    year <- gsub("SN_SWE_WY", "", year_v1) # take of begining letters
-    
-    # format names, remove spaces
-    snotel_name_v1 <-snsr_snotels$Site_Name[i]
-    snotel_name <-gsub(" ", "_", snotel_name_v1)
-    
-    # pull out other data
-    wy <-rep(year,nday)
-    site_name <-rep(snotel_name,nday) 
-    latitude <-rep(snsr_snotels$cell_lat[i], nday)
-    longitude <-rep(snsr_snotels$cell_lon[i], nday)
-    ele_m <-rep(snsr_snotels$Elevation_m[i], nday)
-    station_id <-rep(snsr_snotels$Site_ID[i], nday)
-    cell_number <-rep(snsr_snotels$cell[i], nday)
-    x_cell <-rep(snsr_snotels$x_cell_num[i], nday)
-    y_cell <-rep(snsr_snotels$y_cell_num[i], nday)
-    
-    # make df
-    final_df <-cbind(site_name, wy, snsr_swe_mm, 
-                     latitude, longitude, ele_m,
-                     station_id, cell_number, x_cell, y_cell) # bind all 3 cols
-    head(final_df)
-    
-    # create saving information
-    saving_location <-file.path("./csvs/snsr_snotel_data/")
-    full_saving_name <-paste0(saving_location,snotel_name,"_swe_",year,".csv")
-    
-    # save
-    write.csv(final_df, full_saving_name, row.names=FALSE)
-  }
-}
-
-# apply function to list of hdf files
-pbmclapply(hdf_paths[2:32], function(x) snotel_snsr_extract(x, snsr_snotels = snsr_snotels_full_ts), 
-           mc.cores = 14, mc.cleanup = TRUE)
-#lapply(hdf_paths[1], function(x) snotel_snsr_extract(x, snsr_snotels = snsr_snotels_full_ts))
-
-
-
-# burnside (2004), carson (2005), forestdale (2004)
-# horse meadow (2004), leavitt (1990)
-
-# filter for data with the full time series
-burnside <-filter(snsr_snotels, Site_Name == "BURNSIDE LAKE")
-carson <-filter(snsr_snotels, Site_Name == "CARSON PASS")
-forestdale <-filter(snsr_snotels, Site_Name == "FORESTDALE CREEK")
-horse <-filter(snsr_snotels, Site_Name == "HORSE MEADOW")
-leavitt <-filter(snsr_snotels, Site_Name == "LEAVITT LAKE")
-
-# define the years to start from for the other 5 stations
-start_date_df
-start_2004 <-hdf_paths[20:32]
-start_2005 <-hdf_paths[21:32]
-start_1990 <-hdf_paths[6:32]
-
-# pull out all stations that start in WY 2004 (burnside, forestdale, horse)
-pbmclapply(start_2004, function(x) snotel_snsr_extract(x, snsr_snotels = rbind(burnside, forestdale, horse)), 
-           mc.cores = 14, mc.cleanup = TRUE)
-
-# pull out all stations that start in WY 2005 (carson)
-pbmclapply(start_2005, function(x) snotel_snsr_extract(x, snsr_snotels = carson), 
-           mc.cores = 14, mc.cleanup = TRUE)
-
-# pull out all stations that start in WY 1990 (leavitt)
-pbmclapply(start_1990, function(x) snotel_snsr_extract(x, snsr_snotels = leavitt), 
-           mc.cores = 14, mc.cleanup = TRUE)

@@ -24,21 +24,21 @@ flm_stack <-rast(flm_list)
 # # writeRaster(tuo_stack, "./rasters/tuo_stack.tif")
 
 
-test <-c(100,100,100,16,100,100,100,100,199,100,100,15,100,100,100,100,100,100,15,68,17,16,15,14,0)
-dowy <-as.integer(max(which(test >= 15)))
-# yaht <-sdd(test)
-
-# read in rast
-tuo_stack1 <-rast("./rasters/tuo_stack.tif")
+# test <-c(100,100,100,16,100,100,100,100,199,100,100,15,100,100,100,100,100,100,15,68,17,16,15,14,0)
+# dowy <-as.integer(max(which(test >= 15)))
+# # yaht <-sdd(test)
+# 
+# # read in rast
+# tuo_stack1 <-rast("./rasters/tuo_stack.tif")
 
 # agg to 300
-tuo_stack2 <-terra::aggregate(tuo_stack1, fact = 10, fun = mean, cores = 14)
-tuo_stack2
-plot(tuo_stack2[[220]])
+flm_stack2 <-terra::aggregate(flm_stack, fact = 3, fun = near, cores = 14)
+flm_stack2
+plot(flm_stack2[[220]])
 
 # reproj
-tuo_stack <-project(tuo_stack2, "EPSG:4326")
-plot(tuo_stack[[220]])
+flm_stack3 <-project(flm_stack2, "EPSG:4326", method = "near")
+plot(flm_stack3[[220]])
 
 # define and calc sdd
 sdd <-function(x, sca_thres = 30){
@@ -60,9 +60,9 @@ sdd <-function(x, sca_thres = 30){
 
 # run and plot
 plot(tuo_stack[[245]])
-wy20_sdd <- terra::app(x = tuo_stack2, fun = sdd, cores = 14)
-plot(wy20_sdd)
-writeRaster(wy20_sdd, "./rasters/wy2020_300m_30_sdd.tif")
+flm90_sdd <- terra::app(x = flm_stack3, fun = sdd, cores = 14)
+plot(flm90_sdd)
+writeRaster(flm90_sdd, "./rasters/flm_wy2020_90m_30_sdd.tif")
 
 
 # full thing test
