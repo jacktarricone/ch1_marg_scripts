@@ -9,7 +9,7 @@ flm_list <-list.files("~/ch3_fusion/rasters/flm/raw", full.names = T)
 tail(flm_list)
 
 # stack em
-# flm_stack <-rast(flm_list)
+flm_stack <-rast(flm_list)
 # flm_stack <-ifel(flm_stack1 == 0, NA, flm_stack1)
 # writeRaster(flm_stck, "./~/ch3_fusion/rasters/flm/flm_stack_formatted.tif")
 # plot(flm_stack[[180]])
@@ -24,7 +24,8 @@ tail(flm_list)
 # # writeRaster(tuo_stack, "./rasters/tuo_stack.tif")
 
 
-# test <-c(100,100,100,16,100,100,100,100,199,100,100,15,100,100,100,100,100,100,15,68,17,16,15,14,0)
+test <-c(100,100,100,16,100,100,100,100,199,100,100,15,100,100,100,100,100,100,15,68,17,16,15,14,0)
+dowy <-as.integer(max(which(test >= 15)))
 # yaht <-sdd(test)
 
 # read in rast
@@ -40,7 +41,7 @@ tuo_stack <-project(tuo_stack2, "EPSG:4326")
 plot(tuo_stack[[220]])
 
 # define and calc sdd
-sdd <-function(x, sca_thres = 15){
+sdd <-function(x, sca_thres = 30){
   
   # Remove NAs, or handle them safely in the comparison
   if (all(is.na(x))) {
@@ -52,15 +53,20 @@ sdd <-function(x, sca_thres = 15){
     return(NA)
   } 
   else{
-    dowy <-as.numeric(max(which(x > sca_thres)))
+    dowy <-as.integer(max(which(x >= sca_thres)))
     return(dowy)
   }
 }
 
 # run and plot
-wy20_sdd <- terra::app(x = tuo_stack, fun = sdd, cores = 14)
+plot(tuo_stack[[245]])
+wy20_sdd <- terra::app(x = tuo_stack2, fun = sdd, cores = 14)
 plot(wy20_sdd)
+writeRaster(wy20_sdd, "./rasters/wy2020_300m_30_sdd.tif")
 
 
-
-
+# full thing test
+flm_wy20_sdd <- terra::app(x = flm_stack, fun = sdd, cores = 14)
+plot(flm_wy20_sdd)
+writeRaster(flm_wy20_sdd, "./rasters/flm_wy2020_30m_30_sdd.tif")
+hist(flm_wy20_sdd)

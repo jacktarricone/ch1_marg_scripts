@@ -11,6 +11,7 @@ library(ggpointdensity)
 library(data.table)
 library(tidyr)
 library(snotelr)
+library(dataRetrieval)
 
 # set wd
 setwd('~/ch1_margulis')
@@ -63,16 +64,17 @@ theme_set(theme_classic(14))
 good_stations <-as.integer(c(356, 428, 462, 463, 473, 508, 518, 539, 
                              540, 541, 575, 697, 724, 771, 778, 784, 809, 834, 846, 848))
 
-snotel_list <-snotel_download(
+snotel_df <-snotel_download(
   good_stations,
   network = "sntl",
   metric = TRUE,
   internal = TRUE
 )
 
-# filter for CA
-snotel_df <-filter(snotel_df1, site_id %in% good_stations)
-head(snotel_df)
+snotel_df$date <-lubridate::ymd(snotel_df$date)
+snotel_df$waterYear <-calcWaterYear(snotel_df$date)
+
+snotel_2020 <-filter(snotel_df, waterYear == 2020)
 
 
 #########################
@@ -82,20 +84,15 @@ head(snotel_df)
 #########################
 
 # calc metric 
-snotel_sdd_df <-as.data.frame(snotel_df) %>%
+snotel_sdd_df <-as.data.frame(snotel_2020) %>%
                               group_by(site_name, waterYear) %>%
-                              summarise(sdd_dowy  = sdd(snotel_swe_mm, swe_thres = 100))
+                              summarise(sdd_dowy  = sdd(snow_water_equivalent, swe_thres = 100))
 
 snotel_sdd_df
-snotel_sdd_2020 <-filter(snotel_sdd_df, waterYear == 2020)
-snotel_sdd_2020
 
-snsr_max_df <-as.data.frame(snsr_df) %>%
-                       group_by(cell_num, site_name_v2, wy) %>%
-                       summarise(max_snsr_m  = max_swe(swe_mm, swe_thres = 25.4)/1000)
 
-snsr_max_df
-unique(snsr_max_df$max_snsr_m)
+
+
 
 # loop through cells
 cells <- paste0("cell", 1:9)  
