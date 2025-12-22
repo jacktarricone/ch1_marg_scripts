@@ -5,7 +5,7 @@ library(terra)
 setwd("~/ch1_margulis/")
 
 # load in stack
-flm_list <-list.files("~/ch3_fusion/rasters/flm/raw", full.names = T)
+flm_list <-list.files("~/ch1_margulis/rasters/flm/2001", full.names = T)
 tail(flm_list)
 
 # stack em
@@ -32,7 +32,7 @@ flm_stack <-rast(flm_list)
 # tuo_stack1 <-rast("./rasters/tuo_stack.tif")
 
 # agg to 300
-flm_stack2 <-terra::aggregate(flm_stack, fact = 3, fun = near, cores = 14)
+flm_stack2 <-terra::aggregate(flm_stack, fact = 3, fun = "mean")
 flm_stack2
 plot(flm_stack2[[220]])
 
