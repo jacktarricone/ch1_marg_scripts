@@ -246,6 +246,7 @@ p <- ggplot() +
     expand = c(0, 0)
   ) +
   scale_y_continuous(expand = expansion(mult = c(0.02, 0.04))) +
+  scale_x_continuous(expand = expansion(mult = c(0.008, 0.01))) +
   scale_color_manual(
     values = c("Daily mean" = "black", "Monthly mean ±1 SD" = "red"),
     breaks = c("Daily mean", "Monthly mean ±1 SD"),
@@ -295,5 +296,5 @@ ggsave(
   width = 6, height = 4.2,
   dpi = 600
 )
-
+getwd()
 system("open ./plots/snotel_sierra_density_oct_feb_mean_sd_monthly.pdf")
