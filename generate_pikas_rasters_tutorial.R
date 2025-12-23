@@ -27,23 +27,23 @@
 # 3) SWE units are millimeters (mm). (So 20 cm SWE = 200 mm.)
 # 4) Missing/no-data values use -32768.
 #
-# Key update (2025-12-23)
-# -----------------------
-# Your error:
-#   "no method for coercing this S4 class to a vector"
-# was caused by trying to use base::rbind() on SpatRaster objects (no method),
-# which falls back to the default rbind() that attempts to coerce S4 to vector.
+# Performance approach
+# --------------------
+# - Read each annual SWE cube in two row halves (top/bottom) to reduce RAM.
+# - Compute the metric pixel-wise on each half via apply().
+# - Convert each half to a 5-band SpatRaster with the correct HALF extent.
+# - Merge halves into a full-domain raster and write a GeoTIFF.
 #
-# Fix:
-#   Do NOT row-bind SpatRasters.
-#   Instead, stream-write the output GeoTIFF in two row blocks using:
-#     writeStart() + writeValues() + writeStop()
+# Parallelism note
+# ---------------
+# Parallelizing across years can speed things up, but each worker reads huge
+# arrays, so RAM can become the limiting factor. Use fewer cores if needed.
 #
-# This is also more memory-efficient than building a full 3D array in RAM.
+# Updated: 2025-12-23
 ###############################################################################
 
 ###############################################################################
-# Package installation (auto-install if missing)
+# Packages (auto-install if missing)
 ###############################################################################
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
@@ -54,7 +54,6 @@ install_if_missing_cran <- function(pkgs) {
     install.packages(missing, dependencies = TRUE)
   }
 }
-
 install_if_missing_bioc <- function(pkgs) {
   if (!"BiocManager" %in% rownames(installed.packages())) {
     message("Installing BiocManager (required for Bioconductor packages).")
@@ -67,17 +66,19 @@ install_if_missing_bioc <- function(pkgs) {
   }
 }
 
-install_if_missing_cran(c("terra"))
+install_if_missing_cran(c("terra", "pbapply", "pbmcapply"))
 install_if_missing_bioc(c("rhdf5"))
 
 suppressPackageStartupMessages({
-  library(rhdf5)
   library(terra)
+  library(rhdf5)
   library(parallel)
+  library(pbapply)
+  library(pbmcapply)
 })
 
 ###############################################################################
-# 0) USER SETTINGS (edit these paths if Chris runs elsewhere)
+# 0) USER SETTINGS
 ###############################################################################
 ROOT_DIR <- "~/ch1_margulis"
 SWE_HDF_DIR <- file.path(ROOT_DIR, "swe/hdf")
@@ -87,19 +88,23 @@ SNOW_METRICS_DIR <- file.path(ROOT_DIR, "rasters/snow_metrics")
 # Metric settings
 SWE_THRESHOLD_MM <- 200
 SNOW_METRIC_NAME <- paste0("pikas_days_swe_lt_", SWE_THRESHOLD_MM, "mm_oct_feb")
-LAYER_NAMES <- paste0(
-  "days_swe_lt_", SWE_THRESHOLD_MM, "mm_",
-  c("Oct", "Nov", "Dec", "Jan", "Feb")
-)
+LAYER_NAMES <- paste0("days_swe_lt_", SWE_THRESHOLD_MM, "mm_", c("Oct","Nov","Dec","Jan","Feb"))
 
-# Extent handling:
-# Safer default: use DEM extent (matches grid). If you are CERTAIN your raster is
-# lon/lat and want to hard-code extent, set USE_DEM_EXTENT <- FALSE.
+# Extent handling: safest is DEM extent (matches grid)
 USE_DEM_EXTENT <- TRUE
 EXTENT_OVERRIDE <- c(-123.3, -117.6, 35.4, 42)  # only used if USE_DEM_EXTENT=FALSE
 
+# Output write options (int16 is plenty: max days in a month ~31)
+WRITE_OPTS <- list(datatype = "INT2S", NAflag = -32768)
+# Optional compression:
+# WRITE_OPTS <- c(WRITE_OPTS, list(gdal = "COMPRESS=LZW"))
+
+# Parallel controls (for the PARALLEL batch option at the end)
+PARALLEL_MODE <- "psock"   # "psock" (recommended) or "fork"
+NCORES <- min(5, max(1, parallel::detectCores() - 1))
+
 ###############################################################################
-# 1) INPUT DISCOVERY + CRS/EXTENT (from DEM)
+# 1) INPUT DISCOVERY + CRS/EXTENT FROM DEM
 ###############################################################################
 setwd(ROOT_DIR)
 
@@ -119,28 +124,26 @@ dem_extent  <- terra::ext(dem)
 
 message("Using DEM/static raster for CRS/extent: ", dem_path)
 message("DEM CRS (first 120 chars): ", substr(dem_crs_wkt, 1, 120), "...")
-message("DEM extent: ", paste(dem_extent[1], dem_extent[2], dem_extent[3], dem_extent[4], sep = ", "))
+message("DEM extent: ", paste(c(dem_extent[1], dem_extent[2], dem_extent[3], dem_extent[4]), collapse = ", "))
 
 EXTENT_VEC <- if (USE_DEM_EXTENT) c(dem_extent[1], dem_extent[2], dem_extent[3], dem_extent[4]) else EXTENT_OVERRIDE
 message("OUTPUT extent set to: ", paste(EXTENT_VEC, collapse = ", "))
 
 ###############################################################################
-# 2) METRIC FUNCTION: DAYS SWE < THRESHOLD PER MONTH (Oct–Feb)
+# 2) METRIC FUNCTION (pixel time-series -> length-5 integer vector)
 ###############################################################################
 accum_swe_below_thres_oct_feb <- function(x, swe_thres = 200) {
   x <- as.numeric(x)
   x[x == -32768] <- NA
   if (all(is.na(x))) return(rep(NA_integer_, 5))
   
-  # We only need correct month boundaries for Oct–Feb. Use a leap vs non-leap
-  # reference year solely to make Feb have 29 vs 28 days when length==366.
+  # Only need month boundaries; choose leap/non-leap reference year based on length
   start_date <- if (length(x) == 366) as.Date("2003-10-01") else as.Date("2001-10-01")
   dates <- seq.Date(start_date, by = "day", length.out = length(x))
   month_num <- as.integer(format(dates, "%m"))
   
   months <- c(10, 11, 12, 1, 2)  # Oct–Feb
-  out <- integer(length(months))
-  
+  out <- integer(5)
   for (i in seq_along(months)) {
     v <- x[month_num == months[i]]
     out[i] <- if (all(is.na(v))) NA_integer_ else as.integer(sum(v < swe_thres, na.rm = TRUE))
@@ -149,7 +152,7 @@ accum_swe_below_thres_oct_feb <- function(x, swe_thres = 200) {
 }
 
 ###############################################################################
-# 3) RASTER GENERATOR (stream-write output in two row blocks)
+# 3) GENERATOR: HDF5 -> (top half raster + bottom half raster) -> merge -> GeoTIFF
 ###############################################################################
 generate_snow_metric_rasters <- function(
     swe_h5_path,
@@ -159,16 +162,16 @@ generate_snow_metric_rasters <- function(
     dem_crs = NULL,
     extent_vec = NULL,
     out_base_dir = NULL,
+    write_opts = NULL,
     ...
 ) {
   if (!file.exists(swe_h5_path)) stop("Missing HDF5 file: ", swe_h5_path)
-  if (is.null(dem_crs)) stop("dem_crs (WKT) must be provided.")
-  if (is.null(extent_vec) || length(extent_vec) != 4) {
-    stop("extent_vec must be length-4 (xmin,xmax,ymin,ymax).")
-  }
+  if (is.null(dem_crs)) stop("dem_crs must be provided.")
+  if (is.null(extent_vec) || length(extent_vec) != 4) stop("extent_vec must be length-4 (xmin,xmax,ymin,ymax).")
   if (is.null(out_base_dir)) stop("out_base_dir must be provided.")
+  if (is.null(write_opts)) write_opts <- list()
   
-  # Find SWE dataset + parse dims robustly (e.g. "6601 x 5701 x 365")
+  # Locate SWE dataset + parse dims robustly (e.g. "6601 x 5701 x 365")
   test <- rhdf5::h5ls(swe_h5_path)
   swe_row <- which(test$name == "SWE" & test$group == "/")
   if (length(swe_row) == 0) swe_row <- which(test$name == "SWE")[1]
@@ -181,89 +184,74 @@ generate_snow_metric_rasters <- function(
   nrow <- as.integer(parts[1])
   ncol <- as.integer(parts[2])
   nday <- as.integer(parts[3])
+  if (any(is.na(c(nrow, ncol, nday))) || nday < 300) stop("Bad parsed dims from: ", dims)
   
-  if (any(is.na(c(nrow, ncol, nday))) || nday < 300) {
-    stop("Could not parse valid nrow/ncol/nday from HDF5 dims: ", dims)
-  }
-  
-  # Split rows into two halves (robust, not hard-coded)
+  # Split rows into two halves
   mid   <- floor(nrow / 2)
   rows1 <- 1:mid
   rows2 <- (mid + 1):nrow
   cols  <- 1:ncol
   days  <- 1:nday
   
+  # Compute split extents (terra rows are top->bottom; y decreases from ymax to ymin)
+  xmin <- extent_vec[1]; xmax <- extent_vec[2]; ymin <- extent_vec[3]; ymax <- extent_vec[4]
+  yres <- (ymax - ymin) / nrow
+  ymid <- ymax - mid * yres
+  ext1 <- terra::ext(xmin, xmax, ymid, ymax)  # top half
+  ext2 <- terra::ext(xmin, xmax, ymin, ymid)  # bottom half
+  
   # Output path
   name <- gsub("\\.h5$", "", basename(swe_h5_path))
   good_name <- gsub("SN_SWE", snow_metric_name, name)
-  
   out_dir <- file.path(out_base_dir, snow_metric_name)
   if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-  
   out_path <- file.path(out_dir, paste0(good_name, ".tif"))
   
-  # Prepare an empty on-disk raster with correct geometry and 5 layers
-  K <- 5L
-  r_out <- terra::rast(nrows = nrow, ncols = ncol, nlyrs = K)
-  terra::ext(r_out) <- extent_vec
-  terra::crs(r_out) <- dem_crs
-  if (!is.null(layer_names)) terra::names(r_out) <- layer_names
-  
-  # Write options: small ints + explicit nodata.
-  # NOTE: day counts fit in INT2S easily (0..31). NAflag is stored as NoData.
-  wopt <- list(datatype = "INT2S", NAflag = -32768)
-  
-  r_out <- terra::writeStart(r_out, filename = out_path, overwrite = TRUE, wopt = wopt)
-  
-  # ---- half 1: read, compute, write ----
+  # ----- half 1 -----
   c1 <- rhdf5::h5read(swe_h5_path, "/SWE", index = list(rows1, cols, days))
   message(basename(swe_h5_path), " | half1 read (rows ", min(rows1), "-", max(rows1), ")")
-  
-  res_c1 <- apply(c1, c(1, 2), snow_metric_function, ...)
+  res1 <- apply(c1, c(1, 2), snow_metric_function, ...)
   message(basename(swe_h5_path), " | half1 metric")
   rm(c1); gc()
   
-  # res_c1 is [K x nrow_half x ncol]. Convert to (ncell_half x K) in terra cell order.
-  # Terra expects values ordered by row (top->bottom) and within each row by column (left->right).
-  nr1 <- length(rows1)
-  vals1 <- matrix(NA_integer_, nrow = nr1 * ncol, ncol = K)
-  for (k in 1:K) {
-    # res_c1[k,,] is [nrow_half x ncol]. Use t() then as.vector for row-major order.
-    vals1[, k] <- as.integer(as.vector(t(res_c1[k, , ])))
-  }
-  rm(res_c1); gc()
+  # res1 is [K x nrow_half x ncol] -> [nrow_half x ncol x K]
+  K <- 5L
+  arr1 <- aperm(res1, c(2, 3, 1))
+  storage.mode(arr1) <- "integer"
+  r1 <- terra::rast(arr1)
+  terra::ext(r1) <- ext1
+  terra::crs(r1) <- dem_crs
+  if (!is.null(layer_names)) names(r1) <- layer_names
+  rm(res1, arr1); gc()
   
-  r_out <- terra::writeValues(r_out, vals1, start = 1)
-  rm(vals1); gc()
-  
-  # ---- half 2: read, compute, write ----
+  # ----- half 2 -----
   c2 <- rhdf5::h5read(swe_h5_path, "/SWE", index = list(rows2, cols, days))
   message(basename(swe_h5_path), " | half2 read (rows ", min(rows2), "-", max(rows2), ")")
-  
-  res_c2 <- apply(c2, c(1, 2), snow_metric_function, ...)
+  res2 <- apply(c2, c(1, 2), snow_metric_function, ...)
   message(basename(swe_h5_path), " | half2 metric")
   rm(c2); gc()
   
-  nr2 <- length(rows2)
-  vals2 <- matrix(NA_integer_, nrow = nr2 * ncol, ncol = K)
-  for (k in 1:K) {
-    vals2[, k] <- as.integer(as.vector(t(res_c2[k, , ])))
-  }
-  rm(res_c2); gc()
+  arr2 <- aperm(res2, c(2, 3, 1))
+  storage.mode(arr2) <- "integer"
+  r2 <- terra::rast(arr2)
+  terra::ext(r2) <- ext2
+  terra::crs(r2) <- dem_crs
+  if (!is.null(layer_names)) names(r2) <- layer_names
+  rm(res2, arr2); gc()
   
-  # start row for second half is mid+1
-  r_out <- terra::writeValues(r_out, vals2, start = mid + 1)
-  rm(vals2); gc()
-  
-  r_out <- terra::writeStop(r_out)
   rhdf5::h5closeAll()
   
+  # Merge halves (no overlap; stacks vertically)
+  r <- terra::merge(r1, r2)
+  rm(r1, r2); gc()
+  
+  terra::writeRaster(r, out_path, overwrite = TRUE, wopt = write_opts)
   message("Wrote: ", out_path)
   out_path
 }
 
 ###############################################################################
-# 4) RUNNERS + QUICK VALIDATION
+# 4) RUNNER + QUICK VALIDATION
 ###############################################################################
 run_one_year <- function(h5_path) {
   tryCatch(
@@ -275,6 +263,7 @@ run_one_year <- function(h5_path) {
       dem_crs = dem_crs_wkt,
       extent_vec = EXTENT_VEC,
       out_base_dir = SNOW_METRICS_DIR,
+      write_opts = WRITE_OPTS,
       swe_thres = SWE_THRESHOLD_MM
     ),
     error = function(e) {
@@ -290,17 +279,21 @@ validate_output_quick <- function(tif_path) {
   r <- terra::rast(tif_path)
   message("Output raster: ", tif_path)
   message("  nlyr: ", terra::nlyr(r))
-  message("  names: ", paste(terra::names(r), collapse = ", "))
-  message("  extent: ", paste(c(terra::ext(r)[1], terra::ext(r)[2], terra::ext(r)[3], terra::ext(r)[4]), collapse = ", "))
+  message("  names: ", paste(names(r), collapse = ", "))
+  ex <- terra::ext(r)
+  message("  extent: ", paste(c(ex[1], ex[2], ex[3], ex[4]), collapse = ", "))
   print(terra::global(r, fun = range, na.rm = TRUE))
   invisible(r)
 }
 
 ###############################################################################
-# 5) EXECUTION
+# 5) EXECUTION: SMOKE TEST + BATCH PROCESSORS (SEQUENTIAL + PARALLEL)
 ###############################################################################
+message("Running metric: ", SNOW_METRIC_NAME)
+message("Threshold (mm): ", SWE_THRESHOLD_MM)
+message("Parallel mode configured: ", PARALLEL_MODE, " | cores: ", NCORES)
 
-# ---- (A) Smoke test first file ----
+# --- Smoke test ---
 test_file <- swe_list[1]
 message("\n=== SMOKE TEST: ", basename(test_file), " ===")
 out_test <- run_one_year(test_file)
@@ -312,18 +305,57 @@ if (inherits(out_test, "pikas_metric_error")) {
   message("Smoke test finished OK.")
 }
 
-# ---- (B) Batch run all years (sequential; safest) ----
+# --- Batch processor (SEQUENTIAL; safest) ---
 message("\n=== BATCH RUN (SEQUENTIAL) ===")
-results <- vector("list", length(swe_list))
+results_seq <- vector("list", length(swe_list))
 for (i in seq_along(swe_list)) {
   message("\n[", i, "/", length(swe_list), "] ", basename(swe_list[i]))
-  results[[i]] <- run_one_year(swe_list[i])
+  results_seq[[i]] <- run_one_year(swe_list[i])
+}
+fails_seq <- vapply(results_seq, inherits, logical(1), what = "pikas_metric_error")
+if (any(fails_seq)) {
+  message("\n=== SEQUENTIAL FAILURES (", sum(fails_seq), "/", length(fails_seq), ") ===")
+  print(results_seq[fails_seq])
+} else {
+  message("\nSequential run: all years completed successfully.")
 }
 
-fails <- vapply(results, inherits, logical(1), what = "pikas_metric_error")
-if (any(fails)) {
-  message("\n=== FAILURES (", sum(fails), "/", length(fails), ") ===")
-  print(results[fails])
+# --- Batch processor (PARALLEL; faster, higher RAM) ---
+#
+# Use ONLY if you have enough memory. Start with NCORES=2 or 3 if unsure.
+#
+message("\n=== BATCH RUN (PARALLEL) ===")
+if (PARALLEL_MODE == "psock") {
+  cl <- parallel::makeCluster(NCORES)
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  
+  # Load libs on workers
+  parallel::clusterEvalQ(cl, { library(terra); library(rhdf5) })
+  
+  # Export everything workers need
+  parallel::clusterExport(
+    cl,
+    varlist = c(
+      "generate_snow_metric_rasters",
+      "accum_swe_below_thres_oct_feb",
+      "SNOW_METRIC_NAME", "LAYER_NAMES",
+      "dem_crs_wkt", "EXTENT_VEC",
+      "SNOW_METRICS_DIR", "WRITE_OPTS",
+      "SWE_THRESHOLD_MM", "run_one_year"
+    ),
+    envir = environment()
+  )
+  
+  results_par <- pbapply::pblapply(swe_list, run_one_year, cl = cl)
 } else {
-  message("\nAll years completed successfully.")
+  # fork mode can be less stable with GDAL/PROJ stacks; use only if you trust it
+  results_par <- pbmcapply::pbmclapply(swe_list, run_one_year, mc.cores = NCORES)
+}
+
+fails_par <- vapply(results_par, inherits, logical(1), what = "pikas_metric_error")
+if (any(fails_par)) {
+  message("\n=== PARALLEL FAILURES (", sum(fails_par), "/", length(fails_par), ") ===")
+  print(results_par[fails_par])
+} else {
+  message("\nParallel run: all years completed successfully.")
 }
