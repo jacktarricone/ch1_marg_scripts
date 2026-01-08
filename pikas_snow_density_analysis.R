@@ -146,7 +146,7 @@ dens <- snow_all %>%
   ) %>%
   filter(!is.na(date)) %>%
   filter(date >= min_date, date <= max_date) %>%
-  filter(month(date) %in% c(10, 11, 12, 1, 2)) %>%
+  filter(month(date) %in% c(10, 11, 12, 1, 2, 3, 4)) %>% # add march, april
   mutate(
     season_year  = if_else(month(date) >= 10L, year(date) + 1L, year(date)),
     season_start = as.Date(paste0(season_year - 1L, "-10-01")),
@@ -168,6 +168,11 @@ daily_mean <- dens %>%
     n_obs              = n(),
     .groups = "drop"
   )
+
+daily_mean
+mean(daily_mean$mean_density_kg_m3)
+mean(daily_mean$sd_density_kg_m3)
+write.csv(daily_mean, "./Downloads/pikas_snow_density_tahoe.csv")
 
 # -----------------------------
 # 5) Monthly mean + SD (Oct–Feb)
