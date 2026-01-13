@@ -1,0 +1,44 @@
+Warning message:
+package ‘terra’ was built under R version 4.5.2 
+Found 32 yearly rasters (WY1985–WY2016).
+|---------|---------|---------|---------|=========================================                                          Prepared references for WY1985 (pikas_days_swe_lt_166mm_oct_mar_WY1985.tif)
+Prepared references for WY1986 (pikas_days_swe_lt_166mm_oct_mar_WY1986.tif)
+Prepared references for WY1987 (pikas_days_swe_lt_166mm_oct_mar_WY1987.tif)
+Prepared references for WY1988 (pikas_days_swe_lt_166mm_oct_mar_WY1988.tif)
+Prepared references for WY1989 (pikas_days_swe_lt_166mm_oct_mar_WY1989.tif)
+Prepared references for WY1990 (pikas_days_swe_lt_166mm_oct_mar_WY1990.tif)
+Prepared references for WY1991 (pikas_days_swe_lt_166mm_oct_mar_WY1991.tif)
+Prepared references for WY1992 (pikas_days_swe_lt_166mm_oct_mar_WY1992.tif)
+Prepared references for WY1993 (pikas_days_swe_lt_166mm_oct_mar_WY1993.tif)
+Prepared references for WY1994 (pikas_days_swe_lt_166mm_oct_mar_WY1994.tif)
+Prepared references for WY1995 (pikas_days_swe_lt_166mm_oct_mar_WY1995.tif)
+Prepared references for WY1996 (pikas_days_swe_lt_166mm_oct_mar_WY1996.tif)
+Prepared references for WY1997 (pikas_days_swe_lt_166mm_oct_mar_WY1997.tif)
+Prepared references for WY1998 (pikas_days_swe_lt_166mm_oct_mar_WY1998.tif)
+Prepared references for WY1999 (pikas_days_swe_lt_166mm_oct_mar_WY1999.tif)
+Prepared references for WY2000 (pikas_days_swe_lt_166mm_oct_mar_WY2000.tif)
+Prepared references for WY2001 (pikas_days_swe_lt_166mm_oct_mar_WY2001.tif)
+Prepared references for WY2002 (pikas_days_swe_lt_166mm_oct_mar_WY2002.tif)
+Prepared references for WY2003 (pikas_days_swe_lt_166mm_oct_mar_WY2003.tif)
+Prepared references for WY2004 (pikas_days_swe_lt_166mm_oct_mar_WY2004.tif)
+Prepared references for WY2005 (pikas_days_swe_lt_166mm_oct_mar_WY2005.tif)
+Prepared references for WY2006 (pikas_days_swe_lt_166mm_oct_mar_WY2006.tif)
+Prepared references for WY2007 (pikas_days_swe_lt_166mm_oct_mar_WY2007.tif)
+Prepared references for WY2008 (pikas_days_swe_lt_166mm_oct_mar_WY2008.tif)
+Prepared references for WY2009 (pikas_days_swe_lt_166mm_oct_mar_WY2009.tif)
+Prepared references for WY2010 (pikas_days_swe_lt_166mm_oct_mar_WY2010.tif)
+Prepared references for WY2011 (pikas_days_swe_lt_166mm_oct_mar_WY2011.tif)
+Prepared references for WY2012 (pikas_days_swe_lt_166mm_oct_mar_WY2012.tif)
+Prepared references for WY2013 (pikas_days_swe_lt_166mm_oct_mar_WY2013.tif)
+Prepared references for WY2014 (pikas_days_swe_lt_166mm_oct_mar_WY2014.tif)
+Prepared references for WY2015 (pikas_days_swe_lt_166mm_oct_mar_WY2015.tif)
+Prepared references for WY2016 (pikas_days_swe_lt_166mm_oct_mar_WY2016.tif)
+|---------|---------|---------|---------|=========================================                                          Wrote annual climatology: ./rasters/snow_metrics_averages/pikas_166mm_averages/annual_mean_days_swe_lt_166mm_octmar_WY1985_WY2016.tif
+|---------|---------|---------|---------|=========================================                                          Computed monthly climatology for Oct
+|---------|---------|---------|---------|=========================================                                          Computed monthly climatology for Nov
+|---------|---------|---------|---------|=========================================                                          Computed monthly climatology for Dec
+|---------|---------|---------|---------|=========================================                                          Computed monthly climatology for Jan
+|---------|---------|---------|---------|=========================================                                          Computed monthly climatology for Feb
+|---------|---------|---------|---------|=========================================                                          Computed monthly climatology for Mar
+Wrote monthly climatology (6 layers): ./rasters/snow_metrics_averages/pikas_166mm_averages/monthly_mean_days_swe_lt_166mm_octmar_WY1985_WY2016.tif
+Done.
